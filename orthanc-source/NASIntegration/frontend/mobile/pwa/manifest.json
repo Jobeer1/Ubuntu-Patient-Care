@@ -1,0 +1,244 @@
+{
+  "name": "SA Medical Imaging System",
+  "short_name": "SA MedImg",
+  "description": "Advanced medical imaging system optimized for South African healthcare",
+  "version": "1.0.0",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#007749",
+  "background_color": "#ffffff",
+  "scope": "/",
+  "lang": "en-ZA",
+  "dir": "ltr",
+  
+  "icons": [
+    {
+      "src": "/assets/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/maskable-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/icons/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/assets/screenshots/mobile-viewer.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile DICOM Viewer"
+    },
+    {
+      "src": "/assets/screenshots/tablet-dashboard.png",
+      "sizes": "768x1024",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Tablet Dashboard"
+    }
+  ],
+  
+  "categories": [
+    "medical",
+    "healthcare",
+    "productivity",
+    "utilities"
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Emergency Access",
+      "short_name": "Emergency",
+      "description": "Quick access to emergency imaging studies",
+      "url": "/emergency",
+      "icons": [
+        {
+          "src": "/assets/icons/emergency-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Recent Studies",
+      "short_name": "Recent",
+      "description": "View recent imaging studies",
+      "url": "/studies/recent",
+      "icons": [
+        {
+          "src": "/assets/icons/recent-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Voice Dictation",
+      "short_name": "Dictate",
+      "description": "Start voice dictation for reports",
+      "url": "/dictation",
+      "icons": [
+        {
+          "src": "/assets/icons/microphone-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Offline Mode",
+      "short_name": "Offline",
+      "description": "Access cached studies offline",
+      "url": "/offline",
+      "icons": [
+        {
+          "src": "/assets/icons/offline-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://sa-medical-imaging.co.za/manifest.json"
+    }
+  ],
+  
+  "prefer_related_applications": false,
+  
+  "protocol_handlers": [
+    {
+      "protocol": "dicom",
+      "url": "/viewer?study=%s"
+    }
+  ],
+  
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "application/dicom": [".dcm", ".dicom"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/png": [".png"]
+      }
+    }
+  ],
+  
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["application/dicom", "image/*"]
+        }
+      ]
+    }
+  },
+  
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  
+  "handle_links": "preferred",
+  
+  "capture_links": "existing-client-navigate",
+  
+  "scope_extensions": [
+    {
+      "origin": "https://orthanc.sa-medical.local"
+    }
+  ],
+  
+  "id": "sa-medical-imaging-system",
+  
+  "note_taking": {
+    "new_note_url": "/notes/new"
+  },
+  
+  "permissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "notifications",
+    "background-sync",
+    "persistent-storage"
+  ],
+  
+  "features": [
+    "cross-origin-isolated"
+  ]
+}
