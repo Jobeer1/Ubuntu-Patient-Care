@@ -1,0 +1,51 @@
+# Core Flask Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Authentication & Security
+pyotp==2.9.0
+qrcode[pil]==7.4.2
+
+# Image Processing & DICOM
+Pillow==10.0.1
+pydicom==2.4.3
+numpy==1.24.3
+opencv-python==4.8.1.78
+scipy==1.11.2
+scikit-image==0.21.0
+
+# Voice Recognition & Audio
+vosk==0.3.45
+SpeechRecognition==3.10.0
+pyaudio==0.2.11
+wave
+
+# NAS & Network Storage
+smbprotocol==1.12.0
+pysmb==1.2.9.1
+
+# Utilities
+requests==2.31.0
+python-dateutil==2.8.2
+
+# AI/ML for Diagnosis
+tensorflow==2.13.0
+scikit-learn==1.3.0
+joblib==1.3.2
+
+# Face Recognition
+face_recognition==1.3.0
+dlib==19.24.2
+
+# Security & Encryption
+cryptography==41.0.3
+
+# QR Code Generation
+qrcode==7.4.2
+
+# DICOM Networking (for device connectivity testing)
+pynetdicom==2.0.2
+
+# Development & Testing
+pytest==7.4.2
+pytest-flask==1.2.0

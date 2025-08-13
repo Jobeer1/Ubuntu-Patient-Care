@@ -1,0 +1,565 @@
+/* 🇿🇦 South African Medical Imaging System - Component Styles */
+
+/* Study Browser Styles */
+.study-browser {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-medium);
+}
+
+.study-browser.loading,
+.study-browser.error {
+  justify-content: center;
+  align-items: center;
+}
+
+.study-browser-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.study-browser-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.study-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-light);
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.study-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.study-item {
+  background: var(--background-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.study-item:hover {
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.study-item.selected {
+  border-color: var(--primary-blue);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.study-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.study-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.study-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.medical-aid {
+  font-size: 16px;
+}
+
+.patient-info {
+  margin-bottom: 8px;
+}
+
+.patient-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.patient-details {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sa-id {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+  margin-top: 2px;
+}
+
+.study-description {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.series-info {
+  margin-bottom: 8px;
+}
+
+.series-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.modality-icon {
+  font-size: 14px;
+}
+
+.series-description {
+  flex: 1;
+}
+
+.image-count {
+  font-weight: 500;
+}
+
+.institution-info,
+.referring-physician {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.language-indicator {
+  font-size: 10px;
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-align: right;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-message {
+  font-size: 14px;
+}
+
+/* Viewport Styles */
+.viewport-container {
+  position: relative;
+  background: var(--background-dark);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.viewport-element {
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.viewport-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.viewport-info {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.3;
+}
+
+.viewport-info.top-left {
+  top: 8px;
+  left: 8px;
+}
+
+.viewport-info.top-right {
+  top: 8px;
+  right: 8px;
+  text-align: right;
+}
+
+.viewport-info.bottom-left {
+  bottom: 8px;
+  left: 8px;
+}
+
+.viewport-info.bottom-right {
+  bottom: 8px;
+  right: 8px;
+  text-align: right;
+}
+
+.viewport-measurements {
+  color: var(--success-green);
+  font-weight: 600;
+}
+
+.empty-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-medium);
+}
+
+.empty-content {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-content .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-content .empty-message {
+  font-size: 16px;
+}
+
+.loading-overlay,
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.loading-overlay {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.error-overlay {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Tool Panel Styles */
+.tool-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-medium);
+}
+
+.tool-panel-header {
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.tool-tabs {
+  display: flex;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--background-light);
+}
+
+.tab-btn.active {
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+}
+
+.tool-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tool-section {
+  margin-bottom: 24px;
+}
+
+.tool-section h4,
+.tool-section h5 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border: 1px solid var(--border-color);
+  background: var(--background-light);
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.tool-btn:hover {
+  border-color: var(--primary-blue);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.tool-btn.active {
+  border-color: var(--primary-blue);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-blue);
+}
+
+.tool-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.tool-name {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.preset-buttons,
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.measurements-header,
+.ai-header,
+.voice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.measurements-list,
+.ai-results,
+.voice-transcript {
+  min-height: 200px;
+}
+
+.empty-measurements,
+.empty-results,
+.empty-transcript {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-secondary);
+}
+
+.condition-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.condition-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.condition-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.voice-controls {
+  margin-bottom: 16px;
+}
+
+.language-select {
+  margin-bottom: 12px;
+}
+
+.language-select label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.voice-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.transcript-area {
+  min-height: 150px;
+  background: var(--background-light);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+/* Status Bar Styles */
+.status-bar {
+  height: 32px;
+  background: var(--background-medium);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.status-left,
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.status-item.error {
+  color: var(--danger-red);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-green);
+  flex-shrink: 0;
+}
+
+.status-indicator.warning {
+  background: var(--warning-orange);
+}
+
+.status-indicator.error {
+  background: var(--danger-red);
+}
+
+.status-indicator.connected {
+  background: var(--success-green);
+}
+
+.status-indicator.disconnected {
+  background: var(--danger-red);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tool-tabs {
+    font-size: 10px;
+  }
+  
+  .tab-btn {
+    padding: 8px 4px;
+  }
+  
+  .status-left,
+  .status-right {
+    gap: 8px;
+  }
+  
+  .status-item {
+    font-size: 11px;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .study-item {
+    border-width: 2px;
+  }
+  
+  .tool-btn {
+    border-width: 2px;
+  }
+  
+  .viewport-info {
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid white;
+  }
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🇿🇦 South African Medical Imaging System - Device API Test</h1>
+    
+    <div class="test-section">
+        <h3>Server Status</h3>
+        <button onclick="testServerHealth()">Test Server Health</button>
+        <div id="health-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Device Endpoints</h3>
+        <button onclick="testGetDevices()">Get Devices</button>
+        <button onclick="testGetModalityTypes()">Get Modality Types</button>
+        <button onclick="testGetDepartments()">Get Departments</button>
+        <div id="device-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Network Discovery</h3>
+        <button onclick="testArpScan()">ARP Scan</button>
+        <button onclick="testNetworkScan()">Network Discovery Scan</button>
+        <div id="network-result"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:5000';
+        
+        async function makeRequest(url, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    status: 0,
+                    error: error.message
+                };
+            }
+        }
+        
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            const isSuccess = result.success;
+            
+            element.className = `test-section ${isSuccess ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <h4>${isSuccess ? '✅ Success' : '❌ Error'}</h4>
+                <p><strong>Status:</strong> ${result.status}</p>
+                ${result.error ? `<p><strong>Error:</strong> ${result.error}</p>` : ''}
+                <pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>
+            `;
+        }
+        
+        async function testServerHealth() {
+            console.log('Testing server health...');
+            const result = await makeRequest(`${baseUrl}/health`);
+            displayResult('health-result', result);
+        }
+        
+        async function testGetDevices() {
+            console.log('Testing GET /api/devices...');
+            const result = await makeRequest(`${baseUrl}/api/devices`);
+            displayResult('device-result', result);
+        }
+        
+        async function testGetModalityTypes() {
+            console.log('Testing GET /api/devices/modality-types...');
+            const result = await makeRequest(`${baseUrl}/api/devices/modality-types`);
+            displayResult('device-result', result);
+        }
+        
+        async function testGetDepartments() {
+            console.log('Testing GET /api/devices/departments...');
+            const result = await makeRequest(`${baseUrl}/api/devices/departments`);
+            displayResult('device-result', result);
+        }
+        
+        async function testArpScan() {
+            console.log('Testing POST /api/devices/network/arp-scan...');
+            const result = await makeRequest(`${baseUrl}/api/devices/network/arp-scan`, 'POST');
+            displayResult('network-result', result);
+        }
+        
+        async function testNetworkScan() {
+            console.log('Testing POST /api/devices/network/discovery-scan...');
+            const payload = {
+                ip_range: '192.168.1.1-192.168.1.5',
+                ports: [104, 80],
+                max_threads: 2
+            };
+            const result = await makeRequest(`${baseUrl}/api/devices/network/discovery-scan`, 'POST', payload);
+            displayResult('network-result', result);
+        }
+        
+        // Test server health on page load
+        window.onload = function() {
+            testServerHealth();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+/* Network Discovery Component Styles */
+
+.network-discovery {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.discovery-header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.discovery-header h2 {
+    color: #007749; /* SA Green */
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.discovery-header p {
+    color: #666;
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+/* Discovery Tabs */
+.discovery-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #007749;
+    background: #f8f9fa;
+}
+
+.tab-btn.active {
+    color: #007749;
+    border-bottom-color: #007749;
+    background: #f8fff8;
+}
+
+/* Discovery Content */
+.discovery-content {
+    margin-bottom: 30px;
+}
+
+.scan-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border-left: 4px solid #007749;
+}
+
+.scan-section h3 {
+    color: #007749;
+    margin: 0 0 10px 0;
+    font-size: 20px;
+}
+
+.scan-section p {
+    color: #666;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+/* Scan Form */
+.scan-form {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007749;
+    box-shadow: 0 0 0 3px rgba(0, 119, 73, 0.1);
+}
+
+.ip-range-input,
+.ip-input {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+/* Suggestions */
+.suggestions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.suggestions span {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.suggestion-btn {
+    padding: 6px 12px;
+    background: #e9ecef;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
+}
+
+.suggestion-btn:hover {
+    background: #007749;
+    color: white;
+}
+
+/* Scan Controls */
+.scan-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.scan-btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scan-btn.primary {
+    background: #007749;
+    color: white;
+}
+
+.scan-btn.primary:hover:not(:disabled) {
+    background: #005a37;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 119, 73, 0.3);
+}
+
+.scan-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Quick Add Form */
+.quick-add-form {
+    display: grid;
+    gap: 20px;
+}
+
+/* Scan Results */
+.scan-results {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.results-header h3 {
+    color: #007749;
+    margin: 0;
+    font-size: 22px;
+}
+
+.results-summary {
+    display: flex;
+    gap: 20px;
+}
+
+.result-stat {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.result-stat.medical {
+    background: #e8f5e8;
+    color: #007749;
+}
+
+.result-stat strong {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Devices Section */
+.devices-section {
+    margin-top: 25px;
+}
+
+.devices-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 10px 20px;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    border-color: #007749;
+    color: #007749;
+}
+
+.control-btn.primary {
+    background: #007749;
+    color: white;
+    border-color: #007749;
+}
+
+.control-btn.primary:hover:not(:disabled) {
+    background: #005a37;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Devices Grid */
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.device-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.device-card:hover {
+    border-color: #007749;
+    box-shadow: 0 4px 12px rgba(0, 119, 73, 0.1);
+    transform: translateY(-2px);
+}
+
+.device-card.selected {
+    border-color: #007749;
+    background: #f8fff8;
+    box-shadow: 0 4px 12px rgba(0, 119, 73, 0.2);
+}
+
+.device-card.medical-device {
+    border-left: 4px solid #FFB81C; /* SA Gold */
+}
+
+.device-card.medical-device.selected {
+    border-left-color: #007749;
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.device-ip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.device-ip strong {
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    color: #333;
+}
+
+.medical-badge {
+    background: #FFB81C;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.device-header input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.device-details {
+    display: grid;
+    gap: 8px;
+}
+
+.device-detail {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 10px;
+    align-items: start;
+}
+
+.device-detail .label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.device-detail .value {
+    font-size: 14px;
+    color: #333;
+    font-family: 'Courier New', monospace;
+}
+
+.services-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.service-tag {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* South African Context */
+.sa-context {
+    margin-top: 40px;
+    padding: 20px;
+    background: linear-gradient(135deg, #007749 0%, #FFB81C 100%);
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.sa-flag {
+    font-size: 48px;
+    flex-shrink: 0;
+}
+
+.sa-info h4,
+.sa-info strong {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.sa-info p {
+    margin: 0;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .network-discovery {
+        padding: 15px;
+        margin: 10px;
+    }
+    
+    .discovery-tabs {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .tab-btn {
+        text-align: left;
+        padding: 15px;
+        border-bottom: none;
+        border-left: 3px solid transparent;
+    }
+    
+    .tab-btn.active {
+        border-left-color: #007749;
+        border-bottom: none;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .results-summary {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .devices-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .devices-controls {
+        flex-direction: column;
+    }
+    
+    .sa-context {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .sa-flag {
+        font-size: 36px;
+    }
+}

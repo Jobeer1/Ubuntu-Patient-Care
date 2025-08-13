@@ -1,0 +1,56 @@
+# Orthanc Management Module - Database Requirements
+# Core database requirements for multiple SQL backends
+
+# Core SQLAlchemy and database abstraction
+SQLAlchemy>=1.4.0,<2.0.0
+alembic>=1.8.0  # Alternative migration system
+
+# Database drivers - install based on your database choice
+
+# SQLite (built-in with Python, no additional packages needed)
+
+# MySQL/MariaDB support
+PyMySQL>=1.0.0
+# Alternative: mysqlclient>=2.1.0
+
+# PostgreSQL support  
+psycopg2-binary>=2.9.0
+# Alternative: psycopg2>=2.9.0
+
+# Firebird support
+fdb>=2.0.0
+
+# Microsoft SQL Server support
+pyodbc>=4.0.0
+# Alternative: pymssql>=2.2.0
+
+# Oracle support (requires Oracle Instant Client)
+# cx_Oracle>=8.3.0
+
+# Connection pooling and utilities
+sqlalchemy-utils>=0.38.0
+sqlparse>=0.4.0
+
+# Configuration and environment
+python-dotenv>=0.19.0
+
+# Security and hashing
+bcrypt>=3.2.0
+passlib>=1.7.0
+
+# JSON and data handling
+ujson>=5.0.0  # Faster JSON processing
+
+# Monitoring and logging
+psutil>=5.8.0  # System monitoring
+structlog>=21.0.0  # Structured logging
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+factory-boy>=3.2.0  # Test data factories
+
+# Optional: Database GUI tools (development only)
+# sqlalchemy-migrate>=0.13.0
+# sqlacodegen>=2.3.0  # Generate models from existing database
