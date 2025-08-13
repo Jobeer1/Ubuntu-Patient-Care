@@ -1,3 +1,47 @@
+## Secure Active Directory Integration & User Management for PACS
+
+### Goals
+- Integrate a robust, efficient, and accurate Active Directory (AD) or LDAP system with Orthanc PACS for user authentication and access control.
+- Make user and access management extremely easy for admins, but with strong security (multi-factor authentication, role-based access, audit logging).
+- Ensure only authorized users can access patient data and images, with all actions logged for POPI compliance.
+- Images should be rendered using host/user resources (client-side rendering) to optimize performance and privacy.
+- Reports must be attached to images in the PACS, and sharing must be possible via secure, expiring links so patients can only access their own images and reports.
+
+### Implementation Steps
+1. **Active Directory/LDAP Integration**
+  - Integrate Orthanc PACS with AD/LDAP for single sign-on (SSO) and centralized user management.
+  - Support for multi-factor authentication (MFA) for all admin and clinical users.
+  - Map AD groups to system roles (admin, radiologist, transcriptionist, billing, patient).
+2. **User & Access Management**
+  - Build or configure an admin UI for adding/removing users, assigning roles, and setting access to patient data.
+  - All changes to users/roles are logged and require MFA for approval.
+  - Provide easy bulk user import (CSV/Excel) for onboarding.
+3. **Image Rendering**
+  - Use client-side rendering (e.g., Cornerstone.js) for DICOM images in the viewer, leveraging the user's device for performance and privacy.
+  - Ensure server never sends images to unauthorized users; all access is checked against AD roles.
+4. **Secure Report Attachment & Sharing**
+  - Attach finalized reports to DICOM studies in Orthanc.
+  - Generate secure, expiring links for patients to view only their own images and reports (one-time access, strong encryption, audit logging).
+  - Optionally, allow doctors to share images/reports with referring physicians via secure links.
+5. **Compliance & Audit**
+  - All access and sharing actions are logged for POPI Act compliance.
+  - Regularly review access logs and test for unauthorized access.
+
+### Success Criteria
+- Admins can easily and securely manage users and access rights.
+- Only authorized users can access patient data and images.
+- Images are rendered efficiently on user devices.
+- Patients can securely access only their own images and reports via expiring links.
+- All actions are logged and system passes compliance review.
+## Real-World Reporting & Billing Workflow (South African Radiology)
+
+### Reporting & Authorisation
+1. **Doctor Dictation:** Doctor creates a report using voice dictation (STT) or keyboard in the reporting module.
+2. **Transcription Review:** The draft report is sent to a team of three transcriptionists who review and correct the STT output for medical accuracy and terminology, especially for complex South African medical terms.
+3. **Doctor Proofreading & Authorisation:** The corrected report is sent back to the doctor for final proofreading and digital authorisation/sign-off.
+4. **Billing Team Processing:** Once authorised, the report is sent to the billing team to assign fees and submit claims to medical schemes, ensuring compliance with local billing codes and requirements.
+
+This workflow ensures high-quality, accurate reports and proper billing, tailored for South African radiology practice. All steps are logged for audit and POPI compliance.
 # Ubuntu Patient Sorg – Step-by-Step Project Plan
 
 
