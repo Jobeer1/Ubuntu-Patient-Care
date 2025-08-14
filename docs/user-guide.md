@@ -1,3 +1,0 @@
-# User Guide
-
-// ...existing content from Orthanc/docs/user-guide.md...

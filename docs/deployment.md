@@ -1,3 +1,0 @@
-# Deployment Guide
-
-// ...existing content from Orthanc/docs/deployment.md...
