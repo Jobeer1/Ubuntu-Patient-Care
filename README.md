@@ -57,6 +57,10 @@ This isn't a one-time effort. It is a continuous rebellion. It is a long, hard f
 
 ## 🚀 Quick Start
 
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Jobeer1/Ubuntu-Patient-Care)
+
+**🎯 For Hackathon Judges: Click the Gitpod button above to try our SA RIS system instantly!**
+
 ### Prerequisites
 - Docker & Docker Compose
 - Ubuntu 20.04+ or compatible Linux distribution
