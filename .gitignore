@@ -1,0 +1,38 @@
+# Ignore large model weights globally
+**/*.pt
+**/cache/
+**/models/whisper/cache/
+
+# Python caches and virtualenvs
+__pycache__/
+*.pyc
+**/__pycache__/
+venv/
+.env
+*.egg-info/
+
+# Node modules and build artifacts
+**/node_modules/
+**/dist/
+**/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+
+# Large files
+*.gz
+*.zip
+*.tar
+*.exe
+*.dmg
+*.pkg
+*.deb
