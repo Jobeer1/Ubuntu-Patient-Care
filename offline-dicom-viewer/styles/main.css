@@ -851,3 +851,7 @@ body {
         color: black !important;
     }
 }
+
+/* NAS connected badge and row highlight (used by NASIntegration pages) */
+.nas-connected { background-color: rgba(0, 123, 255, 0.03); }
+.nas-connected-badge { font-size: 0.75rem; padding: 0.2rem 0.4rem; border-radius: 0.25rem; display: inline-block; }

@@ -95,6 +95,22 @@ Ubuntu Patient Sorg is developing a comprehensive healthcare technology solution
 - [x] Reporting module
 - [x] Archive connectivity
 
+## NAS Integration Fixes (frontend)
+
+Summary:
+- Fixed UI ping/range behaviour so devices reporting response_time are treated as reachable even when backend omits a reachable flag.
+- Port-scan results now render without showing `undefined` and include a NAS Confidence badge. When the backend does not provide a confidence score, a client-side heuristic computes one from open ports and banners.
+- Scan results are now shown inline per-device (accordion) for easier per-device inspection instead of replacing the global `#discoveryResults` panel.
+
+Files changed:
+- `backend/static/js/ui-helpers.js` — added `formatScanResult`, `computeNasConfidence`, and `formatScanAccordion` helpers; updated ping/range formatters.
+- `backend/static/js/device-management.js` — updated `scanDevice()` to insert/ toggle an inline scan accordion and update the device row's confidence cell.
+
+Recommended next steps:
+1. Have backend include `nas_confidence_score` and normalized `response_time` in scan/ping responses to avoid client-side inference.
+2. Optionally tune the heuristic weights in `computeNasConfidence()` using known device scans (Synology/QNAP samples).
+3. Add a small unit test or fixture JSON and a UI test validating the accordion rendering for scans.
+
 ## Hackathon Deliverables
 
 ### OpenEMR RIS & Medical Billing
