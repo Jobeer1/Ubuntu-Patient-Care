@@ -6,6 +6,26 @@ An integrated PACS (Picture Archiving and Communication System) and reporting pl
 
 ---
 
+## 🤖 **Model Weights & AI Components**
+
+**Important:** The AI model weights are excluded from the repository due to size constraints.
+
+### **Required Model Files:**
+- `medical-reporting-module/models/whisper/base.pt` (138MB) - Base Whisper model for voice transcription
+- `medical-reporting-module/models/whisper/cache/medium_temp.pt` (1.16GB) - Cached medium model
+
+### **Download Links:**
+🔗 **Model weights will be available for download via cloud storage**
+- For hackathon judges: Use the automated setup script `bash setup_hackathon.sh`
+- For full deployment: Contact the development team for access to complete model weights
+
+### **Setup Options:**
+1. **Quick Demo:** Run `bash setup_hackathon.sh` (downloads fallback models)
+2. **Full Setup:** Download complete model weights and place in the paths above
+3. **Gitpod Demo:** Models are downloaded automatically in the cloud environment
+
+---
+
 ## ⚡ **Current Implementation Status**
 
 ### ✅ **Core PACS Functionality**

@@ -1,10 +1,31 @@
 # 🏥 Ubuntu Patient Care 🇿🇦
 Your code can fight injustice. Your passion can heal a nation.
 
-## 🚀 Try it Now - Hackathon Demo
+## 🏆 HACKATHON DEMO - Try It Now!
+
+**🎯 For Judges & Evaluators:** Get started in 30 seconds!
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Jobeer1/Ubuntu-Patient-Care)
 
-**For Hackathon Judges:** Click the Gitpod button above for a one-click demo environment!
+### 🚀 Quick Setup Instructions:
+1. **Click the Gitpod button above** - No local setup required!
+2. **Wait for automatic setup** - Dependencies install automatically
+3. **Run the setup script:** `bash setup_hackathon.sh`
+4. **Start the system:** `python Orthanc/medical-reporting-module/core/app_factory.py`
+
+### 🔧 Local Setup (Alternative):
+```bash
+git clone https://github.com/Jobeer1/Ubuntu-Patient-Care.git
+cd Ubuntu-Patient-Care
+bash setup_hackathon.sh
+```
+
+### 📝 Demo Features:
+- ✅ **DICOM Medical Imaging Viewer** - Full PACS functionality
+- ✅ **Voice-to-Text Medical Reporting** - AI-powered transcription
+- ✅ **South African Medical Billing** - Complete RIS integration
+- ✅ **Offline-First Design** - Works without internet
+- ✅ **Open Source & Free** - No licensing fees
 
 ## 💔 The Problem. Our Problem.
 This is a story you know. A doctor needs an ultrasound to save a life, but the machine is "end of life." A multi-billion dollar company, like Philips, tells you, "Sorry, we can't offer any services or parts. Please buy a new machine."
