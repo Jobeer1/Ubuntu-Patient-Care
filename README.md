@@ -224,3 +224,22 @@ MIT License - See LICENSE file for details
   <p><em>Modern PACS and reporting platform with SA-specific workflows</em></p>
   <p><em>Backend refactored to modular architecture (August 2025)</em></p>
 </div>
+
+## 🧠 Model weights
+
+This repository contains code that can use pre-trained model weights (for example, speech-to-text or other ML models) stored under `medical-reporting-module/models/whisper/`. The actual weight files (large binary `.pt` files and cache files) are intentionally excluded from the repository and must be downloaded separately by users.
+
+What to do:
+- I (the maintainer) will upload the weight files to Google Drive or OneDrive and paste a public download link here. Once available, download the archive and extract the files into the following path inside your local checkout:
+
+```
+Orthanc/medical-reporting-module/models/whisper/
+```
+
+- Ensure any cache files (for example `cache/` subfolder) are placed under the `whisper` folder as provided in the archive.
+
+Notes:
+- Weight files may be large (>100 MB) and are excluded from the git history to keep this repo lightweight.
+- If you prefer to host the weights yourself, place them in the same path above and the code will detect them at runtime.
+
+Once the weights are uploaded, a download link will be added to this section of the README.

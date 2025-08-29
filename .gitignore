@@ -1,0 +1,26 @@
+# Ignore model weights and caches
+medical-reporting-module/models/whisper/*.pt
+medical-reporting-module/models/whisper/cache/
+
+# Python caches and virtualenvs
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Node modules and build artifacts
+**/node_modules/
+**/dist/
+**/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
