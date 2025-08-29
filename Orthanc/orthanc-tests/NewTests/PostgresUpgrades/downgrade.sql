@@ -1,1 +1,0 @@
--- you may paste here a test downgrade procedure to avoid rebuilding the docker image ...  check downgrade.sh

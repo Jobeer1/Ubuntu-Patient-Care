@@ -1,3 +1,0 @@
-# Wildcard query over the patient name
-(0008,0005) CS [ISO_IR 192]
-(0010,0010) PN [*ü*]

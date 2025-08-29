@@ -1,7 +1,0 @@
-SA Medical Report
-Report ID: 5b6adb3c-2b7e-497c-82f4-5ab27c8dc9e1
-Created: 2025-08-25T08:47:36.106667
-Word Count: 0
-==================================================
-
-Test SA medical report with tuberculosis and hypertension.

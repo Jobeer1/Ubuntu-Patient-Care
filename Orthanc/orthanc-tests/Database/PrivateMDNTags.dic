@@ -1,8 +1,0 @@
-# DCMDICTPATH=PrivateMDNTags.dic:/usr/share/libdcmtk2/dicom.dic dcm2xml ./PrivateMDNTags.dcm
-
-# Private tags taken from DICOM conformance statement of
-# Philips "GEMINI PET/CT Systems with v3.5 or 3.6" (page 141/168)
-
-(7053,"Philips PET Private Group",03)	ST	OriginalImageFileName	1
-(00e1,"ELSCINT1", c2)	UI	PET-CT-MultiModalityName	1
-

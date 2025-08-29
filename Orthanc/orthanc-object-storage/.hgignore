@@ -1,7 +1,0 @@
-syntax: glob
-CMakeLists.txt.user*
-*~
-*/ThirdPartyDownloads/*
-.vscode/
-*.orig
-Aws/i/

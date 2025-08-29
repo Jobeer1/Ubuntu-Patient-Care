@@ -1,5 +1,0 @@
-# dump2dcm +Ug --write-xfer-little Issue111.dump Issue111.dcm
-
-(0010,0020) LO A              # Patient ID
-(0010,0010) PN HELLO^A        # Patient Name
-(0008,0050) SH (no value available)  #  AccessionNumber
