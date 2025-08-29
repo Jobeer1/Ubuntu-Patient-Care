@@ -214,6 +214,37 @@ python backend/device_management.py --scan
 - **Architecture**: See `BACKEND_REFACTORING_2025.md` for technical details
 - **Progress**: See `PHASE_3_COMPLETE.md` for latest developments
 
+## 🤖 **Model Weights & External Downloads**
+
+### **AI Model Files**
+The following AI model weights are **not included** in this repository due to size constraints:
+
+- **Whisper Models**: `medical-reporting-module/models/whisper/*.pt`
+- **Medical AI Models**: Various `.pt` and `.pth` files in model directories
+- **Training Datasets**: Large dataset files (>100MB)
+
+### **External Download Links**
+📥 **Download the model weights from external storage:**
+
+- **Google Drive**: [Coming Soon - Link will be added here]
+- **OneDrive**: [Coming Soon - Link will be added here]
+
+### **Installation Instructions**
+1. Download the model weights from the links above
+2. Extract to the appropriate model directories:
+   ```bash
+   # Example structure after download:
+   medical-reporting-module/
+   ├── models/
+   │   ├── whisper/
+   │   │   ├── base.pt
+   │   │   ├── small.pt
+   │   │   └── medium.pt
+   ```
+3. Restart the application after placing the model files
+
+> **Note**: Users can also generate their own voice/text dictation files as needed.
+
 ## 📄 **License**
 MIT License - See LICENSE file for details
 
