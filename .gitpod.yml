@@ -1,0 +1,43 @@
+image: gitpod/workspace-python
+
+tasks:
+  - name: Setup Ubuntu Patient Care - Orthanc
+    init: |
+      echo "🚀 Initializing Ubuntu Patient Care - Orthanc Integration"
+      cd Orthanc
+      # Install Python dependencies
+      pip install -r requirements.txt
+      # Setup model weights (placeholders for demo)
+      python setup_weights.py
+      echo "✅ Setup complete!"
+    command: |
+      cd Orthanc
+      echo "🏥 Ubuntu Patient Care - Orthanc Integration Ready!"
+      echo "📚 Available commands:"
+      echo "  - python orthanc-server/app.py          # Start Orthanc server"
+      echo "  - python medical-reporting-module/app.py # Start medical reporting"
+      echo "  - cd sa-ris-frontend && npm start       # Start frontend"
+      echo ""
+      echo "🎯 For Hackathon Judges:"
+      echo "  - This is a complete medical imaging and reporting system"
+      echo "  - Includes DICOM viewer, voice recognition, and SA compliance"
+      echo "  - Model weights are placeholder files for demo purposes"
+      echo "Run: python app.py"
+
+ports:
+  - port: 5000
+    onOpen: open-preview
+    description: Flask Backend
+  - port: 3000  
+    onOpen: open-preview
+    description: Frontend Development Server
+  - port: 8042
+    onOpen: ignore
+    description: Orthanc DICOM Server
+
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-python.flake8
+    - ms-vscode.vscode-json
+    - bradlc.vscode-tailwindcss

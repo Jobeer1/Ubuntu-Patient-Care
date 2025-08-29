@@ -1,6 +1,11 @@
 # 🏥 Ubuntu Patient Care 🇿🇦
 Your code can fight injustice. Your passion can heal a nation.
 
+## 🚀 Try it Now - Hackathon Demo
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Jobeer1/Ubuntu-Patient-Care)
+
+**For Hackathon Judges:** Click the Gitpod button above for a one-click demo environment!
+
 ## 💔 The Problem. Our Problem.
 This is a story you know. A doctor needs an ultrasound to save a life, but the machine is "end of life." A multi-billion dollar company, like Philips, tells you, "Sorry, we can't offer any services or parts. Please buy a new machine."
 
