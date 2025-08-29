@@ -262,8 +262,11 @@ USER_MANAGEMENT_TEMPLATE = """
             <div>
                 <button class="btn" onclick="showAddUserModal()">➕ Add User</button>
                 <button class="btn btn-secondary" onclick="window.location.href='/'">🏠 Home</button>
-                <button class="btn btn-secondary" onclick="window.location.href='/nas-config'">⚙️ NAS Config</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/orthanc-server'">🖥️ Orthanc Server</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/patient-viewer'">🏥 Patients</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/dicom-viewer'">📱 DICOM Viewer</button>
                 <button class="btn btn-secondary" onclick="window.location.href='/device-management'">📱 Devices</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/nas-config'">⚙️ NAS Config</button>
             </div>
         </div>
         

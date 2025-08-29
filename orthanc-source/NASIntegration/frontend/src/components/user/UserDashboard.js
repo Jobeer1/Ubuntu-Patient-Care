@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from 'react-query';
-import { Images, Upload, Search, Share2, Clock } from 'lucide-react';
+import { Image, Upload, Search, Share2, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -42,7 +42,7 @@ const UserDashboard = () => {
         <StatsCard
           title="My Images"
           value={images?.length || 0}
-          icon={Images}
+          icon={Image}
           color="blue"
           subtitle="Total uploaded"
         />
@@ -80,7 +80,7 @@ const UserDashboard = () => {
             {images.map((image) => (
               <div key={image.image_id} className="flex items-center p-3 bg-gray-50 rounded-lg">
                 <div className="h-10 w-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <Images className="h-5 w-5 text-primary-600" />
+                  <Image className="h-5 w-5 text-primary-600" />
                 </div>
                 <div className="ml-3 flex-1">
                   <p className="text-sm font-medium text-gray-900">
@@ -99,7 +99,7 @@ const UserDashboard = () => {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <Images className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <Image className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p>No images uploaded yet</p>
             <p className="text-sm mt-1">Upload your first DICOM image to get started</p>
           </div>
@@ -120,7 +120,7 @@ const UserDashboard = () => {
           <ActionButton
             title="Browse Images"
             description="View all your images"
-            icon={Images}
+            icon={Image}
             href="/images"
             color="bg-blue-500 hover:bg-blue-600"
           />

@@ -11,15 +11,21 @@ import type {
 export class AuthService {
   // Authentication endpoints
   static async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const formData = new FormData();
-    formData.append('username', credentials.username);
-    formData.append('password', credentials.password);
-    
-    return apiClient.post<LoginResponse>('/auth/login', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    // Send JSON data instead of form data for the Flask backend
+    const response = await apiClient.post<any>('/auth/login', {
+      username: credentials.username,
+      password: credentials.password
     });
+
+    // Flask backend returns: { success: true, user: {...}, message: string }
+    if (response.success && response.user) {
+      return {
+        user: response.user,
+        message: response.message
+      };
+    } else {
+      throw new Error(response.message || 'Login failed');
+    }
   }
 
   static async register(data: RegisterRequest): Promise<User> {
@@ -30,8 +36,7 @@ export class AuthService {
     try {
       await apiClient.post('/auth/logout');
     } finally {
-      // Clear local storage regardless of API response
-      localStorage.removeItem('access_token');
+      // Clear local storage - remove token-based storage
       localStorage.removeItem('user');
     }
   }
@@ -65,29 +70,23 @@ export class AuthService {
     return apiClient.get<PermissionResponse[]>('/authorizations/pending');
   }
 
-  // Token management utilities
-  static getStoredToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
-
+  // Session management utilities (no tokens needed)
   static getStoredUser(): User | null {
     const userData = localStorage.getItem('user');
     return userData ? JSON.parse(userData) : null;
   }
 
   static storeAuthData(loginResponse: LoginResponse): void {
-    localStorage.setItem('access_token', loginResponse.access_token);
     localStorage.setItem('user', JSON.stringify(loginResponse.user));
   }
 
   static clearAuthData(): void {
-    localStorage.removeItem('access_token');
     localStorage.removeItem('user');
   }
 
   static isAuthenticated(): boolean {
-    const token = this.getStoredToken();
+    // For session-based auth, we just check if user exists in storage
     const user = this.getStoredUser();
-    return !!(token && user);
+    return user !== null;
   }
 }

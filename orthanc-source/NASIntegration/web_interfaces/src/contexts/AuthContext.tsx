@@ -13,7 +13,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 type AuthAction = 
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
+  | { type: 'AUTH_SUCCESS'; payload: { user: User } }
   | { type: 'AUTH_FAILURE' }
   | { type: 'LOGOUT' }
   | { type: 'SET_USER'; payload: User };
@@ -28,21 +28,18 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
     case 'AUTH_SUCCESS':
       return {
         user: action.payload.user,
-        token: action.payload.token,
         isAuthenticated: true,
         isLoading: false,
       };
     case 'AUTH_FAILURE':
       return {
         user: null,
-        token: null,
         isAuthenticated: false,
         isLoading: false,
       };
     case 'LOGOUT':
       return {
         user: null,
-        token: null,
         isAuthenticated: false,
         isLoading: false,
       };
@@ -58,7 +55,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
 const initialState: AuthState = {
   user: null,
-  token: null,
   isAuthenticated: false,
   isLoading: true,
 };
@@ -69,19 +65,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check for existing auth data on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = AuthService.getStoredToken();
       const user = AuthService.getStoredUser();
 
-      if (token && user) {
+      if (user) {
         try {
-          // Verify token is still valid by fetching current user
-          const currentUser = await AuthService.getCurrentUser();
+          // For session-based auth, we assume the session is valid if user data exists
           dispatch({ 
             type: 'AUTH_SUCCESS', 
-            payload: { user: currentUser, token } 
+            payload: { user } 
           });
         } catch (error) {
-          // Token is invalid, clear stored data
+          // Session is invalid, clear stored data
           AuthService.clearAuthData();
           dispatch({ type: 'AUTH_FAILURE' });
         }
@@ -100,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       AuthService.storeAuthData(response);
       dispatch({ 
         type: 'AUTH_SUCCESS', 
-        payload: { user: response.user, token: response.access_token } 
+        payload: { user: response.user } 
       });
     } catch (error) {
       dispatch({ type: 'AUTH_FAILURE' });

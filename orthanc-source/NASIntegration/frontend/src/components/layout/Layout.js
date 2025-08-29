@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Activity, 
   Users, 
-  Images, 
+  Image, 
   Settings, 
   LogOut, 
   Menu, 
@@ -28,7 +28,7 @@ const Layout = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: BarChart3, current: location.pathname === '/' },
-    { name: 'Images', href: '/images', icon: Images, current: location.pathname.startsWith('/images') },
+    { name: 'Images', href: '/images', icon: Image, current: location.pathname.startsWith('/images') },
     ...(user?.role === 'admin' ? [
       { name: 'Admin Panel', href: '/admin', icon: Settings, current: location.pathname.startsWith('/admin') },
       { name: 'User Management', href: '/admin/users', icon: Users, current: location.pathname === '/admin/users' },

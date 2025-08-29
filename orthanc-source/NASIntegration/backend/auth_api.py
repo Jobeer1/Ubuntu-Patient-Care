@@ -321,6 +321,63 @@ def _calculate_session_duration():
     except Exception:
         return None
 
+@auth_api.route('/status', methods=['GET'])
+@cross_origin()
+def auth_status():
+    """Get current authentication status"""
+    try:
+        if 'authenticated' not in session:
+            return jsonify({
+                'authenticated': False,
+                'message': 'Not authenticated'
+            }), 401
+        
+        user_data = session.get('user_data', {})
+        return jsonify({
+            'authenticated': True,
+            'user': {
+                'username': user_data.get('username'),
+                'name': user_data.get('name'),
+                'role': user_data.get('role'),
+                'facility': user_data.get('facility'),
+                'province': user_data.get('province')
+            },
+            'session_info': {
+                'login_time': session.get('login_time'),
+                'duration': _calculate_session_duration(),
+                'user_type': session.get('user_type')
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Auth status error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@auth_api.route('/activity', methods=['POST'])
+@cross_origin()
+def log_activity():
+    """Log user activity"""
+    try:
+        if 'authenticated' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+        
+        data = request.get_json() or {}
+        activity_type = data.get('type', 'page_view')
+        page = data.get('page', 'unknown')
+        
+        # In a real system, you would log this to a database
+        logger.info(f"User activity - User: {session.get('username')}, Type: {activity_type}, Page: {page}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Activity logged',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Activity logging error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # Error handlers
 @auth_api.errorhandler(BadRequest)
 def handle_bad_request(e):

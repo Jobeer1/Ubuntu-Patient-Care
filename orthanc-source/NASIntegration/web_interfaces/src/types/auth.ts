@@ -1,13 +1,13 @@
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
-  full_name: string;
-  role: UserRole;
-  is_active: boolean;
-  is_verified: boolean;
-  created_at: string;
-  last_login?: string;
+  name: string;
+  role: string;
+  facility: string;
+  province: string;
+  session_token?: string;
+  login_time?: string;
 }
 
 export interface LoginRequest {
@@ -16,10 +16,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
   user: User;
+  message?: string;
 }
 
 export interface RegisterRequest {
@@ -40,7 +38,6 @@ export type UserRole =
 
 export interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }

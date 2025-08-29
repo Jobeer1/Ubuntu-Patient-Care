@@ -1,7 +1,10 @@
 # 🏥 Orthanc Management Module - Complete Specification
+*Note: Backend infrastructure recently refactored to modular architecture (January 2025) for improved maintainability*
 
 ## Overview
 This module provides comprehensive Orthanc PACS server management, referring doctor workflow automation, patient image authorization, and secure patient sharing capabilities for South African healthcare facilities.
+
+*The implementation leverages the new modular backend structure with blueprint-based routing for better organization and maintenance.*
 
 ## 🎯 Core Requirements
 

@@ -1,7 +1,10 @@
 # 🏥 Simple Orthanc Management for South African Healthcare
+*Built on the new modular backend architecture (January 2025)*
 
 ## Overview
 This is a **practical, user-friendly** Orthanc PACS management system designed specifically for South African healthcare facilities. It replaces the overly complex original specification with a simple, working solution that healthcare staff can actually use.
+
+*Implementation uses the recently refactored modular backend structure for improved maintainability and easier development.*
 
 ## 🎯 What This System Does
 

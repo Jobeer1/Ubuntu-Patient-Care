@@ -72,6 +72,8 @@ class BlueprintRegistry:
             ('collaboration_api_endpoints', 'collaboration_bp', 'Real-time collaboration endpoints'),
             ('telemedicine_api_endpoints', 'telemedicine_bp', 'Telemedicine integration endpoints'),
             ('orthanc_simple_api', 'orthanc_api', 'Simple Orthanc PACS management'),
+            ('sa_healthcare_professionals_api', 'sa_professionals_api', 'SA Healthcare Professionals API'),
+            ('sa_medical_aid_api', 'sa_medical_aid_api', 'SA Medical Aid Integration API'),
         ]
         
         for module_name, blueprint_name, description in blueprints:

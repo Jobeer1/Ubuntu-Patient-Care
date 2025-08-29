@@ -115,6 +115,14 @@ def get_quick_stats():
             'error': str(e)
         }), 500
 
+
+# Compatibility alias expected by some UIs
+@orthanc_api.route('/statistics', methods=['GET'])
+@cross_origin(supports_credentials=True)
+def get_statistics_compat():
+    """Compatibility endpoint mapping /api/orthanc/statistics -> quick-stats"""
+    return get_quick_stats()
+
 # ===== CONFIGURATION =====
 
 @orthanc_api.route('/config', methods=['GET'])
@@ -276,6 +284,34 @@ def add_doctor():
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ===== PATIENTS LIST (compatibility) =====
+@orthanc_api.route('/patients', methods=['GET'])
+@cross_origin(supports_credentials=True)
+def get_patients_compat():
+    """Compatibility endpoint to return patient list expected by some UIs."""
+    try:
+        # Try orthanc_manager.get_patients() if available
+        if hasattr(orthanc_manager, 'get_patients'):
+            patients = orthanc_manager.get_patients()
+        elif hasattr(orthanc_manager, 'list_patients'):
+            patients = orthanc_manager.list_patients()
+        else:
+            # Fallback: try to derive from quick stats or return empty list
+            try:
+                stats = orthanc_manager.get_quick_stats()
+                patients = stats.get('patients', []) if isinstance(stats, dict) else []
+            except Exception:
+                patients = []
+
+        return jsonify({
+            'success': True,
+            'patients': patients
+        })
+    except Exception as e:
+        logger.error(f"Error getting patients compat: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ===== QUICK SETUP ENDPOINTS =====
 

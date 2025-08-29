@@ -22,6 +22,8 @@ const Navigation: React.FC = () => {
     if (user?.role === 'admin') {
       return [
         ...baseItems,
+        { name: 'Device Management', href: '/device-management' },
+        { name: 'User Management', href: '/user-management' },
         { name: 'Manage Doctors', href: '/admin/doctors' },
         { name: 'Authorizations', href: '/admin/authorizations' },
         { name: 'System Config', href: '/admin/config' },
@@ -109,7 +111,7 @@ const Navigation: React.FC = () => {
                       <span className="sr-only">Open user menu</span>
                       <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
-                          {user?.full_name?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                          {user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}
                         </span>
                       </div>
                     </Menu.Button>
@@ -204,13 +206,13 @@ const Navigation: React.FC = () => {
                 <div className="flex-shrink-0">
                   <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-white font-medium">
-                      {user?.full_name?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                      {user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}
                     </span>
                   </div>
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">
-                    {user?.full_name || user?.username}
+                    {user?.name || user?.username}
                   </div>
                   <div className="text-sm font-medium text-gray-500">{user?.email}</div>
                 </div>

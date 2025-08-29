@@ -205,10 +205,13 @@ MAIN_INTERFACE_TEMPLATE = """
             </form>
             
             <div class="links">
-                <a href="/user-management">User Management</a>
-                <a href="/nas-config">NAS Config</a>
-                <a href="/device-management">Devices</a>
-                <a href="/system-status">System Status</a>
+                <a href="/user-management">👥 User Management</a>
+                <a href="/orthanc-server">🖥️ Orthanc Server</a>
+                <a href="/patient-viewer">🏥 Patient Viewer</a>
+                <a href="/dicom-viewer">📱 DICOM Viewer</a>
+                <a href="/device-management">📱 Devices</a>
+                <a href="/nas-config">⚙️ NAS Config</a>
+                <a href="/system-status">📊 System Status</a>
             </div>
             
             <div class="features">

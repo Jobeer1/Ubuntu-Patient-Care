@@ -12,43 +12,20 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      withCredentials: true, // Enable cookies for session-based auth
     });
-
-    // Request interceptor to add auth token
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = this.getStoredToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // Token expired or invalid
-          this.clearStoredToken();
+          // Session expired or invalid
           window.location.href = '/login';
         }
         return Promise.reject(error);
       }
     );
-  }
-
-  private getStoredToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
-
-  private clearStoredToken(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
   }
 
   // Generic methods

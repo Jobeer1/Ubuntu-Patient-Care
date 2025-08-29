@@ -178,6 +178,10 @@ DEVICE_MANAGEMENT_TEMPLATE = """
                 <button class="btn" onclick="scanARPTable()">🔍 Scan ARP Table</button>
                 <button class="btn" onclick="networkDiscovery()">🌐 Network Discovery</button>
                 <button class="btn btn-secondary" onclick="window.location.href='/'">🏠 Home</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/user-management'">👥 Users</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/orthanc-server'">🖥️ Orthanc Server</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/patient-viewer'">🏥 Patients</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/dicom-viewer'">📱 DICOM Viewer</button>
             </div>
         </div>
         

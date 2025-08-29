@@ -46,6 +46,8 @@ class NASDevice:
     shares: List[Dict]  # List of available shares
     ports: List[int]  # Open ports
     services: List[str]  # Detected services
+    mac_address: Optional[str] = None
+    via_arp: bool = False
     capacity_gb: Optional[int] = None
     free_space_gb: Optional[int] = None
     status: str = "discovered"  # discovered, configured, error
@@ -208,7 +210,7 @@ class NASDiscoveryManager:
         }
     
     def discover_nas_devices(self, ip_range: str, scan_type: str = "comprehensive", 
-                           max_threads: int = 50) -> List[NASDevice]:
+                           max_threads: int = 50, max_hosts: Optional[int] = None) -> List[NASDevice]:
         """
         🔍 Discover NAS devices on the network
         
@@ -235,14 +237,22 @@ class NASDiscoveryManager:
                        list(range(5000, 5002)) + list(range(8080, 8081))
             
             discovered_devices = []
-            
+
+            # Respect max_hosts cap to avoid very large scans
+            cap = max_hosts if max_hosts is not None else 100
+            cap = max(1, min(cap, 1024))
+            target_ips = ips[:cap]
+
+            # Pre-scan ARP table to find devices that may be reachable even without ICMP
+            arp_map = self._scan_arp_table()
+
             # Scan IPs concurrently
             with ThreadPoolExecutor(max_workers=max_threads) as executor:
                 future_to_ip = {
                     executor.submit(self._scan_ip_for_nas, ip, ports): ip 
-                    for ip in ips[:100]  # Limit to 100 IPs for performance
+                    for ip in target_ips
                 }
-                
+
                 for future in concurrent.futures.as_completed(future_to_ip):
                     ip = future_to_ip[future]
                     try:
@@ -250,6 +260,30 @@ class NASDiscoveryManager:
                         if nas_device:
                             discovered_devices.append(nas_device)
                             logger.info(f"✅ Found NAS device: {nas_device.name} at {nas_device.ip_address}")
+                        else:
+                            # If no ports detected but ARP has this IP, include as ARP-known device
+                            if ip in arp_map:
+                                mac = arp_map[ip]
+                                device_id = f"arp_{ip.replace('.', '_')}_{int(time.time())}"
+                                arp_device = NASDevice(
+                                    id=device_id,
+                                    name=f"ARP Device {ip}",
+                                    ip_address=ip,
+                                    hostname=self._get_hostname(ip),
+                                    nas_type='unknown',
+                                    manufacturer='Unknown',
+                                    model='Unknown',
+                                    shares=[],
+                                    ports=[],
+                                    services=[],
+                                    mac_address=mac,
+                                    via_arp=True,
+                                    last_seen=datetime.now().isoformat(),
+                                    created_at=datetime.now().isoformat(),
+                                    status='discovered'
+                                )
+                                discovered_devices.append(arp_device)
+                                logger.info(f"⚠️ ARP-only device found: {ip} ({mac})")
                     except Exception as e:
                         logger.debug(f"Error scanning {ip}: {e}")
             
@@ -270,29 +304,78 @@ class NASDiscoveryManager:
     
     def _parse_ip_range(self, ip_range: str) -> List[str]:
         """Parse IP range into list of IPs"""
-        ips = []
-        
+        ips: List[str] = []
+
         try:
             if '/' in ip_range:
                 # CIDR notation
                 network = ipaddress.IPv4Network(ip_range, strict=False)
                 ips = [str(ip) for ip in network.hosts()]
             elif '-' in ip_range:
-                # Range notation
+                # Range notation (simple single-octet range supported)
                 start_ip, end_ip = ip_range.split('-')
                 start_parts = start_ip.strip().split('.')
                 end_parts = end_ip.strip().split('.')
-                
-                for i in range(int(start_parts[3]), int(end_parts[3]) + 1):
-                    ips.append(f"{start_parts[0]}.{start_parts[1]}.{start_parts[2]}.{i}")
+
+                # if same first three octets, iterate last octet
+                if start_parts[:3] == end_parts[:3]:
+                    for i in range(int(start_parts[3]), int(end_parts[3]) + 1):
+                        ips.append(f"{start_parts[0]}.{start_parts[1]}.{start_parts[2]}.{i}")
+                else:
+                    # Fallback: expand full networks using ipaddress (less efficient but safe)
+                    start = ipaddress.IPv4Address(start_ip.strip())
+                    end = ipaddress.IPv4Address(end_ip.strip())
+                    cur = start
+                    while cur <= end:
+                        ips.append(str(cur))
+                        cur = ipaddress.IPv4Address(int(cur) + 1)
             else:
                 # Single IP
-                ips = [ip_range]
-                
+                ips = [ip_range.strip()]
+
         except Exception as e:
             logger.error(f"Error parsing IP range {ip_range}: {e}")
-            
+
         return ips
+
+    def _scan_arp_table(self) -> Dict[str, str]:
+        """Return mapping ip -> mac from local ARP table."""
+        arp_map: Dict[str, str] = {}
+        try:
+            system = platform.system().lower()
+            if system == 'windows':
+                res = subprocess.run(['arp', '-a'], capture_output=True, text=True, timeout=3)
+                out = res.stdout
+                for line in out.splitlines():
+                    m = re.match(r'\s*(\d+\.\d+\.\d+\.\d+)\s+([0-9a-fA-F-]{17})\s+\w+', line)
+                    if m:
+                        ip, mac = m.groups()
+                        arp_map[ip] = mac.replace('-', ':').upper()
+            else:
+                # try /proc/net/arp first
+                if os.path.exists('/proc/net/arp'):
+                    with open('/proc/net/arp', 'r') as f:
+                        lines = f.readlines()[1:]
+                        for line in lines:
+                            parts = line.split()
+                            if len(parts) >= 4:
+                                ip = parts[0]
+                                mac = parts[3]
+                                if mac != '00:00:00:00:00:00':
+                                    arp_map[ip] = mac.upper()
+                else:
+                    # fallback to arp -a
+                    res = subprocess.run(['arp', '-a'], capture_output=True, text=True, timeout=3)
+                    out = res.stdout
+                    for line in out.splitlines():
+                        m = re.search(r'(\d+\.\d+\.\d+\.\d+).*?([0-9a-fA-F:]{17})', line)
+                        if m:
+                            ip, mac = m.groups()
+                            arp_map[ip] = mac.upper()
+        except Exception as e:
+            logger.debug(f"ARP scan failed: {e}")
+
+        return arp_map
     
     def _scan_ip_for_nas(self, ip: str, ports: List[int]) -> Optional[NASDevice]:
         """Scan a single IP for NAS services"""
@@ -381,25 +464,29 @@ class NASDiscoveryManager:
         if port in [80, 443, 5000, 5001, 8080]:
             try:
                 protocol = "https" if port in [443, 5001] else "http"
-                import requests
-                response = requests.get(f"{protocol}://{ip}:{port}", timeout=3, verify=False)
-                
-                # Check for NAS-specific headers or content
-                content = response.text.lower()
-                headers = str(response.headers).lower()
-                
-                if "synology" in content or "dsm" in content:
-                    return "Synology DSM"
-                elif "qnap" in content or "qts" in content:
-                    return "QNAP QTS"
-                elif "netgear" in content or "readynas" in content:
-                    return "Netgear ReadyNAS"
-                elif "buffalo" in content:
-                    return "Buffalo NAS"
-                elif "mycloud" in content:
-                    return "WD MyCloud"
-                    
-            except:
+                try:
+                    import requests
+                except Exception:
+                    requests = None
+
+                if requests:
+                    response = requests.get(f"{protocol}://{ip}:{port}", timeout=3, verify=False)
+                    # Check for NAS-specific headers or content
+                    content = response.text.lower()
+                    headers = str(response.headers).lower()
+
+                    if "synology" in content or "dsm" in content:
+                        return "Synology DSM"
+                    elif "qnap" in content or "qts" in content:
+                        return "QNAP QTS"
+                    elif "netgear" in content or "readynas" in content:
+                        return "Netgear ReadyNAS"
+                    elif "buffalo" in content:
+                        return "Buffalo NAS"
+                    elif "mycloud" in content:
+                        return "WD MyCloud"
+            except Exception:
+                # Network or parse error while probing web port; ignore and continue
                 pass
         
         return service

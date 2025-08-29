@@ -1,6 +1,7 @@
 # 🇿🇦 South African Medical Imaging System - Quick Start
 
 ## 🏥 **NEW: Simple Orthanc PACS Management**
+*Note: Backend recently refactored to modular architecture for improved maintainability*
 
 ### **🚀 5-Minute PACS Setup**
 1. **Install Orthanc** (download from orthanc-server.com)
@@ -18,13 +19,14 @@
 ---
 
 ## 🚀 **System Installation**
+*The backend has been refactored to a modular blueprint architecture for better maintainability*
 
 ### **Option 1: Clean Install (Recommended)**
 ```bash
 # Run the clean installer
 python install_clean.py
 
-# Start the system
+# Start the system (uses refactored modular backend)
 python start_sa_system.py
 ```
 
@@ -37,10 +39,22 @@ pip install -r requirements-core.txt
 # Optional: Install advanced features
 pip install -r requirements-optional.txt
 
-# Start the system
+# Start the refactored modular system
 cd ..
 python start_sa_system.py
 ```
+
+### **🔧 Backend Architecture (Recently Refactored)**
+The system now uses a modular blueprint structure:
+- **Main App**: `backend/app.py` (~100 lines, down from 1359)
+- **Route Modules**: Organized in `backend/routes/`
+  - `auth_routes.py` - Authentication endpoints
+  - `admin_routes.py` - Admin dashboard functionality
+  - `device_routes.py` - Medical device management
+  - `nas_routes.py` - NAS integration features
+  - `web_routes.py` - Web interface routes
+- **Configuration**: Centralized in `backend/config.py`
+- **Utilities**: Shared functions in `backend/auth_utils.py`
 
 ## 🌐 **Access the System**
 
@@ -125,6 +139,7 @@ python start_sa_system.py
 - 📊 Advanced Analytics
 
 ## 🆘 **Troubleshooting**
+*Updated for the new modular backend architecture*
 
 ### **PACS Server Issues**
 ```bash
@@ -135,8 +150,21 @@ orthanc --version
 netstat -an | grep 8042
 netstat -an | grep 4242
 
-# Restart the management system
+# Restart the management system (now using modular backend)
 python start_sa_system.py
+```
+
+### **Backend Issues (Post-Refactoring)**
+```bash
+# Check if the modular backend is working
+python -c "from backend.app import create_app; print('✅ Modular backend imports correctly')"
+
+# Test specific blueprint modules
+python -c "from backend.routes.auth_routes import auth_bp; print('✅ Auth routes working')"
+python -c "from backend.routes.admin_routes import admin_bp; print('✅ Admin routes working')"
+
+# Verify configuration loading
+python -c "from backend.config import DevelopmentConfig; print('✅ Config system working')"
 ```
 
 ### **General Issues**
@@ -165,10 +193,12 @@ pip install -r backend/requirements-optional.txt
 - **Health check**: http://localhost:5000/api/orthanc/health-check
 - **Test all features**: `python backend/test_orthanc_simple.py`
 
-### **General Support**
+### **General Support (Modular Backend)**
 - Check system status at: http://localhost:5000/system-status
 - Review logs in the console output
 - All warnings about optional features are normal
+- **New**: Backend modular structure improves debugging - check specific blueprint modules if issues occur
+- **Architecture details**: See `BACKEND_REFACTORING_2025.md` for technical documentation
 
 ## 🎯 **Success Checklist**
 
@@ -197,3 +227,8 @@ pip install -r backend/requirements-optional.txt
 - **💰 Cost-effective** using free, open-source software
 - **🛡️ Secure** patient sharing with automatic expiration
 - **👥 User-friendly** - no technical training required
+- **🔧 Maintainable** - Recently refactored to modular architecture for easier development and support
+
+---
+
+**For detailed technical information about the recent backend refactoring, see `BACKEND_REFACTORING_2025.md`**

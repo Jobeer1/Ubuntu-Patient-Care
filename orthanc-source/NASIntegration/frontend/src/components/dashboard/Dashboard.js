@@ -3,7 +3,7 @@ import { useQuery } from 'react-query';
 import { 
   Activity, 
   Users, 
-  Images, 
+  Image, 
   HardDrive, 
   Shield, 
   AlertCircle,
@@ -113,7 +113,7 @@ const Dashboard = () => {
         <StatsCard
           title="Total Images"
           value={stats?.images?.total_images || 0}
-          icon={Images}
+          icon={Image}
           color="blue"
           subtitle="DICOM files stored"
         />
@@ -167,7 +167,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <Images className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <Image className="h-12 w-12 mx-auto mb-3 text-gray-300" />
               <p>No images uploaded yet</p>
             </div>
           )}

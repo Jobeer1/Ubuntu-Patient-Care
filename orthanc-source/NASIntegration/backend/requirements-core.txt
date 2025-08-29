@@ -13,6 +13,9 @@ numpy==1.24.3
 # NAS & Network Storage (Required)
 smbprotocol==1.12.0
 
+# DICOM Support (Required for medical device testing)
+pynetdicom==2.0.2
+
 # Utilities (Required)
 requests==2.31.0
 python-dateutil==2.8.2

@@ -48,3 +48,28 @@ def system_status_interface():
     """Serve system status interface"""
     from .templates.system_status import SYSTEM_STATUS_TEMPLATE
     return render_template_string(SYSTEM_STATUS_TEMPLATE)
+
+@web_bp.route('/orthanc-server')
+def orthanc_server_management_interface():
+    """Serve Orthanc server management interface"""
+    from .templates.orthanc_server_management import ORTHANC_SERVER_MANAGEMENT_TEMPLATE
+    return render_template_string(ORTHANC_SERVER_MANAGEMENT_TEMPLATE)
+
+@web_bp.route('/dicom-viewer')
+def dicom_viewer_interface():
+    """Serve DICOM viewer interface"""
+    from .templates.dicom_viewer import DICOM_VIEWER_TEMPLATE
+    return render_template_string(DICOM_VIEWER_TEMPLATE)
+
+@web_bp.route('/patient-viewer')
+def patient_viewer_interface():
+    """Serve patient viewer interface"""
+    from .templates.patient_viewer import PATIENT_VIEWER_TEMPLATE
+    return render_template_string(PATIENT_VIEWER_TEMPLATE)
+
+
+@web_bp.route('/patients')
+def patients_compat_interface():
+    """Compatibility route: older links may request /patients — serve patient viewer."""
+    from .templates.patient_viewer import PATIENT_VIEWER_TEMPLATE
+    return render_template_string(PATIENT_VIEWER_TEMPLATE)

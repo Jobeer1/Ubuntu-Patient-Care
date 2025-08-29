@@ -9,6 +9,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import DashboardRouter from './components/DashboardRouter';
+import DeviceManagement from './components/DeviceManagement';
+import UserManagement from './components/UserManagement';
+import ReportsSystem from './components/ReportsSystem';
 import { useAuth } from './contexts/AuthContext';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -60,6 +63,42 @@ function App() {
               <ProtectedRoute roles={["admin"]}>
                 <Layout>
                   <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Device Management - Admin only */}
+          <Route
+            path="/device-management"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <Layout>
+                  <DeviceManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* User Management - Admin only */}
+          <Route
+            path="/user-management"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <Layout>
+                  <UserManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Reports System - Admin only */}
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <Layout>
+                  <ReportsSystem />
                 </Layout>
               </ProtectedRoute>
             }
