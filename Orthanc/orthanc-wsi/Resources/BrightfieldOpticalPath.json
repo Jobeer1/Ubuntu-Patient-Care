@@ -1,0 +1,20 @@
+[
+  {
+    "OpticalPathIdentifier" : "1",
+    "OpticalPathDescription" : "Brightfield",
+    "IlluminationTypeCodeSequence" : [
+      {
+        "CodeValue" : "111744",
+        "CodingSchemeDesignator" : "DCM",
+        "CodeMeaning" : "Brightfield illumination"
+      }
+    ],
+    "IlluminationColorCodeSequence" : [
+      {
+        "CodeValue" : "R-102C0",
+        "CodingSchemeDesignator" : "SRT",
+        "CodeMeaning" : "Full Spectrum"
+      }
+    ]
+  }
+]

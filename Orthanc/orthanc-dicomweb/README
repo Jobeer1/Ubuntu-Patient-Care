@@ -1,0 +1,76 @@
+DICOMweb plugin for Orthanc
+===========================
+
+
+General Information
+-------------------
+
+This repository contains the source code of a plugin for Orthanc, the
+lightweight Vendor Neutral Archive for medical imaging. This plugin
+extends the RESTful API of Orthanc with WADO and DICOMweb support.
+
+
+DICOMweb Support
+----------------
+
+Currently, a basic support of the following protocols is provided:
+
+* WADO-URI (Web Access to DICOM Persistent Objects), previously known as WADO
+  http://medical.nema.org/Dicom/2011/11_18pu.pdf
+  http://medical.nema.org/medical/dicom/current/output/html/part18.html#sect_6.2
+
+* WADO-RS (Web Access to DICOM Objects by RESTful Services)
+  http://medical.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5
+
+* STOW-RS (STore Over the Web by RESTful Services)
+  http://medical.nema.org/medical/dicom/current/output/html/part18.html#sect_6.6
+
+* QIDO-RS (Query based on ID for DICOM Objects by RESTful Services)
+  http://medical.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7
+
+The full status about the support of these protocols can be found in
+the "./Status.txt" file.
+
+
+Installation and usage
+----------------------
+
+Build and usage instructions are available in the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/dicomweb.html
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing: AGPL
+---------------
+
+The DICOMweb plugin for Orthanc is licensed under the Affero General
+Public License (AGPL) license. Pay attention to the fact that this
+license is more restrictive than the license of the Orthanc core.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="Jun",
+  day="01",
+  volume="31",
+  number="3",
+  pages="341--352",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

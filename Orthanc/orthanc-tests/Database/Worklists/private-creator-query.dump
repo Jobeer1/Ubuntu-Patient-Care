@@ -1,0 +1,3 @@
+(0010,0010) PN [VIV*]                        #  16, 1 PatientName
+(8001,0010) LO [LIAC]                        #   1 PrivateCreator
+(8001,1001) LO [ONCO^FRANCO]                 #   1 Oncologist

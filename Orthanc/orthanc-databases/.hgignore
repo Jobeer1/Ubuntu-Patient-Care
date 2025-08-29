@@ -1,0 +1,9 @@
+syntax: glob
+build*
+PostgreSQL/CMakeLists.txt.user
+PostgreSQL/ThirdPartyDownloads/
+Odbc/ThirdPartyDownloads/
+MySQL/ThirdPartyDownloads/
+SQLite/ThirdPartyDownloads/
+.vscode/
+*~

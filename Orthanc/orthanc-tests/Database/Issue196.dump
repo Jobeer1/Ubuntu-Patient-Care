@@ -1,0 +1,4 @@
+# dump2dcm --write-xfer-little Issue196.dump Issue196.dcm
+
+(0008,0018) UI [1.2.840.113619.2.176.2025.1499492.7040.1171286242.109] #  54, 1 SOPInstanceUID
+(0008,0016) UI =MRImageStorage                          #  26, 1 SOPClassUID

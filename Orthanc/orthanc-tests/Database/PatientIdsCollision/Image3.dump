@@ -1,0 +1,4 @@
+(0008,0016) UI 1.2.840.10008.5.1.4.1.1.4
+(0010,0020) LO COMMON         # Patient ID
+(0010,0010) PN FOO            # Patient Name
+(0008,1030) LO FOO^SERIES     # Study description

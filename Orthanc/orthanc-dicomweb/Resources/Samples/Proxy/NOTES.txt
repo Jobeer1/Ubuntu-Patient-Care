@@ -1,0 +1,9 @@
+This is a sample configuration file for nginx to test the DICOMweb
+plugin behind a HTTP proxy. To start the proxy as a regular user:
+
+$ nginx -c ./nginx.local.conf -p $PWD
+
+
+References about "Forwarded" header in nginx:
+https://onefeed.xyz/posts/x-forwarded-for-vs-x-real-ip.html
+https://www.nginx.com/resources/wiki/start/topics/examples/forwarded/

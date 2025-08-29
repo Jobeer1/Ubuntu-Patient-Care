@@ -1,0 +1,17 @@
+{
+  "OrthancPluginDicomInstance" : "DICOM instance managed by the Orthanc core",
+  "OrthancPluginDicomWebNode" : "Node visited by DICOMweb conversion",
+  "OrthancPluginFindAnswers" : "Answers to a DICOM C-FIND query",
+  "OrthancPluginFindMatcher" : "Matcher for DICOM C-FIND query",
+  "OrthancPluginFindQuery" : "DICOM C-FIND query",
+  "OrthancPluginImage" : "2D image managed by the Orthanc core",
+  "OrthancPluginJob" : "Orthanc job",
+  "OrthancPluginKeysValuesIterator" : "Iterator over the keys and values of a key-value store",
+  "OrthancPluginPeers" : "Orthanc peer",
+  "OrthancPluginRestOutput" : "Output for a call to the REST API of Orthanc",
+  "OrthancPluginServerChunkedRequestReader" : "Read for a chunked HTTP request",
+  "OrthancPluginStorageArea" : "Storage area plugin",
+  "OrthancPluginWebDavCollection" : "WebDAV collection",
+  "OrthancPluginWorklistAnswers" : "Answers to a DICOM C-FIND worklist query",
+  "OrthancPluginWorklistQuery" : "DICOM C-FIND worklist query"
+}

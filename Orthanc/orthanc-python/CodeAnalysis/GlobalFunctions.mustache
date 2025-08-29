@@ -1,0 +1,64 @@
+/**
+ * SPDX-FileCopyrightText: 2020-2023 Osimis S.A., 2024-2025 Orthanc Team SRL, 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
+ * Python plugin for Orthanc
+ * Copyright (C) 2020-2023 Osimis S.A., Belgium
+ * Copyright (C) 2024-2025 Orthanc Team SRL, Belgium
+ * Copyright (C) 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain, Belgium
+ *
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+
+// WARNING: Auto-generated file. Do not modify it by hand.
+
+
+// Forward declaration of the custom global functions
+{{#custom_functions}}
+extern PyObject *{{implementation}}(PyObject* module, PyObject *args);
+{{/custom_functions}}
+// End of forward declarations
+
+
+{{#global_functions}}
+static PyObject* sdk_{{c_function}}(PyObject* module, PyObject* args)
+{
+  PythonLock::LogCall("Calling Python global function: {{c_function}}()");
+
+{{> function_body}}
+}
+
+{{/global_functions}}
+
+static PyMethodDef ORTHANC_SDK_FUNCTIONS[] = 
+{
+{{#global_functions}}
+  { "{{short_name}}", sdk_{{c_function}}, METH_VARARGS,
+    "Generated from C function {{c_function}}()" },
+{{/global_functions}}
+{{#custom_functions}}
+  { "{{short_name}}", {{implementation}}, METH_VARARGS,
+    "Implemented in C++ function {{implementation}}()" },
+{{/custom_functions}}
+  { NULL, NULL }
+};
+
+
+PyMethodDef* GetOrthancSdkFunctions()
+{
+  return ORTHANC_SDK_FUNCTIONS;
+}

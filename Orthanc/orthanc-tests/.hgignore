@@ -1,0 +1,16 @@
+syntax: glob
+*.pyc
+OrthancStorage/
+IntegrationTestsConfiguration.json
+PerfsDb/.env/
+PerfsDb/Storages/
+PerfsDb/ConfigFiles/
+PerfsDb/Results/
+.vscode/
+*~
+NewTests/storages/**
+NewTests/configurations/*.json
+.env/
+Tests/*.crt
+Tests/*.key
+Tests/dicom-tls.json

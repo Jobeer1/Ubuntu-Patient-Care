@@ -1,0 +1,160 @@
+
+======================
+== Stone Web viewer ==
+======================
+
+------------
+Improvements
+------------
+
+* Update OrthancFramework to 1.12.1 to benefit from:
+  https://orthanc.uclouvain.be/hg/orthanc/rev/57c0fba5e5c7
+
+* Save/load annotations as attachments of their parent series
+  (including detection of collisions thanks to revisions).
+  https://orthanc.uclouvain.be/book/faq/features.html#metadata-attachments
+  
+* Internationalization and translations (i18n). Some possible libraries:
+  https://phrase.com/blog/posts/the-best-javascript-i18n-libraries/
+
+* Configurable keyboard shortcuts. See Osimis Web viewer:
+  https://bitbucket.org/osimis/osimis-webviewer-plugin/src/master/doc/default-configuration.json
+
+* Handle mobile gestures.
+
+* Display GSPS layers (Grayscale Softcopy Presentation State).
+
+* Use "ImagerPixelSpacing" (0018,1164) tag if "PixelSpacing" is missing
+
+* Override which tags are displayed in the image information in the
+  top-left, top-right and bottom-right pannels.
+
+  For reference, in the case of MRI, "Echo Time" (0018,0081),
+  "Repetition Time" (0018,0080), "Magnetic Field Strength (0018,0087)
+  and "Slice Thickness" (0018,0050) would be useful to have.
+
+  https://groups.google.com/g/orthanc-users/c/_kDp_ieYTgI/m/KHBxpSSOCQAJ
+  
+* Add a button (and/or a keyboard shortcut) to select the next series
+  in the main viewport. In Osimis viewer, this was implemented by
+  up/down arrow keys (prev/next series).
+  https://groups.google.com/g/orthanc-users/c/u_lH9aqKsdw/m/KQ7U9CkiAAAJ.
+
+* Minor: Rotate the anchors of the text after rotation of the display.
+
+* Order the studies in the left column according to their Instance
+  Number (0020,0013). Suggestion by Joseph Maratt.
+
+* Open using Orthanc parent/study/series identifier, or using DICOM
+  accession number:
+  https://discourse.orthanc-server.org/t/stone-web-viewer-what-is-the-link-to-use-through-the-access-number/4808
+
+* Add configuration options to disable annotations and measurements:
+  https://discourse.orthanc-server.org/t/niveles-de-acceso-y-permisos-a-funcionalidades-del-stone-web-viewer/5106
+
+
+------------
+Known issues
+------------
+
+* Compatibility with Google Chrome browser on iPad Air 4:
+  https://groups.google.com/g/orthanc-users/c/7SgedbIiA2k/
+  https://groups.google.com/g/orthanc-users/c/RfQJFgkOUYY/m/za7rkcLNBQAJ
+
+-----------------
+Code refactorings
+-----------------
+
+* Replace "ParsedDicomCache" by "Orthanc::ParsedDicomCache" (new in
+  Orthanc framework 1.9.0)
+
+* Replace calls to /studies/.../series/.../metadata by calls to
+  /instances?StudyInstanceUID=...&SeriesInstanceUID=...&includefield=...&includefield=...
+  to benefit from ExtraMainDicomTags stored in DB and avoid reading from disk when not necessary.
+  This way, we request only the tags that the viewer is going to use.
+  The /metadata requests all tags and therefore will read from the storage unless you have
+  specified "DicomWeb.SeriesMetadata": "MainDicomTags"; this is an acceptable workaround
+  for now but the first approach is cleaner and removes dependencies between the DicomWeb config
+  and stone.  It might also be more efficient on other backends as well.
+
+--------
+Wishlist
+--------
+
+* Display video files even if the Orthanc REST API is not available
+  (using pure DICOMweb). This could possible be done using the
+  DICOMweb Bulk Data URI, and/or a dedicated JavaScript video player.
+
+* "Start the Viewer with a specific Dicom file and display the
+  specific images. For example I start the Viewer with dicomFile and
+  open slide1, slide4, slide8, slide12 ?"
+  https://groups.google.com/g/orthanc-users/c/6KSe0WEEfco/m/nOIl57EzAAAJ
+
+* Configuration option related to the "DicomSource" class in order to
+  systematically request server-side transcoding.
+
+* Fully implement "Basic Image Review" profile from IHE:
+  https://wiki.ihe.net/index.php/Basic_Image_Review
+
+* Support hanging protocols (automatically adapt the layout given the
+  type of modality to be displayed):
+  https://groups.google.com/g/orthanc-users/c/bGtK3q9ZUmg/m/gr8kCcVWCAAJ
+
+* Create secondary capture DICOM images with the annotations burned in:
+  https://groups.google.com/g/orthanc-users/c/T3h-6dIjvww/m/sVtHxwT_AQAJ
+
+* Configure the default layout (e.g. 1x2 instead of 1x1) and the
+  default view of the left toolbox:
+  https://groups.google.com/g/orthanc-users/c/y2B_RIzegNc/m/H9MhY9y2AgAJ
+
+* Display the PatientName & ID in the page title such that it appears 
+  in the browser tab name
+  https://groups.google.com/g/orthanc-users/c/F7cK8axehfA/m/ku-CPsvbAQAJ
+
+* Configuration option (plus GET parameter in the URL) to set where to
+  start in the series by default (plus possibly a dictionary mapping
+  SOP Class UIDs for per-modality setting):
+  https://groups.google.com/g/orthanc-users/c/tHPMBHe-Z-A/m/XXlRBdhoAgAJ
+
+--------
+Won't do
+--------
+
+* Debian packaging, which requires source-level build dependencies:
+  https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=975069#22
+
+  => A solution for AMD64 architectures is to use the standalone
+  Debian repository that is provided by Sebastien Jodogne:
+  https://orthanc.uclouvain.be/book/users/cookbook.html#obtaining-binaries
+
+
+
+==================================
+== Stone of Orthanc C++ library ==
+==================================
+
+-------
+General
+-------
+
+* Documentation
+
+-------------
+Optimizations
+-------------
+
+* Speedup RT-STRUCT projection in sagittal + coronal views
+* Speedup RT-STRUCT loading
+* "ParseDicomFromOrthanc": new command
+
+-----------------
+Platform-specific
+-----------------
+
+* WebAssembly: Possible issue in "emscripten_set_timeout()" if the
+  Oracle is destroyed while a sleep event is still being processed
+  (the callback payload would be invalid). This is not a problem as
+  long as the Oracle singleton is never destroyed. A cleaner solution
+  would be similar to "WebAssemblyViewport::CreateObjectCookie()".
+
+* Add precompiled headers for Microsoft Visual Studio.

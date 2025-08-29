@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <title>Mirador</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <!--link rel="shortcut icon" type="image/svg" href="/img/mirador-logo.svg"/-->
+  </head>
+  <body>
+    <div id="mirador" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0;"></div>
+
+    <!--
+
+        WARNING: Mirador v4.0.0 can sometimes request regions of negative
+        width or height. We thus stick to Mirador v3.3.0 for the moment.
+        https://github.com/openseadragon/openseadragon/issues/2379
+
+      -->
+    <script>document.write("<script type='text/javascript' src='https://unpkg.com/mirador@3.3.0/dist/mirador.min.js'><\/script>");</script>
+    <script type="text/javascript">
+      var params = new URL(document.location).searchParams;
+      var manifest = params.get('iiif-content') || params.get('manifest');
+      var windows = [];
+      if (manifest) {
+        windows.push({ manifestId: manifest});
+      }
+      var miradorInstance = Mirador.viewer({
+        id: 'mirador',
+        windows: windows
+      });
+    </script>
+  </body>
+</html>

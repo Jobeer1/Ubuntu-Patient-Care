@@ -1,0 +1,61 @@
+Python plugin for Orthanc
+=========================
+
+
+General Information
+-------------------
+
+This repository contains the source code of a plugin to create new
+plugins for Orthanc using the Python programming language, rather than
+using C/C++.
+
+
+Installation and usage
+----------------------
+
+Build instructions and usage details are available as part of the
+Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/python.html
+
+Note that since version 6.0 of this plugin, the build process requires
+the Pystache module to be installed in the Python environment used by
+CMake:
+https://pypi.org/project/pystache/
+
+On Debian/Ubuntu environments, it is sufficient to install the
+"python3-pystache" package. This dependency is not needed at runtime.
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing
+---------
+
+The Python plugin for Orthanc is licensed under the AGPL license.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="Jun",
+  day="01",
+  volume="31",
+  number="3",
+  pages="341--352",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

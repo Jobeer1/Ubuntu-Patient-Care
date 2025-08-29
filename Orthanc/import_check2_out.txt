@@ -1,0 +1,5 @@
+backend.device_management: OK
+backend.core: OK
+backend.repository: OK
+backend.discovery_service: OK
+backend.connectivity_service: OK

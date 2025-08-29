@@ -1,0 +1,2 @@
+http://orthanc.osimis.io/pythonToolbox/OsimisToolbox-22.0.0.tar.gz
+pillow

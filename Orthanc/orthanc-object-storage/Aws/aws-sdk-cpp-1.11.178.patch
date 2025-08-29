@@ -1,0 +1,116 @@
+Only in aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/include/aws/core: SDKConfig.h
+diff -urEb aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/include/aws/core/utils/Array.h aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/include/aws/core/utils/Array.h
+--- aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/include/aws/core/utils/Array.h	2023-10-06 20:16:49.000000000 +0200
++++ aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/include/aws/core/utils/Array.h	2024-06-23 10:47:33.294537700 +0200
+@@ -14,7 +14,7 @@
+ #include <cstring>
+ #include <algorithm>
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+ 
+ #include <iterator>
+ 
+@@ -54,7 +54,7 @@
+                 {
+                     m_data.reset(Aws::NewArray<T>(m_size, ARRAY_ALLOCATION_TAG));
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+                     std::copy(arrayToCopy, arrayToCopy + arraySize, stdext::checked_array_iterator< T * >(m_data.get(), m_size));
+ #else
+                     std::copy(arrayToCopy, arrayToCopy + arraySize, m_data.get());
+@@ -82,7 +82,7 @@
+                     if(arr->m_size > 0 && arr->m_data)
+                     {
+                         size_t arraySize = arr->m_size;
+-#ifdef _WIN32
++#ifdef _MSC_VER
+                         std::copy(arr->m_data.get(), arr->m_data.get() + arraySize, stdext::checked_array_iterator< T * >(m_data.get() + location, m_size));
+ #else
+                         std::copy(arr->m_data.get(), arr->m_data.get() + arraySize, m_data.get() + location);
+@@ -101,7 +101,7 @@
+                 {
+                     m_data.reset(Aws::NewArray<T>(m_size, ARRAY_ALLOCATION_TAG));
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+                     std::copy(other.m_data.get(), other.m_data.get() + other.m_size, stdext::checked_array_iterator< T * >(m_data.get(), m_size));
+ #else
+                     std::copy(other.m_data.get(), other.m_data.get() + other.m_size, m_data.get());
+@@ -134,7 +134,7 @@
+                 {
+                     m_data.reset(Aws::NewArray<T>(m_size, ARRAY_ALLOCATION_TAG));
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+                     std::copy(other.m_data.get(), other.m_data.get() + other.m_size, stdext::checked_array_iterator< T * >(m_data.get(), m_size));
+ #else
+                     std::copy(other.m_data.get(), other.m_data.get() + other.m_size, m_data.get());
+Only in aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/include/aws/core/utils: Array.h~
+diff -urEb aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/platform/windows/FileSystem.cpp aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/platform/windows/FileSystem.cpp
+--- aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/platform/windows/FileSystem.cpp	2023-10-06 20:16:49.000000000 +0200
++++ aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/platform/windows/FileSystem.cpp	2024-06-22 19:00:43.200750034 +0200
+@@ -10,7 +10,7 @@
+ #include <aws/core/utils/memory/stl/AWSVector.h>
+ #include <cassert>
+ #include <iostream>
+-#include <Userenv.h>
++#include <userenv.h>
+ 
+ #pragma warning( disable : 4996)
+ 
+diff -urEb aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/utils/crypto/openssl/CryptoImpl.cpp aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/utils/crypto/openssl/CryptoImpl.cpp
+--- aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/utils/crypto/openssl/CryptoImpl.cpp	2023-10-06 20:16:49.000000000 +0200
++++ aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/utils/crypto/openssl/CryptoImpl.cpp	2024-06-22 18:38:51.196880348 +0200
+@@ -221,7 +221,7 @@
+                 EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
+ 
+                 auto currentPos = stream.tellg();
+-                if (currentPos == -1)
++                if (currentPos == std::streampos(-1))
+                 {
+                     currentPos = 0;
+                     stream.clear();
+@@ -298,7 +298,7 @@
+                 EVP_DigestInit_ex(ctx, EVP_sha1(), nullptr);
+ 
+                 auto currentPos = stream.tellg();
+-                if (currentPos == -1)
++                if (currentPos == std::streampos(-1))
+                 {
+                     currentPos = 0;
+                     stream.clear();
+@@ -376,7 +376,7 @@
+                 EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr);
+ 
+                 auto currentPos = stream.tellg();
+-                if (currentPos == -1)
++                if (currentPos == std::streampos(-1))
+                 {
+                     currentPos = 0;
+                     stream.clear();
+diff -urEb aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/utils/StringUtils.cpp aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/utils/StringUtils.cpp
+--- aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-core/source/utils/StringUtils.cpp	2023-10-06 20:16:49.000000000 +0200
++++ aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-core/source/utils/StringUtils.cpp	2024-06-22 18:55:21.912052713 +0200
+@@ -14,7 +14,7 @@
+ #include <functional>
+ 
+ #ifdef _WIN32
+-#include <Windows.h>
++#include <windows.h>
+ #endif
+ 
+ using namespace Aws::Utils;
+diff -urEb aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-text-to-speech/include/aws/text-to-speech/windows/WaveOutPCMOutputDriver.h aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-text-to-speech/include/aws/text-to-speech/windows/WaveOutPCMOutputDriver.h
+--- aws-sdk-cpp-1.11.178.orig/src/aws-cpp-sdk-text-to-speech/include/aws/text-to-speech/windows/WaveOutPCMOutputDriver.h	2023-10-06 20:16:49.000000000 +0200
++++ aws-sdk-cpp-1.11.178/src/aws-cpp-sdk-text-to-speech/include/aws/text-to-speech/windows/WaveOutPCMOutputDriver.h	2024-06-22 18:57:00.963064735 +0200
+@@ -10,7 +10,7 @@
+ 
+ #include <mutex>
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ namespace Aws
+ {

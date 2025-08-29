@@ -1,0 +1,18 @@
+{
+  "type": "firebird",
+  "host": "localhost",
+  "port": 3050,
+  "database": "/path/to/orthanc_sa.fdb",
+  "username": "SYSDBA",
+  "password": "masterkey",
+  "use_ssl": false,
+  "min_connections": 1,
+  "max_connections": 10,
+  "connection_timeout": 30,
+  "options": {
+    "charset": "UTF8",
+    "dialect": "3",
+    "page_size": "16384",
+    "cache_pages": "2048"
+  }
+}

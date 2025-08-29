@@ -1,0 +1,36 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: orthanc-python
+Upstream-Contact: Sebastien Jodogne <s.jodogne@gmail.com>
+Source: https://orthanc.uclouvain.be/
+
+Files:
+  AUTHORS
+  CITATION.cff
+  CodeAnalysis/README.txt
+  NEWS
+  OrthancSDKVersion.cmake
+  README
+  Sources/README.txt
+  TODO
+Copyright: 2020-2023 Osimis S.A. (Belgium), 2024-2025 Orthanc Team SRL (Belgium), 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain (Belgium)
+License: CC0-1.0
+
+Files:
+  CodeAnalysis/*.json
+  CodeAnalysis/*.mustache
+  Resources/valgrind-python.supp
+Copyright: 2020-2023 Osimis S.A. (Belgium), 2024-2025 Orthanc Team SRL (Belgium), 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain (Belgium)
+License: AGPL-3.0-or-later
+
+Files:
+  Resources/Orthanc/CMake/*
+  Resources/Orthanc/Toolchains/*
+Copyright: 2012-2016 Sebastien Jodogne, University Hospital of Liege (Belgium), 2017-2023 Osimis S.A. (Belgium), 2024-2025 Orthanc Team SRL (Belgium), and 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain (Belgium)
+License: LGPL-3.0-or-later
+
+Files:
+  Resources/Orthanc/OrthancPluginCodeModel.json
+  Resources/Orthanc/Plugins/*
+  Resources/Orthanc/Sdk-*/orthanc/OrthancCPlugin.h
+Copyright: 2012-2016 Sebastien Jodogne, University Hospital of Liege (Belgium), 2017-2023 Osimis S.A. (Belgium), 2024-2025 Orthanc Team SRL (Belgium), and 2021-2025 Sebastien Jodogne, ICTEAM UCLouvain (Belgium)
+License: GPL-3.0-or-later

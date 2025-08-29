@@ -1,0 +1,74 @@
+OHIF plugin for Orthanc
+=======================
+
+
+General information
+-------------------
+
+This repository contains the source code of a plugin to give access to
+OHIF directly inside Orthanc.
+
+The homepage of OHIF can be found at:
+https://ohif.org/
+
+The source code of OHIF is available at:
+https://github.com/OHIF/Viewers
+
+Packages for the released versions of OHIF are available at:
+https://github.com/OHIF/Viewers/tags
+
+
+Installation and usage
+----------------------
+
+Build and usage instructions are available in the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/ohif.html
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing
+---------
+
+- OHIF is licensed under the MIT license.
+
+- The OHIF plugin for Orthanc is licensed under the GPL license, to
+  fulfill the GPL license of the Orthanc SDK.
+
+- This project is REUSE compliant for its licensing, as established by
+  Free Software Foundation Europe (FSFE):
+  https://reuse.software/
+
+
+Citation
+--------
+
+If you wish to cite OHIF, please refer to the following page:
+https://v3-docs.ohif.org/#citing-ohif
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="Jun",
+  day="01",
+  volume="31",
+  number="3",
+  pages="341--352",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

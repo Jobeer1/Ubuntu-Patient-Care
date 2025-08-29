@@ -1,0 +1,870 @@
+{
+   "0008,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "878"
+   }, 
+   "0008,0005": {
+      "Name": "SpecificCharacterSet", 
+      "Type": "String", 
+      "Value": "ISO_IR 100"
+   }, 
+   "0008,0008": {
+      "Name": "ImageType", 
+      "Type": "String", 
+      "Value": "ORIGINAL\\PRIMARY"
+   }, 
+   "0008,0012": {
+      "Name": "InstanceCreationDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0008,0013": {
+      "Name": "InstanceCreationTime", 
+      "Type": "String", 
+      "Value": "171344"
+   }, 
+   "0008,0016": {
+      "Name": "SOPClassUID", 
+      "Type": "String", 
+      "Value": "1.2.840.10008.5.1.4.1.1.128"
+   }, 
+   "0008,0018": {
+      "Name": "SOPInstanceUID", 
+      "Type": "String", 
+      "Value": "1.3.46.670589.28.2.15.30.26407.37145.3.2116.41.1342458737"
+   }, 
+   "0008,0020": {
+      "Name": "StudyDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0008,0021": {
+      "Name": "SeriesDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0008,0022": {
+      "Name": "AcquisitionDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0008,0023": {
+      "Name": "ContentDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0008,002a": {
+      "Name": "AcquisitionDateTime", 
+      "Type": "String", 
+      "Value": "20120716171219"
+   }, 
+   "0008,0030": {
+      "Name": "StudyTime", 
+      "Type": "String", 
+      "Value": "171117"
+   }, 
+   "0008,0031": {
+      "Name": "SeriesTime", 
+      "Type": "String", 
+      "Value": "171121"
+   }, 
+   "0008,0032": {
+      "Name": "AcquisitionTime", 
+      "Type": "String", 
+      "Value": "171219"
+   }, 
+   "0008,0033": {
+      "Name": "ContentTime", 
+      "Type": "String", 
+      "Value": "171344"
+   }, 
+   "0008,0050": {
+      "Name": "AccessionNumber", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0008,0060": {
+      "Name": "Modality", 
+      "Type": "String", 
+      "Value": "PT"
+   }, 
+   "0008,0070": {
+      "Name": "Manufacturer", 
+      "Type": "String", 
+      "Value": "Philips Medical Systems"
+   }, 
+   "0008,0080": {
+      "Name": "InstitutionName", 
+      "Type": "String", 
+      "Value": "C.H.U. Liege"
+   }, 
+   "0008,0090": {
+      "Name": "ReferringPhysicianName", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0008,1010": {
+      "Name": "StationName", 
+      "Type": "String", 
+      "Value": "r054-svr"
+   }, 
+   "0008,1030": {
+      "Name": "StudyDescription", 
+      "Type": "String", 
+      "Value": "TestSUVce-TF"
+   }, 
+   "0008,103e": {
+      "Name": "SeriesDescription", 
+      "Type": "String", 
+      "Value": "[WB_CTAC] Body"
+   }, 
+   "0008,1090": {
+      "Name": "ManufacturerModelName", 
+      "Type": "String", 
+      "Value": "GEMINI TF TOF 16"
+   }, 
+   "0008,1110": {
+      "Name": "ReferencedStudySequence", 
+      "Type": "Sequence", 
+      "Value": []
+   }, 
+   "0008,1111": {
+      "Name": "ReferencedPerformedProcedureStepSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0008,1150": {
+               "Name": "ReferencedSOPClassUID", 
+               "Type": "String", 
+               "Value": "1.2.840.10008.3.1.2.3.3"
+            }, 
+            "0008,1155": {
+               "Name": "ReferencedSOPInstanceUID", 
+               "Type": "String", 
+               "Value": "1.2.840.113704.1.111.4380.1342451248.1"
+            }
+         }
+      ]
+   }, 
+   "0008,1250": {
+      "Name": "RelatedSeriesSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0020,000d": {
+               "Name": "StudyInstanceUID", 
+               "Type": "String", 
+               "Value": "1.2.840.113704.1.111.7016.1342451220.40"
+            }, 
+            "0020,000e": {
+               "Name": "SeriesInstanceUID", 
+               "Type": "String", 
+               "Value": "1.2.840.113704.1.111.4380.1342451435.18"
+            }, 
+            "0040,a170": {
+               "Name": "PurposeOfReferenceCodeSequence", 
+               "Type": "Sequence", 
+               "Value": [
+                  {
+                     "0008,0100": {
+                        "Name": "CodeValue", 
+                        "Type": "String", 
+                        "Value": "122403"
+                     }, 
+                     "0008,0102": {
+                        "Name": "CodingSchemeDesignator", 
+                        "Type": "String", 
+                        "Value": "DCM"
+                     }, 
+                     "0008,0104": {
+                        "Name": "CodeMeaning", 
+                        "Type": "String", 
+                        "Value": "For Attenuation Correction"
+                     }
+                  }
+               ]
+            }
+         }
+      ]
+   }, 
+   "0008,9121": {
+      "Name": "ReferencedRawDataSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0008,1150": {
+               "Name": "ReferencedSOPClassUID", 
+               "Type": "String", 
+               "Value": "1.2.840.10008.5.1.4.1.1.66"
+            }, 
+            "0008,1155": {
+               "Name": "ReferencedSOPInstanceUID", 
+               "Type": "String", 
+               "Value": "1.3.46.670589.28.2.15.2216773740.3.28677.0.1342451482"
+            }
+         }
+      ]
+   }, 
+   "0010,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "96"
+   }, 
+   "0010,0010": {
+      "Name": "PatientName", 
+      "Type": "String", 
+      "Value": "Anonymous^Unknown"
+   }, 
+   "0010,0020": {
+      "Name": "PatientID", 
+      "Type": "String", 
+      "Value": "000000185"
+   }, 
+   "0010,0030": {
+      "Name": "PatientBirthDate", 
+      "Type": "String", 
+      "Value": "0"
+   }, 
+   "0010,0040": {
+      "Name": "PatientSex", 
+      "Type": "String", 
+      "Value": "O"
+   }, 
+   "0010,1000": {
+      "Name": "RETIRED_OtherPatientIDs", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0010,1030": {
+      "Name": "PatientWeight", 
+      "Type": "String", 
+      "Value": "9.293000"
+   }, 
+   "0010,1040": {
+      "Name": "PatientAddress", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0018,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "172"
+   }, 
+   "0018,0050": {
+      "Name": "SliceThickness", 
+      "Type": "String", 
+      "Value": "4"
+   }, 
+   "0018,1000": {
+      "Name": "DeviceSerialNumber", 
+      "Type": "String", 
+      "Value": "7053"
+   }, 
+   "0018,1020": {
+      "Name": "SoftwareVersions", 
+      "Type": "String", 
+      "Value": "9.5.1\\PMSPT1.44"
+   }, 
+   "0018,1030": {
+      "Name": "ProtocolName", 
+      "Type": "String", 
+      "Value": "CHU/Body_PET/CT___50"
+   }, 
+   "0018,1100": {
+      "Name": "ReconstructionDiameter", 
+      "Type": "String", 
+      "Value": "676.000000"
+   }, 
+   "0018,1147": {
+      "Name": "FieldOfViewShape", 
+      "Type": "String", 
+      "Value": "CYLINDRICAL RING"
+   }, 
+   "0018,1149": {
+      "Name": "FieldOfViewDimensions", 
+      "Type": "String", 
+      "Value": "903\\180"
+   }, 
+   "0018,1181": {
+      "Name": "CollimatorType", 
+      "Type": "String", 
+      "Value": "NONE"
+   }, 
+   "0018,1242": {
+      "Name": "ActualFrameDuration", 
+      "Type": "String", 
+      "Value": "3597793"
+   }, 
+   "0018,5100": {
+      "Name": "PatientPosition", 
+      "Type": "String", 
+      "Value": "FFS"
+   }, 
+   "0020,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "338"
+   }, 
+   "0020,000d": {
+      "Name": "StudyInstanceUID", 
+      "Type": "String", 
+      "Value": "1.2.840.113704.1.111.7016.1342451220.40"
+   }, 
+   "0020,000e": {
+      "Name": "SeriesInstanceUID", 
+      "Type": "String", 
+      "Value": "1.3.46.670589.28.2.12.30.26407.37145.2.2516.0.1342458737"
+   }, 
+   "0020,0010": {
+      "Name": "StudyID", 
+      "Type": "String", 
+      "Value": "23848"
+   }, 
+   "0020,0011": {
+      "Name": "SeriesNumber", 
+      "Type": "String", 
+      "Value": "587370"
+   }, 
+   "0020,0013": {
+      "Name": "InstanceNumber", 
+      "Type": "String", 
+      "Value": "4"
+   }, 
+   "0020,0032": {
+      "Name": "ImagePositionPatient", 
+      "Type": "String", 
+      "Value": "-336.683594\\-266.683594\\-163.599976"
+   }, 
+   "0020,0037": {
+      "Name": "ImageOrientationPatient", 
+      "Type": "String", 
+      "Value": "1.000000\\0.000000\\0.000000\\0.000000\\1.000000\\0.000000"
+   }, 
+   "0020,0052": {
+      "Name": "FrameOfReferenceUID", 
+      "Type": "String", 
+      "Value": "1.2.840.113704.1.111.4380.1342451339.9"
+   }, 
+   "0020,1040": {
+      "Name": "PositionReferenceIndicator", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0020,1041": {
+      "Name": "SliceLocation", 
+      "Type": "String", 
+      "Value": "-163.599976"
+   }, 
+   "0020,4000": {
+      "Name": "ImageComments", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0028,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "254"
+   }, 
+   "0028,0002": {
+      "Name": "SamplesPerPixel", 
+      "Type": "String", 
+      "Value": "1"
+   }, 
+   "0028,0004": {
+      "Name": "PhotometricInterpretation", 
+      "Type": "String", 
+      "Value": "MONOCHROME2"
+   }, 
+   "0028,0010": {
+      "Name": "Rows", 
+      "Type": "String", 
+      "Value": "169"
+   }, 
+   "0028,0011": {
+      "Name": "Columns", 
+      "Type": "String", 
+      "Value": "169"
+   }, 
+   "0028,0030": {
+      "Name": "PixelSpacing", 
+      "Type": "String", 
+      "Value": "4.000000\\4.000000"
+   }, 
+   "0028,0051": {
+      "Name": "CorrectedImage", 
+      "Type": "String", 
+      "Value": "DECY\\RADL\\ATTN\\SCAT\\DTIM\\RAN\\NORM"
+   }, 
+   "0028,0100": {
+      "Name": "BitsAllocated", 
+      "Type": "String", 
+      "Value": "16"
+   }, 
+   "0028,0101": {
+      "Name": "BitsStored", 
+      "Type": "String", 
+      "Value": "16"
+   }, 
+   "0028,0102": {
+      "Name": "HighBit", 
+      "Type": "String", 
+      "Value": "15"
+   }, 
+   "0028,0103": {
+      "Name": "PixelRepresentation", 
+      "Type": "String", 
+      "Value": "1"
+   }, 
+   "0028,0106": {
+      "Name": "SmallestImagePixelValue", 
+      "Type": "String", 
+      "Value": "0"
+   }, 
+   "0028,0107": {
+      "Name": "LargestImagePixelValue", 
+      "Type": "String", 
+      "Value": "32765"
+   }, 
+   "0028,1050": {
+      "Name": "WindowCenter", 
+      "Type": "String", 
+      "Value": "1.496995e+04"
+   }, 
+   "0028,1051": {
+      "Name": "WindowWidth", 
+      "Type": "String", 
+      "Value": "2.993990e+04"
+   }, 
+   "0028,1052": {
+      "Name": "RescaleIntercept", 
+      "Type": "String", 
+      "Value": "0"
+   }, 
+   "0028,1053": {
+      "Name": "RescaleSlope", 
+      "Type": "String", 
+      "Value": "0.207791"
+   }, 
+   "0028,1054": {
+      "Name": "RescaleType", 
+      "Type": "String", 
+      "Value": "US"
+   }, 
+   "0032,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "8"
+   }, 
+   "0032,4000": {
+      "Name": "RETIRED_StudyComments", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0040,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "54"
+   }, 
+   "0040,0244": {
+      "Name": "PerformedProcedureStepStartDate", 
+      "Type": "String", 
+      "Value": "20120716"
+   }, 
+   "0040,0245": {
+      "Name": "PerformedProcedureStepStartTime", 
+      "Type": "String", 
+      "Value": "170728"
+   }, 
+   "0040,0253": {
+      "Name": "PerformedProcedureStepID", 
+      "Type": "String", 
+      "Value": "2384880"
+   }, 
+   "0040,0254": {
+      "Name": "PerformedProcedureStepDescription", 
+      "Type": "String", 
+      "Value": ""
+   }, 
+   "0054,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "742"
+   }, 
+   "0054,0016": {
+      "Name": "RadiopharmaceuticalInformationSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0018,0031": {
+               "Name": "Radiopharmaceutical", 
+               "Type": "String", 
+               "Value": "Fluorodeoxyglucose F^18^"
+            }, 
+            "0018,1070": {
+               "Name": "RadiopharmaceuticalRoute", 
+               "Type": "String", 
+               "Value": "Intravenous route"
+            }, 
+            "0018,1072": {
+               "Name": "RadiopharmaceuticalStartTime", 
+               "Type": "String", 
+               "Value": "155600"
+            }, 
+            "0018,1074": {
+               "Name": "RadionuclideTotalDose", 
+               "Type": "String", 
+               "Value": "90100000"
+            }, 
+            "0018,1075": {
+               "Name": "RadionuclideHalfLife", 
+               "Type": "String", 
+               "Value": "6586.199707"
+            }, 
+            "0018,1076": {
+               "Name": "RadionuclidePositronFraction", 
+               "Type": "String", 
+               "Value": "0.967"
+            }, 
+            "0018,1078": {
+               "Name": "RadiopharmaceuticalStartDateTime", 
+               "Type": "String", 
+               "Value": "20120716155600"
+            }, 
+            "0054,0300": {
+               "Name": "RadionuclideCodeSequence", 
+               "Type": "Sequence", 
+               "Value": [
+                  {
+                     "0008,0100": {
+                        "Name": "CodeValue", 
+                        "Type": "String", 
+                        "Value": "C-111A1"
+                     }, 
+                     "0008,0102": {
+                        "Name": "CodingSchemeDesignator", 
+                        "Type": "String", 
+                        "Value": "SNM3"
+                     }, 
+                     "0008,0104": {
+                        "Name": "CodeMeaning", 
+                        "Type": "String", 
+                        "Value": "^18^Fluorine"
+                     }
+                  }
+               ]
+            }, 
+            "0054,0302": {
+               "Name": "AdministrationRouteCodeSequence", 
+               "Type": "Sequence", 
+               "Value": [
+                  {
+                     "0008,0100": {
+                        "Name": "CodeValue", 
+                        "Type": "String", 
+                        "Value": "G-D101"
+                     }, 
+                     "0008,0102": {
+                        "Name": "CodingSchemeDesignator", 
+                        "Type": "String", 
+                        "Value": "SNM3"
+                     }, 
+                     "0008,0104": {
+                        "Name": "CodeMeaning", 
+                        "Type": "String", 
+                        "Value": "Intravenous route"
+                     }
+                  }
+               ]
+            }, 
+            "0054,0304": {
+               "Name": "RadiopharmaceuticalCodeSequence", 
+               "Type": "Sequence", 
+               "Value": [
+                  {
+                     "0008,0100": {
+                        "Name": "CodeValue", 
+                        "Type": "String", 
+                        "Value": "C-B1031"
+                     }, 
+                     "0008,0102": {
+                        "Name": "CodingSchemeDesignator", 
+                        "Type": "String", 
+                        "Value": "SRT"
+                     }, 
+                     "0008,0104": {
+                        "Name": "CodeMeaning", 
+                        "Type": "String", 
+                        "Value": "Fluorodeoxyglucose F^18^"
+                     }
+                  }
+               ]
+            }
+         }
+      ]
+   }, 
+   "0054,0081": {
+      "Name": "NumberOfSlices", 
+      "Type": "String", 
+      "Value": "45"
+   }, 
+   "0054,0202": {
+      "Name": "TypeOfDetectorMotion", 
+      "Type": "String", 
+      "Value": "NONE"
+   }, 
+   "0054,0410": {
+      "Name": "PatientOrientationCodeSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0008,0100": {
+               "Name": "CodeValue", 
+               "Type": "String", 
+               "Value": "F-10450"
+            }, 
+            "0008,0102": {
+               "Name": "CodingSchemeDesignator", 
+               "Type": "String", 
+               "Value": "99SDM"
+            }, 
+            "0008,0104": {
+               "Name": "CodeMeaning", 
+               "Type": "String", 
+               "Value": "recumbent"
+            }, 
+            "0054,0412": {
+               "Name": "PatientOrientationModifierCodeSequence", 
+               "Type": "Sequence", 
+               "Value": [
+                  {
+                     "0008,0100": {
+                        "Name": "CodeValue", 
+                        "Type": "String", 
+                        "Value": "F-10340"
+                     }, 
+                     "0008,0102": {
+                        "Name": "CodingSchemeDesignator", 
+                        "Type": "String", 
+                        "Value": "99SDM"
+                     }, 
+                     "0008,0104": {
+                        "Name": "CodeMeaning", 
+                        "Type": "String", 
+                        "Value": "supine"
+                     }
+                  }
+               ]
+            }
+         }
+      ]
+   }, 
+   "0054,0414": {
+      "Name": "PatientGantryRelationshipCodeSequence", 
+      "Type": "Sequence", 
+      "Value": [
+         {
+            "0008,0100": {
+               "Name": "CodeValue", 
+               "Type": "String", 
+               "Value": "G-5191"
+            }, 
+            "0008,0102": {
+               "Name": "CodingSchemeDesignator", 
+               "Type": "String", 
+               "Value": "99SDM"
+            }, 
+            "0008,0104": {
+               "Name": "CodeMeaning", 
+               "Type": "String", 
+               "Value": "feet-first"
+            }
+         }
+      ]
+   }, 
+   "0054,1000": {
+      "Name": "SeriesType", 
+      "Type": "String", 
+      "Value": "WHOLE BODY\\IMAGE"
+   }, 
+   "0054,1001": {
+      "Name": "Units", 
+      "Type": "String", 
+      "Value": "BQML"
+   }, 
+   "0054,1002": {
+      "Name": "CountsSource", 
+      "Type": "String", 
+      "Value": "EMISSION"
+   }, 
+   "0054,1100": {
+      "Name": "RandomsCorrectionMethod", 
+      "Type": "String", 
+      "Value": "DLYD"
+   }, 
+   "0054,1101": {
+      "Name": "AttenuationCorrectionMethod", 
+      "Type": "String", 
+      "Value": "CTAC-SG"
+   }, 
+   "0054,1102": {
+      "Name": "DecayCorrection", 
+      "Type": "String", 
+      "Value": "START"
+   }, 
+   "0054,1103": {
+      "Name": "ReconstructionMethod", 
+      "Type": "String", 
+      "Value": "BLOB-OS-TF"
+   }, 
+   "0054,1105": {
+      "Name": "ScatterCorrectionMethod", 
+      "Type": "String", 
+      "Value": "SS-SIMUL"
+   }, 
+   "0054,1300": {
+      "Name": "FrameReferenceTime", 
+      "Type": "String", 
+      "Value": "1856793"
+   }, 
+   "0054,1321": {
+      "Name": "DecayFactor", 
+      "Type": "String", 
+      "Value": "1.0"
+   }, 
+   "0054,1330": {
+      "Name": "ImageIndex", 
+      "Type": "String", 
+      "Value": "4"
+   }, 
+   "00e1,0000": {
+      "Name": "PrivateGroupLength", 
+      "Type": "String", 
+      "Value": "64"
+   }, 
+   "00e1,0010": {
+      "Name": "PrivateCreator", 
+      "Type": "String", 
+      "Value": "ELSCINT1"
+   }, 
+   "00e1,10c2": {
+      "Name": "PET-CT Multi Modality Name", 
+      "PrivateCreator": "ELSCINT1", 
+      "Type": "String", 
+      "Value": "1.2.840.113704.1.111.6320.1342451261.21"
+   }, 
+   "07a1,0000": {
+      "Name": "PrivateGroupLength", 
+      "Type": "String", 
+      "Value": "16"
+   }, 
+   "07a1,0010": {
+      "Name": "PrivateCreator", 
+      "Type": "String", 
+      "Value": "ELSCINT1"
+   }, 
+   "7053,0000": {
+      "Name": "PrivateGroupLength", 
+      "Type": "String", 
+      "Value": "10460"
+   }, 
+   "7053,0010": {
+      "Name": "PrivateCreator", 
+      "Type": "String", 
+      "Value": "Philips PET Private Group"
+   }, 
+   "7053,1000": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1001": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1002": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1003": {
+      "Name": "Original Image Filename", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "String", 
+      "Value": "p37s0_na_ctac.img"
+   }, 
+   "7053,1005": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1006": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1009": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1013": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1014": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1015": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1016": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1017": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,1018": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7053,10c2": {
+      "Name": "Unknown Tag & Data", 
+      "PrivateCreator": "Philips PET Private Group", 
+      "Type": "Null", 
+      "Value": null
+   }, 
+   "7fe0,0000": {
+      "Name": "GenericGroupLength", 
+      "Type": "String", 
+      "Value": "57130"
+   }, 
+   "7fe0,0010": {
+      "Name": "PixelData", 
+      "Type": "Null", 
+      "Value": null
+   }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "postgresql",
+  "host": "localhost",
+  "port": 5432,
+  "database": "orthanc_sa",
+  "username": "orthanc_user",
+  "password": "secure_password",
+  "use_ssl": true,
+  "ssl_cert": "/path/to/client-cert.pem",
+  "ssl_key": "/path/to/client-key.pem",
+  "ssl_ca": "/path/to/ca-cert.pem",
+  "min_connections": 2,
+  "max_connections": 20,
+  "connection_timeout": 30,
+  "options": {
+    "sslmode": "require",
+    "application_name": "orthanc_sa",
+    "connect_timeout": "10",
+    "statement_timeout": "30000"
+  }
+}

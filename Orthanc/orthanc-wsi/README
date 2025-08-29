@@ -1,0 +1,100 @@
+Orthanc for Whole-Slide Imaging
+===============================
+
+
+General Information
+-------------------
+
+This repository contains the source code of the official tools to
+introduce support of whole-slide microscopic imaging (WSI) in
+Orthanc. It is made of three separate components:
+
+(a) A command-line tool called "Dicomizer" that converts whole-slide
+    images to DICOM, according to Supplement 145. 
+
+    The input images of the Dicomizer can be either formatted as
+    standard hierarchical TIFF images, or as proprietary formats for
+    digital pathology. In the latter case, OpenSlide is used to decode
+    the input images.
+
+(b) An Orthanc plugin that extends Orthanc Explorer with a Web viewer
+    of whole-slide images.
+
+(c) A command-line tool called "DicomToTiff" that converts some
+    whole-slide image stored in an Orthanc server, into a standard
+    hierarchical TIFF file. This tool can be used to export DICOM
+    images to any post-processing framework.
+
+
+
+Dependencies
+------------
+
+The whole-slide imaging framework is notably based upon the following
+projects:
+
+* Orthanc, a lightweight Vendor Neutral Archive (DICOM server):
+  http://www.orthanc-server.com/
+
+* OpenSlide, a simple interface to read whole-slide images encoded
+  using proprietary file formats:
+  http://openslide.org/
+
+* OpenLayers, a framework to put a dynamic map in any web page:
+  https://openlayers.org/
+
+* OpenJPEG, an open-source JPEG 2000 codec:
+  http://www.openjpeg.org/
+
+
+
+Installation and usage
+----------------------
+
+Build instructions are similar to that of Orthanc:
+https://orthanc.uclouvain.be/book/faq/compiling.html
+
+Usage details are available as part of the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/wsi.html
+
+The two command-line tools can be found in folder "Applications".
+They come with an extensive "--help" option.
+
+The Web viewer plugin can be found in folder "ViewerPlugin". It has no
+specific option, so you just have to make your "Plugins" configuration
+option of Orthanc point to the shared library containing the plugin:
+https://orthanc.chu.ulg.ac.be/book/users/configuration.html
+
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+
+Licensing
+---------
+
+The WSI toolbox for Orthanc is licensed under the AGPL license.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="May",
+  day="03",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

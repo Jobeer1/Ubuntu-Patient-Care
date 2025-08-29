@@ -1,0 +1,7 @@
+Bugs
+----
+- It seems that transcoding from Implicit VR to Explicit VR can lead to errors:
+  https://groups.google.com/g/orthanc-users/c/cCCZpUNMdNU/m/ZwUu-mVcAwAJ
+
+- Find a way to configure the lossy quality for .91:
+  https://discourse.orthanc-server.org/t/with-transfer-syntax-91-is-there-a-way-to-control-compression-ratio/5607

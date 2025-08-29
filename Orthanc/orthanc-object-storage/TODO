@@ -1,0 +1,22 @@
+- Remove false Error log when working in hybrid mode
+  https://discourse.orthanc-server.org/t/object-storage-hybrid-mode/5218
+
+- Investigate use of soft-delete with Google Cloud Storage
+  https://discourse.orthanc-server.org/t/object-storage-hybrid-mode/5218/7
+
+- Test serialize/unserialize MoveStorageJob
+
+- /move-storage shall also move the attachments at
+  Study/Series/Patient level, not only the Instances
+
+- in Hybrid mode, add a Rest API method to know where the files are stored.
+  https://discourse.orthanc-server.org/t/the-question-about-migrating-to-object-storage/4841/4
+
+- Test against AWS S3 Glacier:
+  https://groups.google.com/g/orthanc-users/c/CT1lkzHLAUg/m/h75HuXYpBwAJ
+
+- AWS: use the latest aws S3-crt client ?
+  https://github.com/aws/aws-sdk-cpp/wiki/Improving-S3-Throughput-with-AWS-SDK-for-CPP-v1.9
+
+- Adopt files and implement an "indexer like plugin" supporting object storages: 
+  https://discourse.orthanc-server.org/t/file-indexing-on-an-azure-blob-storage/5451/2

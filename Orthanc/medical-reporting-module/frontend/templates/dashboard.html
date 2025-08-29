@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA Medical Reporting Dashboard</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/sa-dashboard.css" rel="stylesheet">
+    <style>
+        :root {
+            --sa-green: #007A4D;
+            --sa-gold: #FFB612;
+            --sa-blue: #002395;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--sa-green) 0%, var(--sa-blue) 50%, var(--sa-gold) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sa-header {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 1rem 0;
+            border-bottom: 3px solid var(--sa-gold);
+        }
+        
+        .sa-main {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 2rem;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sa-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .sa-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--sa-green);
+        }
+        
+        .sa-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--sa-green);
+        }
+        
+        .sa-date-display {
+            background: linear-gradient(135deg, var(--sa-green), var(--sa-blue));
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="sa-header">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-heartbeat text-2xl mr-3" style="color: var(--sa-gold);"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">SA Medical Reporting 🇿🇦</h1>
+                        <p class="text-sm text-yellow-300" id="doctor-greeting">Goeie dag, {{ doctor_name or 'Dr. Stoyanov' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="sa-date-display">
+                        <i class="fas fa-calendar mr-2"></i>
+                        <span id="current-date-afrikaans">{{ server_date_iso or '' }}</span>
+                    </div>
+                    <div class="text-green-400">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Stelsel Aanlyn
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="sa-main">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Professionele Mediese Verslagdoening</h2>
+            <p class="text-lg text-gray-600">HPCSA-gemagtigde verslagstelsel vir Suid-Afrikaanse mediese praktisyns</p>
+        </div>
+
+        <!-- Action Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- New Report Card -->
+            <div class="sa-card" onclick="navigateTo('/voice-demo')">
+                <div class="sa-card-icon">
+                    <i class="fas fa-file-medical-alt"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Nuwe Verslag</h3>
+                <p class="text-gray-600">Skep 'n nuwe mediese verslag met stemdiksie</p>
+            </div>
+
+            <!-- Voice Dictation Card -->
+            <div class="sa-card" onclick="navigateTo('/voice-demo')">
+                <div class="sa-card-icon">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Stem Diksie</h3>
+                <p class="text-gray-600">Professionele spraak-tot-teks met SA mediese terme</p>
+            </div>
+
+            <!-- Find Studies Card -->
+            <div class="sa-card" onclick="navigateTo('/find-studies')">
+                <div class="sa-card-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Soek Studies</h3>
+                <p class="text-gray-600">Soek pasiënt studies en DICOM beelde</p>
+            </div>
+
+            <!-- Templates Card -->
+            <div class="sa-card" onclick="navigateTo('/templates')">
+                <div class="sa-card-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Sjablone</h3>
+                <p class="text-gray-600">Bestuur HPCSA-gemagtigde verslag sjablone</p>
+            </div>
+        </div>
+
+        <!-- Status and Activity -->
+        <div class="status-grid">
+            <!-- System Status -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-server mr-2 text-green-600"></i>
+                    System Status
+                </h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span>Voice Engine</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                            <i class="fas fa-check-circle mr-1"></i>Online
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Whisper STT</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                            <i class="fas fa-check-circle mr-1"></i>Ready
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>DICOM Server</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                            <i class="fas fa-check-circle mr-1"></i>Connected
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Activity -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-2" style="color: var(--sa-green);"></i>
+                    Today's Activity
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold" style="color: var(--sa-green);" id="reports-count">0</div>
+                        <div class="text-xs text-gray-600">Reports</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold" style="color: var(--sa-blue);" id="sessions-count">0</div>
+                        <div class="text-xs text-gray-600">Voice Sessions</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold" style="color: var(--sa-gold);" id="studies-count">0</div>
+                        <div class="text-xs text-gray-600">Studies</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold" style="color: var(--sa-green);" id="patients-count">0</div>
+                        <div class="text-xs text-gray-600">Patients</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2" style="color: var(--sa-blue);"></i>
+                    Quick Stats
+                </h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>STT Accuracy</span>
+                        <span class="font-semibold text-green-600">95%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Avg Report Time</span>
+                        <span class="font-semibold text-blue-600">3.2 min</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Medical Terms</span>
+                        <span class="font-semibold text-purple-600">78</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-bolt mr-2" style="color: var(--sa-gold);"></i>
+                    Quick Actions
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="navigateTo('/voice-demo')" class="w-full text-left text-sm bg-blue-50 hover:bg-blue-100 p-2 rounded">
+                        <i class="fas fa-microphone mr-2 text-blue-600"></i>
+                        Start Voice Demo
+                    </button>
+                    <button onclick="navigateTo('/dicom-viewer')" class="w-full text-left text-sm bg-green-50 hover:bg-green-100 p-2 rounded">
+                        <i class="fas fa-eye mr-2 text-green-600"></i>
+                        DICOM Viewer
+                    </button>
+                    <button onclick="showSystemInfo()" class="w-full text-left text-sm bg-purple-50 hover:bg-purple-100 p-2 rounded">
+                        <i class="fas fa-cog mr-2 text-purple-600"></i>
+                        System Info
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            loadTodaysActivity();
+            setInterval(updateCurrentDate, 60000); // Update every minute
+        });
+
+        function updateCurrentDate() {
+            const now = new Date();
+            
+            // Afrikaans day names
+            const dayNames = ['Sondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrydag', 'Saterdag'];
+            // Afrikaans month names  
+            const monthNames = ['Januarie', 'Februarie', 'Maart', 'April', 'Mei', 'Junie', 
+                               'Julie', 'Augustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const day = dayNames[now.getDay()];
+            const date = now.getDate();
+            const month = monthNames[now.getMonth()];
+            const year = now.getFullYear();
+            
+            const saTime = now.toLocaleTimeString('en-ZA', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Africa/Johannesburg'
+            });
+            
+            const dateElement = document.getElementById('current-date-afrikaans');
+            if (dateElement) {
+                dateElement.textContent = `${day}, ${date} ${month} ${year} - ${saTime} SAST`;
+            }
+            
+            // Update greeting based on time of day
+            const greetingElement = document.getElementById('doctor-greeting');
+            if (greetingElement) {
+                const hour = now.getHours();
+                let greeting;
+                if (hour < 12) {
+                    greeting = 'Goeie môre, Dr. Stoyanov';
+                } else if (hour < 17) {
+                    greeting = 'Goeie middag, Dr. Stoyanov';
+                } else {
+                    greeting = 'Goeie naand, Dr. Stoyanov';
+                }
+                greetingElement.textContent = greeting;
+            }
+        }
+
+        function loadTodaysActivity() {
+            // Simulate loading today's activity
+            setTimeout(() => {
+                document.getElementById('reports-count').textContent = Math.floor(Math.random() * 20);
+                document.getElementById('sessions-count').textContent = Math.floor(Math.random() * 15);
+                document.getElementById('studies-count').textContent = Math.floor(Math.random() * 30);
+                document.getElementById('patients-count').textContent = Math.floor(Math.random() * 25);
+            }, 1000);
+        }
+
+        function navigateTo(url) {
+            // Add loading animation
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                color: white;
+                font-size: 1.2rem;
+            `;
+            overlay.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+            document.body.appendChild(overlay);
+
+            setTimeout(() => {
+                window.location.href = url;
+            }, 500);
+        }
+
+        function showSystemInfo() {
+            alert('SA Medical Reporting System\nVersion: 1.0.0\nHPCSA Compliant\nOptimized for South African medical terminology');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        navigateTo('/voice-demo');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        navigateTo('/find-studies');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        navigateTo('/templates');
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

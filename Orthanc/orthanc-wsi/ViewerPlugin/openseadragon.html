@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <title>OpenSeadragon</title>
+
+    <!--
+
+        WARNING: OpenSeadragon v4.1.0 can sometimes request regions of negative
+        width or height. We thus stick to OSD v4.0.0 for the moment.
+        https://github.com/openseadragon/openseadragon/issues/2379
+
+      -->
+    <script src="https://unpkg.com/openseadragon@4.0.0/build/openseadragon/openseadragon.js"></script>
+  </head>
+
+  <body>
+    <div id="osd" style="width: 100%; height: 100%;"></div>
+    <script type="text/javascript">
+      var params = new URL(document.location).searchParams;
+      OpenSeadragon({
+      id:                 'osd',
+      prefixUrl:          'https://unpkg.com/openseadragon@4.0.0/build/openseadragon/images/',
+      preserveViewport:   true,
+      visibilityRatio:    1,
+      sequenceMode:       true,
+      tileSources:        [params.get('image')]
+      });
+    </script>
+  </body>
+</html>

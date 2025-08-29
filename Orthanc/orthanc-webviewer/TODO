@@ -1,0 +1,6 @@
+===============================
+== Orthanc Web viewer plugin ==
+===============================
+
+* Invalidate the cache once an instance or series get deleted:
+  https://groups.google.com/g/orthanc-users/c/VX6H4Qp_RSw/m/ZB_l4zVpAAAJ

@@ -1,0 +1,21 @@
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "database": "orthanc_sa",
+  "username": "orthanc_user",
+  "password": "secure_password",
+  "use_ssl": true,
+  "ssl_cert": "/path/to/client-cert.pem",
+  "ssl_key": "/path/to/client-key.pem",
+  "ssl_ca": "/path/to/ca-cert.pem",
+  "min_connections": 2,
+  "max_connections": 20,
+  "connection_timeout": 30,
+  "options": {
+    "charset": "utf8mb4",
+    "collation": "utf8mb4_unicode_ci",
+    "autocommit": "true",
+    "wait_timeout": "28800"
+  }
+}

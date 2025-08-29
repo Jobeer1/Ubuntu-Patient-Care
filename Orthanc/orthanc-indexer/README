@@ -1,0 +1,65 @@
+Folder indexer plugin for Orthanc
+=================================
+
+
+General Information
+-------------------
+
+This repository contains the source code of a plugin that
+automatically synchronizes the content of Orthanc with some
+filesystem.
+
+
+Installation and usage
+----------------------
+
+Build and usage instructions are available in the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/indexer.html
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing
+---------
+
+The folder indexer plugin for Orthanc is licensed under the GPL license.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the two following BibTeX entries:
+
+@Article{Jodogne2018,
+ title = {The Orthanc Ecosystem for Medical Imaging},
+ author = {Jodogne, S{\'e}bastien},
+ journal = {Journal of Digital Imaging},
+ volume = {31},
+ number = {3},
+ pages = {341-352},
+ issn = {1618-727X},
+ doi = {10.1007/s10278-018-0082-y},
+ publisher = {Springer Science and Business Media LLC},
+ year = {2018},
+ url = {https://doi.org/10.1007/s10278-018-0082-y}
+}
+
+@inproceedings{JodogneEuSoMII2021a,
+ title = {Automatically publishing medical images from a filesystem as a {DICOM} server},
+ author = {Jodogne, S{\'e}bastien},
+ booktitle = {EuSoMII Annual Meeting},
+ journal = {Insights into Imaging},
+ volume = {13},
+ number = {S2},
+ issn = {1869-4101},
+ doi = {10.1186/s13244-022-01168-w},
+ publisher = {SpringerOpen},
+ year = {2021},
+ url = {http://hdl.handle.net/2078.1/257257}
+}

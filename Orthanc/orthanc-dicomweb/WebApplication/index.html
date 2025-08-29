@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Orthanc - DICOMweb client</title>
+
+    <link type="text/css" rel="stylesheet" href="../libs/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="../libs/css/font-awesome.min.css"/>
+    
+    <script src="../libs/js/polyfill.min.js"></script>
+   
+    <!-- CSS style to truncate long text in tables, provided they have
+         class "table-layout:fixed;" or attribute ":fixed=true" -->
+    <style>
+      table {
+      table-layout:fixed;
+      }
+
+      table td { 
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      }
+    </style>
+    
+  </head>
+  <body>
+    <div class="container" id="app">
+      <p style="height:1em"></p>
+
+      <div class="bg-light mb-4 rounded-2 py-5 px-3">
+        <div class="row">
+          <div class="col-sm-8">
+            <h1 class="display-4">DICOMweb client</h1>
+            <p class="lead">
+              This is a simple client interface to the DICOMweb
+              servers that are configured in Orthanc. From this page,
+              you can search the content of remote DICOMweb servers
+              (QIDO-RS), then locally retrieve the DICOM
+              studies/series of interest
+              (WADO-RS). <a :href="orthancApiRoot"
+              target="_blank">Orthanc Explorer</a> can be used to send
+              DICOM resources to remote DICOMweb servers (STOW-RS).
+            </p>
+            <p>
+              <a class="btn btn-primary btn-lg"
+                 href="https://orthanc.uclouvain.be/book/plugins/dicomweb.html"
+                 target="_blank" role="button">Open documentation</a>
+              <a class="btn btn-primary btn-lg"
+                 :href="orthancApiRoot"
+                 target="_blank" role="button">Open Orthanc Explorer</a>
+            </p>
+          </div>
+          <div class="col-sm-4">
+            <a href="http://www.orthanc-server.com/" target="_blank">
+              <img class="img-fluid" alt="Orthanc" src="../libs/img/OrthancLogo.png" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="modal-error">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Connection error</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                There was an error connecting to "{{ activeServer }}" server.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- LOOKUP -->
+
+      <div class="row">
+        <div class="alert alert-danger alert-dismissible" v-if="showNoServer">
+          No DICOMweb server is configured!
+        </div>
+        <form style="width:100%;padding:5px;">
+          <div class="mb-3 row">
+            <label class="col-form-label col-sm-3 cols-lg-3">DICOMweb server:</label>
+            <div class="col-sm-9 cols-lg-9">
+              <select class="form-select" v-model="lookup.server">
+                <option v-for="option in servers">{{ option }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label class="col-form-label col-sm-3 cols-lg-3">Patient ID:</label>
+            <div class="col-sm-9 cols-lg-9">
+              <input type="text" class="form-control" v-model="lookup.patientID"></input>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label class="col-form-label col-sm-3 cols-lg-3">Patient name:</label>
+            <div class="col-sm-9 cols-lg-9">
+              <input type="text" class="form-control" v-model="lookup.patientName"></input>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label class="col-form-label col-sm-3 cols-lg-3">Accession number:</label>
+            <div class="col-sm-9 cols-lg-9">
+              <input type="text" class="form-control" v-model="lookup.accessionNumber"></input>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label class="col-form-label col-sm-3 cols-lg-3">Study date:</label>
+            <div class="col-sm-9 cols-lg-9">
+              <input type="text" class="form-control" v-model="lookup.studyDate"></input>
+            </div>
+          </div>
+          <p class="pull-right">
+            <button type="button" class="btn btn-lg btn-success" @click="OnLookup">Do lookup</button>
+            <button type="button" class="btn btn-lg btn-outline-danger" @click="OnReset">Reset</button>
+          </p>
+        </form>
+      </div>
+
+
+      <!-- STUDIES -->
+
+      <hr v-show="showStudies" ref="studies-top" />
+      <div class="row" v-show="showStudies">
+        <h1>Studies</h1>
+      </div>
+      <div class="row" v-show="showStudies">
+        <div class="alert alert-warning alert-dismissible" v-if="showTruncatedStudies">
+          More than {{ maxResults }} matching studies, results have been truncated!
+        </div>
+      </div>
+      <div class="row" v-show="showStudies">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col" v-for="column in studiesFields">{{column.label}}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="s in studies">
+              <td v-for="column in studiesFields">{{column.key in s ? s[column.key].Value : ''}}</td>
+              <td>
+                <button type="button" class="btn btn-secondary" @click="OpenSeries(s)" title="Open series">
+                  <i class="fa fa-folder-open"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="OpenStudyDetails(s)" title="Open tags">
+                  <i class="fa fa-address-card"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="RetrieveStudy(s)" title="Retrieve study using WADO-RS">
+                  <i class="fa fa-cloud-download"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="ConfirmDeleteStudy(s)" title="Delete remote study"
+                        v-if="serversInfo[activeServer].HasDelete == '1'">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="study-details">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Details of study</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-sm-2">Tag</th>
+                    <th scope="col" class="col-sm-3">Description</th>
+                    <th scope="col" class="col-sm-7">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in studyTags">
+                    <td class="col-sm-2">{{'Tag' in s ? s.Tag : ''}}</td>
+                    <td class="col-sm-3">{{'Name' in s ? s.Name : ''}}</td>
+                    <td class="col-sm-7">{{'Value' in s ? s.Value : ''}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="study-delete-confirm">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirm deletion</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Are you sure you want to remove this study from the remote server?
+              </p>
+              <p>
+                Patient name: {{ studyToDelete && studyToDelete['00100010'] && studyToDelete['00100010'].Value }}
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="ExecuteDeleteStudy">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- SERIES -->
+
+      <hr  v-show="showSeries" ref="series-top" />
+      <div class="row" v-show="showSeries">
+        <h1>Series</h1>
+      </div>
+      <div class="row" v-show="showSeries">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col" v-for="column in seriesFields">{{column.label}}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="s in series">
+              <td v-for="column in seriesFields">{{column.key in s ? s[column.key].Value : ''}}</td>
+              <td>
+                <button type="button" class="btn btn-secondary" @click="OpenSeriesPreview(s)" title="Preview">
+                  <i class="fa fa-eye"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="OpenSeriesDetails(s)" title="Open tags">
+                  <i class="fa fa-address-card"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="RetrieveSeries(s)" title="Retrieve series using WADO-RS">
+                  <i class="fa fa-cloud-download"></i>
+                </button>
+                <button type="button" class="btn btn-secondary" @click="ConfirmDeleteSeries(s)" title="Delete remote series"
+                        v-if="serversInfo[activeServer].HasDelete == '1'">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="series-preview">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Preview of series</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-danger alert-dismissible" v-if="previewFailure">
+                The remote DICOMweb server cannot generate a preview for this image.
+              </div>
+              <div class="text-center">
+                <img class="img-fluid" v-if="!previewFailure" v-bind:src="preview">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="series-details">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Details of series</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-sm-2">Tag</th>
+                    <th scope="col" class="col-sm-3">Description</th>
+                    <th scope="col" class="col-sm-7">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in seriesTags">
+                    <td class="col-sm-2">{{'Tag' in s ? s.Tag : ''}}</td>
+                    <td class="col-sm-3">{{'Name' in s ? s.Name : ''}}</td>
+                    <td class="col-sm-7">{{'Value' in s ? s.Value : ''}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="series-delete-confirm">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirm deletion</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Are you sure you want to remove this series from the remote server?
+              </p>
+              <p>
+                Series description: {{ seriesToDelete && seriesToDelete['0008103E'] && seriesToDelete['0008103E'].Value }}
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="ExecuteDeleteSeries">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal" tabindex="-1" id="retrieve-job">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Retrieving {{ jobLevel }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Orthanc is now running a background job to retrieve the
+                {{ jobLevel }} from remote server "{{ activeServer }}" using
+                WADO-RS.
+              </p>
+              <p>
+                Job ID: <tt>{{ jobId }}</tt>
+              </p>
+              <p>
+                Job details:
+              </p>
+              <pre>{{ jobDetails }}</pre>
+              <p>
+                <button type="button" class="btn btn-success" @click="RefreshJobDetails()">Refresh job details</button>
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <p style="height:5em"></p>
+    </div>
+
+    <script src="../libs/js/bootstrap.min.js"></script>
+    <script src="../libs/js/vue.min.js"></script>
+    <script src="../libs/js/axios.min.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+  </body>
+</html>

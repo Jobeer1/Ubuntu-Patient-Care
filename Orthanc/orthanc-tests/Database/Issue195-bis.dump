@@ -1,0 +1,5 @@
+# dump2dcm +Ug --write-xfer-little Issue195-bis.dump Issue195-bis.dcm
+#  => The tag (0008,4567) contains the binary value "42 00" (litte endian, in hexadecimal), as can be seen by hexdump
+
+(0008,4565) UN (no value available)   #   0, 1 StudyDescription
+(0008,4567) UN [42]

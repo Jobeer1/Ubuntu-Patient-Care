@@ -1,0 +1,56 @@
+<!doctype html>
+
+<html lang="us">
+  <head>
+    <meta charset="utf-8" />
+    <title>Orthanc DICOMweb Demo</title>
+  </head>
+
+  <body>
+    <h1>Orthanc DICOMweb Demo</h2>
+
+    <h2>STOW-RS - Upload DICOM file</h2>
+    <form id="stow">
+      <p>
+        DICOM file: 
+        <input id="stow-file" type="file" name="datafile">
+      </p>
+
+      <input type="submit"></input>
+    </form>
+    
+
+    <h2>QIDO-RS - Search for series</h2>
+    <form id="qido-series">
+      <p>
+        Patient ID:
+        <input type="text" name="PatientID" value="*"></input>
+      </p>
+
+      <p>
+        Patient Name:
+        <input type="text" name="PatientName" value="*"></input>
+      </p>
+
+      <p>
+        Study Description:
+        <input type="text" name="StudyDescription" value="*"></input>
+      </p>
+
+      <p>
+        Series Description:
+        <input type="text" name="SeriesDescription" value="*"></input>
+      </p>
+
+      <input type="submit"></input>
+    </form>
+
+    <h3>Results</h3>
+    <ul id="qido-series-results">
+    </ul>
+
+    <script src="jquery.min.js" type="text/javascript"></script>
+    <script src="qido-rs.js" type="text/javascript"></script>
+    <script src="stow-rs.js" type="text/javascript"></script>
+  </body>
+</html>

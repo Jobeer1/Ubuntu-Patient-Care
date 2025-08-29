@@ -1,0 +1,13 @@
+syntax: glob
+ThirdPartyDownloads/
+CMakeLists.txt.user
+*.cpp.orig
+*.h.orig
+.vs/
+.vscode/
+*~
+
+# when opening Orthanc in VSCode, it might find a java project and create files we wan't to ignore:
+.settings/
+.classpath
+.project

@@ -1,0 +1,422 @@
+=======================
+=== Orthanc Roadmap ===
+=======================
+
+For higher-level ideas in the roadmap, please first read the
+"Contributing to Orthanc" section of the Orthanc Book:
+https://orthanc.uclouvain.be/book/contributing.html
+
+
+Some features are being funded by an OpenCollective one-time donations.
+selected features are marked with priorities ((1) - higher, (2) - medium, (3) - nice to have)
+
+=======
+General
+=======
+
+* Configure an user-defined site UID root if generating DICOM UIDs
+  ("FromDcmtkBridge::GenerateUuid()")
+* Improve handling of errors in the command queue:
+  https://groups.google.com/d/msg/orthanc-users/--njEbqcDDI/rBu8XL-Mm-cJ
+* Support partial file retrieval in Orthanc::HttpClient
+* Support retry counter in Orthanc::HttpClient
+* Option to enable DNS lookups in DICOM:
+  https://orthanc.uclouvain.be/hg/orthanc/file/Orthanc-1.9.3/OrthancFramework/Sources/OrthancFramework.cpp#l88
+* Toolbox::ComputeMD5() fails on files larger than 4GB
+* Add an option to run Orthanc in read-only mode both for DICOM and for Rest API.
+* Logging: add more specific information to contextualize the logs.
+  For a DICOM Transfer, that would be nice to include the modality in the context + a study identifier or a job id.
+* (1) Accept extra DICOM tags dictionaries in the DCMTK format '.dic' (easier to use than declare
+  them in the Orthanc configuration file).  Even the standard dictionaries could be 
+  overridden by these custom dictionaries.
+* Add configurations to enable/disable warnings:
+  - Modifying an instance while keeping its original SOPInstanceUID: This should be avoided!
+  - Modifying a study while keeping its original StudyInstanceUID: This should be avoided!
+  In order to be able to disable/enable warnings in both the server and the framework, we should add a map of
+  enabled warnings in the logging classes directly and have something like:
+  LOG_WARNING_IF_ENABLED("Warning_ID") << ...
+  ENABLE_WARNING("Warning_ID", true)
+  Warnings from Framework should have a separate range like W999_ or WF001_ ...
+* Store the job registry in a dedicatd table in DB ?
+  https://discourse.orthanc-server.org/t/performance-issue-when-adding-a-lot-of-jobs-in-the-queue/3915/2
+  Note: that might also be the right time to have a central jobs registry when working
+  with multiple Orthanc instances on the same DB.
+  Note: the json serialization of a job "content" can be very large -> compress it before saving it to DB ?
+* Right now, some Stable events never occurs (e.g. when Orthanc is restarted before the event is triggered).
+  Since these events are used to e.g. generate dicom-web cache (or update it !), we should try
+  to make sure these events always happen.
+  - Generate the events when setting IsStable=true when starting an Orthanc (ok for SQLite) ?
+  - Also consider the use case of an Orthanc cluster that is being scaled-down just after one Orthanc instance
+    has received a few instances -> we can not only check for missing stable events at startup since no Orthanc will start.  
+    We would need to maintain the list of "unstable" resources in DB instead of memory only.
+  - Also check the PG plugin and its new table InvalidChildCounts, with a timestamp there, we can detect for
+    how long a study has not been modified !
+* In prometheus metrics, implement Histograms or Exponential Histograms to measure durations.  Right now, we only provide
+  "average" durations that are not very relevant
+  (https://opentelemetry.io/docs/specs/otel/metrics/data-model/#histogram)
+  - for job durations (+ have one histogram for each job)
+  - for HTTP request handling
+  - ...
+* Investigate if one could fix KeepAlive race conditions:
+  https://discourse.orthanc-server.org/t/socket-hangup-with-rest-api/4023/3
+* The DICOM file cache shall keep a MD5 of the cached file and compare it with MD5
+  from the DB.  That would allow 2 orthancs in a swarm to realize when the other
+  Orthanc has updated the file:
+  https://discourse.orthanc-server.org/t/instances-id-content-api-results-are-different-in-docker-swarm-replicas-of-orthanc/4582
+* Allow saving PrivateTags in ExtraMainDicomTags.
+  Note: they can actually be stored but they then appear as "Unknown Tag & Data" in the responses.
+  If we try to add the PrivateCreator in the ExtraMainDicomTags, then, the DICOMWeb plugin fails to initialize because the private tags are not known.
+* Support hashed passwords in RegisteredUsers.  E.g:
+  "RegisteredUsers": { 
+    "admin": {
+      "Password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8", 
+      "Hashing": "sha1"} }
+* Reuse the ThreadedInstanceLoader from the ArchiveJob in C-Store, peer/store ... to optimize loading
+  time when working with an object storage.
+
+
+============================
+Documentation (Orthanc Book)
+============================
+
+* Write a getting started guide (step by step) for each platform to replace
+  https://orthanc.uclouvain.be/book/users/cookbook.html :
+  - Ubuntu/Debian
+  - Windows (done)
+  - OSX
+  - Docker on Linux
+  Each step by step guide should contain:
+  - get binaries
+  - launch
+  - open explorer
+  - edit configuration file
+  - restart and observe changes
+
+* Explain how log rotation can be achieved (no built-in support in Orthanc)
+* Explain how to interface with Mirth/NextGen Connect
+  https://en.wikipedia.org/wiki/NextGen_Connect
+* How to reproduce issues by replacing Orthanc with storescp or wlmscpfs
+* How to capture TCP traffic of DICOM protocol using tcpdump and Wireshark
+* Add more configurations of viewers (Weasis, Slicer...):
+  https://orthanc.uclouvain.be/book/integrations.html
+* Discuss HL7 in a dedicated page:
+  https://groups.google.com/d/msg/orthanc-users/4dt4992O0lQ/opTjTFU2BgAJ
+  https://groups.google.com/g/orthanc-users/c/Spjtcj9vSPo/m/ktUArWxUDQAJ
+
+
+================
+Orthanc Explorer
+================
+
+* Option to tune the number of results for a local lookup:
+  https://groups.google.com/g/orthanc-users/c/LF39musq02Y/
+
+
+========
+REST API
+========
+
+----------
+Short-term
+----------
+
+
+--------
+Mid-term
+--------
+
+* (1) Archive jobs: Resume downloads using "range requests":
+  https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+* (3) Create DICOM from DICOMweb JSON ("application/dicom+json")
+  with "/tools/create-dicom"
+* (2) Create multi-frame images with /tools/create-dicom (by adding a
+  "MultiFrame" flag to avoid creating a series), or modify PixelData
+  of a multi-frame image:
+  https://groups.google.com/g/orthanc-users/c/y3-xa_GcdLM/m/m0Kr5G5UPAAJ
+* (1) Specify the transfer syntax in /tools/create-dicom
+  https://groups.google.com/g/orthanc-users/c/o15Dekecgds/m/xmPE2y3bAwAJ
+* Support Palette PNG in /tools/create-dicom:
+  https://discourse.orthanc-server.org/t/404-on-tools-create-dicom-endpoint-with-specific-png/3562
+* Support creation of DICOM files from MP4 in /tools/create-dicom.
+  Sample python code: https://github.com/salimkanoun/OrthancGif/blob/new-organisation/python/create_dicom_video.py.
+  We would need to extract frame rate + dimension from the MP4 which would
+  require ffmpeg or a similar library -> can not be done in the Orthanc core.
+  -> keep it for a python plugin
+  -> or require the payload to include rows/columns/cinerate/...
+* When creating e.g a PDF series with /tools/create-dicom with a ParentStudy,
+  the new series does not have the InstitutionName copied from the parent study.
+  Can be tested with "Add PDF" in OE2.
+* (1) In the /studies/{id}/anonymize route, add an option to remove
+  secondary captures.  They usually contains Patient info in the
+  image. The SOPClassUID might be used to identify such secondary
+  captures.
+* Support "/preview" and "/matlab" for LUT color images
+* /preview should be able to display a dose report:
+  https://discourse.orthanc-server.org/t/orthanc-image-preview-shows-empty-image/4459
+* Try to transcode files if a simple decoding fails:
+  https://groups.google.com/g/orthanc-users/c/b8168-NkAhA/m/Df3j-CO9CgAJ
+* (2) Ranges of DICOM tags for "Keep" and "Remove" in ".../modify" and ".../anonymize": 
+  https://groups.google.com/g/orthanc-users/c/6dETktKo9v8/m/b0LUvSfwAgAJ
+* return error code/reason in HTTP response if resubmit/cancel/pause fails ...
+* filter /changes by type e.g: /changes?filter=StablePatient
+  https://groups.google.com/g/orthanc-users/c/r20kDb0axms/m/2tzbQzYJAgAJ
+* save more details in jobs e.g: the resources being sent/exported ...
+  https://groups.google.com/g/orthanc-users/c/rDDusFG5Lco/m/TzTUjWXLAQAJ
+  https://discourse.orthanc-server.org/t/some-confusion-about-jobs-function/3887
+* allow filtering/ordering on the /jobs route:
+  https://groups.google.com/g/orthanc-users/c/hsZ1jng5rIg/m/8xZL2C1VBgAJ
+* add an "AutoDeleteIfSuccessful": false option when creating jobs 
+  https://discourse.orthanc-server.org/t/job-history-combined-with-auto-forwarding/3729/10
+* Allow skipping automatic conversion of color-space in transcoding/decoding.
+  The patch that was initialy provided was breaking the IngestTranscoding.
+  This might require a DCMTK decoding plugin ?
+  https://discourse.orthanc-server.org/t/orthanc-convert-ybr-to-rgb-but-does-not-change-metadata/3533/9
+* Implement a 'commit' route to force the Stable status earlier.
+  https://discourse.orthanc-server.org/t/expediting-stability-of-a-dicom-study-new-api-endpoint/1684
+
+
+---------
+Long-term
+---------
+
+* Stick to the JSONapi or JAREST guidelines for a "v2" of the API:
+  https://groups.google.com/forum/#!msg/orthanc-users/Bag-SwEE9ZI/-w7QXI6p7-oJ
+  http://www.admiraalit.nl/jarest/
+
+
+=====
+DICOM
+=====
+
+--------
+Mid-term
+--------
+
+* Check how Orthanc shall behave wrt to AcceptedSopClasses in these situations (consider Orthanc
+  accepts CT but not PT)
+  - What shall we log/warn if an external modality tries to send a PT/CT
+  - What shall we log/warn if we try to C-GET a PT/CT
+  Should the rejected files be logged as Failed, Warning, Refused, ...
+  Note: some tentative work has been initiated in the get-scu-test branch.
+* Support "Retrieve AE Title" (0008,0054) in C-FIND:
+  - On SCP side: done by https://orthanc.uclouvain.be/hg/orthanc/rev/1ec3e1e18f50
+  - On SCU side:
+    https://groups.google.com/d/msg/orthanc-users/wPl0g5mqZco/5X1Z8tEzBgAJ
+* Check Big Endian transfer syntax in ParsedDicomFile::EmbedImage and
+  DicomImageDecoder
+* Strict hierarchical C-FIND:
+  https://groups.google.com/d/msg/orthanc-users/VBHpeGVSNKM/tkaVvjWFBwAJ
+* report DIMSE error codes in Rest API and job status for /store /query /move /retrieve
+* Log outgoing C-Find queries
+* Support other Transfer Syntaxes in the Worklist plugin:
+  https://discourse.orthanc-server.org/t/could-you-please-create-an-option-to-set-the-transfer-syntax-in-the-worklist-plugin-currently-little-endian-explicit-is-fixed/4871
+* Deidentify Trace level logs: https://discourse.orthanc-server.org/t/dicom-log-deidentification-at-trace-log-level/5563
+  We should implement something like GetDeidentifiedContent(const DcmDataSet& dataset) that would 
+  reproduce DcmDataSet::print but hide individual elements that contain PHI.
+
+
+---------
+Long-term
+---------
+
+* Support extended association (e.g. for C-Find relational queries):
+  https://groups.google.com/d/msg/orthanc-users/xD4d3mpc6ms/srF7E2goAAAJ
+* Support C-MOVE-CANCEL:
+  https://groups.google.com/d/msg/orthanc-users/KnduYBFd06A/o86cl5SeCAAJ
+* Combine StudyDate + StudyTime in C-Find matching (also for the worklist plugin with 
+  ScheduledProcedureStartTime & Date).
+  We should first filter in SQL by StudyDate only, combine it with StudyTime into a single 
+  DateTime string and filter again in C++.
+  https://discourse.orthanc-server.org/t/performin-find-within-orthanc-for-time-frames/4704
+* Worklist plugin: support MPPS
+  https://github.com/orthanc-server/orthanc-setup-samples/blob/master/python-samples/worklist-with-mpps.py
+
+--------------------
+Internationalization
+--------------------
+
+* Support multiple specific character sets (cf. "SCSH32" in orthanc-tests)
+  - http://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.12.html#sect_C.12.1.1.2
+  - Japanese test: http://dicom.nema.org/MEDICAL/dicom/2017c/output/chtml/part05/sect_H.3.2.html
+  https://discourse.orthanc-server.org/t/garbled-characters-when-i-uploaded-japanese-patient-name/3204/5
+* Support Supplementary Kanji set (ISO 2022 IR 159)
+* Create DICOM files with multibyte encodings (Korean, JapaneseKanji, SimplifiedChinese)
+
+
+===========
+Performance
+===========
+
+* (2) DicomMap: create a cache to the main DICOM tags index
+* (3) Check out rapidjson: https://github.com/miloyip/nativejson-benchmark
+
+* Long-shot & not sure it is even feasible at all: try to reduce memory usage by implementing streaming
+  when receiving DICOM instances from the Rest API or from DICOM and store files directly to disk as they
+  are received.  Note that this would likely require rewriting large parts of Orthanc.  Note sure that 
+  would be compatible with Transcoding.
+  Use case: receiving 10 1GB instances in parallel can consume up to 20 GB
+  Alternative option 1: write an "external application/plugin" that would take care of these receptions, write the
+    file at the right place and send a signal to Orthanc to "adopt" the file.
+  Alternative option 2: declare a memory resource (X GB) that is available for reception.  Every time
+    Orthanc starts receiving a file, it reserves the memory or twice the memory (through a Semaphore)
+    if no memory is available, it waits and possibly timeouts returning a 503 or DIMSE A700 (out of resources).
+    This would at least protect from "out of memory" crashes.
+  Alternative option 3: Configure DCMTK to "stream" DICOM files on a temporary file on disk.  Pass the file handle
+    to Orthanc and/or the Storage plugin (instead of passing a memory buffer) -> the object-storage plugin could 
+    "stream" the file to the storage.  The HTTP server could also "stream" its response from file handles.
+    Transcoding should be "file based" too.
+  Alternative option 4: Catch out-of-memory exceptions at quite high level in HTTPHandlers and DICOM receivers
+    and implement retries.  After a few retries, fail for good and return "out-of-resources".
+    Would be interesting to log these errors and count them in the prometheus metrics.
+  Note: I'm (maybe naively) thinking that you only need the beginning of the file to get the DICOM tags to be stored 
+  in the database, so maybe the rest of the file could be "streamed" directly to disk and not kept in memory?
+* To investigate: usage of mapped_file (not only in the indexer plugin): 
+  https://discourse.orthanc-server.org/t/patch-for-orthanc-indexer-plugin-crashing-on-big-non-dicom-files/3849/7
+
+========
+Database
+========
+
+* Integration test searching for "\" and "%" in PatientName, PatientID...
+
+
+=======
+Plugins
+=======
+
+---
+SDK
+---
+
+* Implement PluginsJob::GetOutput() to allow user-defined jobs to provide output:
+  https://groups.google.com/g/orthanc-users/c/GZ7u0bTTVoo/m/Z7iTNTi2BgAJ
+* Add plugins for normalized operations (notably so as to support
+  Print SCU/SCP, cf. "dcmprscp"):
+  https://web.archive.org/web/20170923150432/https://www.medicalconnections.co.uk/kb/DICOM_Print_Service
+* Provide access to the Orthanc::DicomUserConnection class in plugins:
+  https://groups.google.com/d/msg/orthanc-users/ycDA1xPuTRY/nsT2_GOtEgAJ
+* Provide a C++ callback similar to "ReceivedInstanceFilter()" in Lua
+  https://orthanc.uclouvain.be/book/users/lua.html#filtering-incoming-dicom-instances
+  https://groups.google.com/d/msg/orthanc-users/BtvLTE5Ni8A/vIMhmMgfBAAJ
+* Update the SDK to handle buffer sizes > 4GB (all sizes are currently coded in uint32_t)
+* Add a C-Get SCP handler: OrthancPluginRegisterGetCallback
+  https://groups.google.com/g/orthanc-users/c/NRhPkYX9IXQ/m/mWS11g0jBwAJ
+* Add a primitive for user authentication (to generate 401 HTTP status, whereas
+  the "RegisterIncomingHttpRequestFilter()" can only generate 403 HTTP status)
+  https://groups.google.com/g/orthanc-users/c/ymtaAmgSs6Q/m/PqVBactQAQAJ
+* Add an index on the UUID column in the DelayedDeletion plugin:
+  https://discourse.orthanc-server.org/t/delayeddeletion-improvement-unique-index-on-pending-uuid-column/4032
+* Orthanc shall refuse to start if one registers 2 storage plugins.
+  Right now, this is not possible because OrthancPluginRegisterStorageArea2 does not return any value
+  and it can not throw an Exception because that's a core function called from a plugin -> the Exception
+  can not cross the C/C++ frontier safely -> we need a OrthancPluginRegisterStorageArea3 with a return value.
+  Ex: install DelayedDeletion + S3 storage.  Right now, the second plugin to load is just ignored with an error
+  message in the logs.
+
+
+-----------
+Housekeeper
+-----------
+
+* The Housekeeper should just refuse to start if you are using a lossy transfer syntax because that would generate 
+  new orthanc ids as well and there is a risk of messing up things.  tools/reconstruct shall return a 400 as well.
+  https://discourse.orthanc-server.org/t/crashes-on-housekeeper-transcode-storing-in-s3/5330/2
+
+----------------
+Ideas of plugins
+----------------
+
+* DICOM-RT primitives (RT-STRUCT, RT-PLAN, RT-DOSE)
+* Converter to/from NIfTI
+* Decode JPEG2k with grok: https://github.com/GrokImageCompression/grok
+* Generate dynamic HTTP content using Lua:
+  https://groups.google.com/d/msg/orthanc-users/KompazkxRSs/5Rh03mzgDAAJ
+* More generally, expose more callbacks of the plugin SDK in Lua:
+  https://groups.google.com/d/msg/orthanc-users/_FbiRHuXPGM/J-OAv7zaCAAJ
+* Configuration interface plugin
+
+
+===
+Lua
+===
+
+* Configure HTTP headers from Lua (in RestApiPost(), RestApiPut()
+  and RestApiDelete().
+  https://groups.google.com/forum/#!msg/orthanc-users/WNnW187OILM/6XX_bm96BwAJ
+* Retrieve HTTP status from calls to HttpGet, HttpPost, ...
+  https://discourse.orthanc-server.org/t/how-to-get-http-status-code-from-httppost/1263/4
+
+
+================
+Code refactoring
+================
+
+* Avoid direct calls to FromDcmtkBridge (make most of its 
+  methods private), go through ParsedDicomFile wherever possible
+
+
+=================
+Platform-specific
+=================
+
+---------
+Packaging
+---------
+
+* RHEL through EPEL (as of 2021, CentOS seems to be over):
+  http://fedoraproject.org/wiki/EPEL_Package_Maintainers
+* Fedora: Are DICOM dictionaries correctly located?
+  https://groups.google.com/g/orthanc-users/c/YB_LTBuUQNA/m/3H1xsrZJDgAJ
+
+------------------------
+Big-endian architectures
+------------------------
+
+* Check the generated 16bpp PNG images
+
+-----------------
+Microsoft Windows
+-----------------
+
+* Add compatibility with non-ASCII paths (Orthanc expresses its paths
+  as UTF-8 strings, but Windows expects them to be translated to the 
+  system locale)
+* Fix error message when stopping the service:
+  https://groups.google.com/g/orthanc-users/c/NyrwUJ9N6Ec/m/sTZIcWvaAgAJ
+  
+
+====
+Misc
+====
+
+-----------------
+Maintenance tools
+-----------------
+
+* Standalone tool to detect corrupted files:
+  https://groups.google.com/g/orthanc-users/c/KASEJ9Gx3vQ/m/MIJFJdRhAwAJ
+* Standalone tool to detect orphan files in OrthancStorage
+
+----------------------------------
+Code quality and integration tests
+----------------------------------
+
+* Have a look at openQA (cf. GNU Health)
+* Add integration tests for LUT
+* Add more complex testing scenarios like data-migration, change of 
+  configuration files, multiple orthanc interacting togethers with various 
+  config.  This should probably look like the python toolbox tests ...
+  - add a test to validate Modalities and Peers stored in DB are not lost 
+    while upgrading from one version to the other (Sylvain)
+* On Ubuntu 20.04, accesses to unitialized memory are sometimes
+  reported in libgjpeg by valgrind, if running the following command
+  (this is probably unrelated to Orthanc):
+  $ ./Start.sh --force Orthanc.test_bitbucket_issue_141 Orthanc.test_create_pdf Orthanc.test_decode_brainix_as_jpeg
+  
+
+---------------------
+External applications
+---------------------
+
+* Create REST bindings with Slicer
+* Create REST bindings with Horos/OsiriX

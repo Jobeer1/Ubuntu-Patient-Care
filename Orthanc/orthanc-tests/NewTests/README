@@ -1,0 +1,242 @@
+This is a new set of tests directly written in python3.  They should be able to handle 
+more complex scenarios like upgrades or change of configurations.
+
+Prerequisites:
+=============
+
+These tests use python3 and require some modules define in requirements.txt.  Therefore, you need
+to first execute 
+
+pip3 install -r requirements.txt 
+
+Introduction:
+============
+
+You may use these tests to debug Orthanc on your machine.  In this case, there is 
+usually a `preparation` phase and  `execution` phase.  You are usually able to 
+interrupt the tests between these 2 phases such that you can start your debugger.
+Use the `--break_after_preparation` option to do so.
+As well, you may skip the preperation phase thanks to the `--skip_preparation` option.
+
+The orthanc that is being tested is called the `orthanc-under-tests`.
+
+Examples:
+========
+
+All-tests:
+---------
+
+with a local executable:
+
+python3 NewTests/main.py --pattern=* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc/libHousekeeper.so \
+                         --plugin=/home/alain/o/build/orthanc/libDelayedDeletion.so \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/orthanc-gdcm/libOrthancGdcm.so
+
+
+with Docker:
+
+python3 NewTests/main.py --pattern=* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_previous_version_docker_image=orthancteam/orthanc:22.4.0 \
+                         --orthanc_under_tests_http_port=8043
+
+Housekeeper:
+-----------
+
+Run the Housekeeper tests with your locally build version and break between preparation
+and execution to allow you to start your debugger.
+
+//                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+
+python3 NewTests/main.py --pattern=Housekeeper.test_housekeeper.TestHousekeeper.test_before_after_reconstruction \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc/libHousekeeper.so \
+                         --break_after_preparation
+
+python3 NewTests/main.py --pattern=Housekeeper.test_housekeeper2.TestHousekeeper2.test_before_after_reconstruction \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc/libHousekeeper.so \
+                         --break_after_preparation
+
+The test script will:
+- generate 2 configuration file in the `configurations` folder,
+- start your local Orthanc version to prepare the db with one of the configuration file, 
+- drive this Orthanc to prepare the DB
+- interrupt and instruct you how to start your own version, pointing to the configuration file to use
+- execute tests
+
+
+ExtraMainDicomTags:
+------------------
+
+Runs an Orthanc in Index Only mode while storing extra main dicom tags and perform various find (including DicomWeb).
+
+Run the ExtraMainDicomTags tests with your locally build version.
+
+python3 NewTests/main.py --pattern=ExtraMainDicomTags.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --break_after_preparation
+
+The test script will:
+- generate 1 configuration file in the `configurations` folder,
+- interrupt and instruct you how to start your own version, pointing to the configuration file to use
+- execute tests
+
+WithIngestTranscoding:
+------------------
+
+Runs an Orthanc with IngestTranscoding configured.
+
+Run theses tests with your locally build version.
+
+python3 NewTests/main.py --pattern=WithIngestTranscoding.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --break_after_preparation
+
+The test script will:
+- generate 1 configuration file in the `configurations` folder,
+- interrupt and instruct you how to start your own version, pointing to the configuration file to use
+- execute tests
+
+
+StorageCompression:
+------------------
+
+Run the StorageCompression tests with your locally build version and break before and after preparation
+and execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=StorageCompression.test_storage_compression.TestStorageCompression.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --break_after_preparation \
+                         --break_before_preparation
+
+The test script will:
+- generate 2 configuration file in the `configurations` folder,
+- start your local Orthanc version to prepare the db with one of the configuration file, 
+- drive this Orthanc to prepare the DB
+- interrupt and instruct you how to start your own version, pointing to the configuration file to use
+- execute tests
+
+
+MaxStorage:
+----------
+
+Run the MaxStorage tests with your locally build version and break before and after preparation
+and execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=MaxStorage.test_max_storage_reject.TestMaxStorageReject.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --break_after_preparation
+
+python3 NewTests/main.py --pattern=MaxStorage.test_max_storage_pg.TestMaxStoragePG.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/pg/libOrthancPostgreSQLIndex.so \
+                         --break_after_preparation
+
+
+
+Authorization:
+--------------
+
+Run the Authorization tests with your locally build version and break before execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=Authorization.test_authorization.TestAuthorization.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/orthanc-authorization/libOrthancAuthorization.so \
+                         --break_before_preparation
+
+with Docker:
+
+python3 NewTests/main.py --pattern=Authorization.test_authorization.TestAuthorization.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_previous_version_docker_image=orthancteam/orthanc:24.3.3 \
+                         --orthanc_under_tests_http_port=8043
+
+
+Concurrency:
+-----------
+
+Run the Concurrency tests with your locally build version and break before execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=Concurrency.test_concurrency.TestConcurrency.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/pg/libOrthancPostgreSQLIndex.so \
+                         --break_before_preparation
+
+with Docker:
+
+python3 NewTests/main.py --pattern=Concurrency.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_under_tests_http_port=8043
+
+PG upgrades:
+-----------
+
+with Docker:
+
+python3 NewTests/main.py --pattern=PostgresUpgrades.test_pg_upgrades.TestPgUpgrades.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current
+
+
+Read Only PG:
+------------
+
+Run the Read Only tests with your locally build version and break before execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=ReadOnly.test_readonly_pg.TestReadOnlyPG.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/pg/libOrthancPostgreSQLIndex.so \
+                         --break_after_preparation
+
+with Docker (TODO):
+
+python3 NewTests/main.py --pattern=ReadOnly.test_readonly_pg.TestReadOnlyPG.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_under_tests_http_port=8043
+
+C-Get:
+-----
+
+with Docker:
+
+python3 NewTests/main.py --pattern=CGet.test_cget.TestCGet.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc-pre-release:2025.01.20
+
+AdvancedStorage:
+--------------
+
+Run the AdvancedStorage tests with your locally build version and break before execution to allow you to start your debugger.
+
+python3 NewTests/main.py --pattern=AdvancedStorage.test_advanced_storage.TestAdvancedStorage.* \
+                         --orthanc_under_tests_exe=/home/alain/o/build/orthanc/Orthanc \
+                         --orthanc_under_tests_http_port=8043 \
+                         --db=sqlite \
+                         --plugin=/home/alain/o/build/orthanc-dicomweb/libOrthancDicomWeb.so \
+                         --plugin=/home/alain/o/build/advanced-storage/libAdvancedStorage.so \
+                         --break_after_preparation
+
+with Docker:
+
+python3 NewTests/main.py --pattern=AdvancedStorage.test_advanced_storage.TestAdvancedStorage.* \
+                         --orthanc_under_tests_docker_image=orthancteam/orthanc:current \
+                         --orthanc_under_tests_http_port=8043

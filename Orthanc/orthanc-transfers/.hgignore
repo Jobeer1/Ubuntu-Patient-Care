@@ -1,0 +1,7 @@
+syntax: glob
+ThirdPartyDownloads/
+CMakeLists.txt.user
+*.cpp.orig
+*.h.orig
+*~
+.vscode/

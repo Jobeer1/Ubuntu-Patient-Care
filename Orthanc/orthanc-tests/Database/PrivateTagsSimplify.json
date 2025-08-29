@@ -1,0 +1,128 @@
+{
+    "AccessionNumber" : "",
+    "BitsAllocated" : "8",
+    "BitsStored" : "8",
+    "Columns" : "640",
+    "ContentDate" : "20040904",
+    "ContentTime" : "105101",
+    "ConversionType" : "WSD",
+    "DateOfSecondaryCapture" : "20040904",
+    "HighBit" : "7",
+    "ImageType" : "ORIGINAL\\PRIMARY\\ABDOMINAL\\0011\\GEMSSINGLEFRAME\\GEMSMGCOUNT1",
+    "InstanceNumber" : "0008",
+    "InstitutionName" : "Dr D'Eredita' Giuseppe",
+    "InstitutionalDepartmentName" : "Servizio di Ecografia Clinica",
+    "Manufacturer" : "GE Medical Systems",
+    "ManufacturerModelName" : "LOGIQBook",
+    "Modality" : "US",
+    "OperatorsName" : "adm",
+    "PatientBirthDate" : "19650126",
+    "PatientBirthTime" : "000000",
+    "PatientID" : "95",
+    "PatientName" : "s...........^v.......",
+    "PatientOrientation" : "",
+    "PatientSex" : "F",
+    "PhotometricInterpretation" : "RGB",
+    "PixelData" : null,
+    "PixelRepresentation" : "0",
+    "PlanarConfiguration" : "0",
+    "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+    "ReferringPhysicianName" : "",
+    "Rows" : "480",
+    "SOPClassUID" : "1.2.840.10008.5.1.4.1.1.7",
+    "SOPInstanceUID" : "1.2.840.113619.2.115.147416.1094281639.0.38",
+    "SamplesPerPixel" : "3",
+    "SecondaryCaptureDeviceID" : "LOGIQBook",
+    "SecondaryCaptureDeviceManufacturer" : "GE Medical Systems",
+    "SecondaryCaptureDeviceManufacturerModelName" : "LOGIQBook",
+    "SecondaryCaptureDeviceSoftwareVersions" : "LOGIQBook:R1.2.5",
+    "SeriesDate" : "20040904",
+    "SeriesInstanceUID" : "1.2.840.113619.2.115.147416.1094281639.0.30",
+    "SeriesNumber" : "0001",
+    "SeriesTime" : "102532",
+    "SoftwareVersions" : "LOGIQBook:R1.2.5",
+    "StationName" : "LOGIQBOOK",
+    "StudyDate" : "20040904",
+    "StudyID" : "",
+    "StudyInstanceUID" : "1.2.840.113619.2.115.147416.1094281639.0.29",
+    "StudyTime" : "102532",
+    "TimeOfSecondaryCapture" : "105100",
+    "Unknown Tag & Data" : [
+       {
+          "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+          "Unknown Tag & Data" : [
+             {
+                "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                "Unknown Tag & Data" : [
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "0"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "65535"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "Helvetica:14"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "0"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "1,0,1,1,1"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "0.30943396226415093\\0.11059907834101383\\0\\2"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "bif aort"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "Text"
+                   }
+                ]
+             },
+             {
+                "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                "Unknown Tag & Data" : [
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "-3.1415926535897931"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "0\\0\\0\\2"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "1"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "1,1,0,body1.bmp"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "0.72830188679245278\\0.74193548387096775\\0\\2"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "34\\54\\0\\2"
+                   },
+                   {
+                      "PrivateCreator" : "GEMS_Ultrasound_MovieGroup_001",
+                      "Unknown Tag & Data" : "BodyMark"
+                   }
+                ]
+             }
+          ]
+       }
+    ]
+ }
+ 

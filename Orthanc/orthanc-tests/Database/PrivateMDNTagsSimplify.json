@@ -1,0 +1,175 @@
+{
+   "AccessionNumber": "", 
+   "AcquisitionDate": "20120716", 
+   "AcquisitionDateTime": "20120716171219", 
+   "AcquisitionTime": "171219", 
+   "ActualFrameDuration": "3597793", 
+   "AttenuationCorrectionMethod": "CTAC-SG", 
+   "BitsAllocated": "16", 
+   "BitsStored": "16", 
+   "CollimatorType": "NONE", 
+   "Columns": "169", 
+   "ContentDate": "20120716", 
+   "ContentTime": "171344", 
+   "CorrectedImage": "DECY\\RADL\\ATTN\\SCAT\\DTIM\\RAN\\NORM", 
+   "CountsSource": "EMISSION", 
+   "DecayCorrection": "START", 
+   "DecayFactor": "1.0", 
+   "DeviceSerialNumber": "7053", 
+   "FieldOfViewDimensions": "903\\180", 
+   "FieldOfViewShape": "CYLINDRICAL RING", 
+   "FrameOfReferenceUID": "1.2.840.113704.1.111.4380.1342451339.9", 
+   "FrameReferenceTime": "1856793", 
+   "GenericGroupLength": "57130", 
+   "HighBit": "15", 
+   "ImageComments": "", 
+   "ImageIndex": "4", 
+   "ImageOrientationPatient": "1.000000\\0.000000\\0.000000\\0.000000\\1.000000\\0.000000", 
+   "ImagePositionPatient": "-336.683594\\-266.683594\\-163.599976", 
+   "ImageType": "ORIGINAL\\PRIMARY", 
+   "InstanceCreationDate": "20120716", 
+   "InstanceCreationTime": "171344", 
+   "InstanceNumber": "4", 
+   "InstitutionName": "C.H.U. Liege", 
+   "LargestImagePixelValue": "32765", 
+   "Manufacturer": "Philips Medical Systems", 
+   "ManufacturerModelName": "GEMINI TF TOF 16", 
+   "Modality": "PT", 
+   "NumberOfSlices": "45", 
+   "Original Image Filename": "p37s0_na_ctac.img", 
+   "PET-CT Multi Modality Name": "1.2.840.113704.1.111.6320.1342451261.21", 
+   "PatientAddress": "", 
+   "PatientBirthDate": "0", 
+   "PatientGantryRelationshipCodeSequence": [
+      {
+         "CodeMeaning": "feet-first", 
+         "CodeValue": "G-5191", 
+         "CodingSchemeDesignator": "99SDM"
+      }
+   ], 
+   "PatientID": "000000185", 
+   "PatientName": "Anonymous^Unknown", 
+   "PatientOrientationCodeSequence": [
+      {
+         "CodeMeaning": "recumbent", 
+         "CodeValue": "F-10450", 
+         "CodingSchemeDesignator": "99SDM", 
+         "PatientOrientationModifierCodeSequence": [
+            {
+               "CodeMeaning": "supine", 
+               "CodeValue": "F-10340", 
+               "CodingSchemeDesignator": "99SDM"
+            }
+         ]
+      }
+   ], 
+   "PatientPosition": "FFS", 
+   "PatientSex": "O", 
+   "PatientWeight": "9.293000", 
+   "PerformedProcedureStepDescription": "", 
+   "PerformedProcedureStepID": "2384880", 
+   "PerformedProcedureStepStartDate": "20120716", 
+   "PerformedProcedureStepStartTime": "170728", 
+   "PhotometricInterpretation": "MONOCHROME2", 
+   "PixelData": null, 
+   "PixelRepresentation": "1", 
+   "PixelSpacing": "4.000000\\4.000000", 
+   "PositionReferenceIndicator": "", 
+   "PrivateCreator": "Philips PET Private Group", 
+   "PrivateGroupLength": "10460", 
+   "ProtocolName": "CHU/Body_PET/CT___50", 
+   "RETIRED_OtherPatientIDs": "", 
+   "RETIRED_StudyComments": "", 
+   "RadiopharmaceuticalInformationSequence": [
+      {
+         "AdministrationRouteCodeSequence": [
+            {
+               "CodeMeaning": "Intravenous route", 
+               "CodeValue": "G-D101", 
+               "CodingSchemeDesignator": "SNM3"
+            }
+         ], 
+         "RadionuclideCodeSequence": [
+            {
+               "CodeMeaning": "^18^Fluorine", 
+               "CodeValue": "C-111A1", 
+               "CodingSchemeDesignator": "SNM3"
+            }
+         ], 
+         "RadionuclideHalfLife": "6586.199707", 
+         "RadionuclidePositronFraction": "0.967", 
+         "RadionuclideTotalDose": "90100000", 
+         "Radiopharmaceutical": "Fluorodeoxyglucose F^18^", 
+         "RadiopharmaceuticalCodeSequence": [
+            {
+               "CodeMeaning": "Fluorodeoxyglucose F^18^", 
+               "CodeValue": "C-B1031", 
+               "CodingSchemeDesignator": "SRT"
+            }
+         ], 
+         "RadiopharmaceuticalRoute": "Intravenous route", 
+         "RadiopharmaceuticalStartDateTime": "20120716155600", 
+         "RadiopharmaceuticalStartTime": "155600"
+      }
+   ], 
+   "RandomsCorrectionMethod": "DLYD", 
+   "ReconstructionDiameter": "676.000000", 
+   "ReconstructionMethod": "BLOB-OS-TF", 
+   "ReferencedPerformedProcedureStepSequence": [
+      {
+         "ReferencedSOPClassUID": "1.2.840.10008.3.1.2.3.3", 
+         "ReferencedSOPInstanceUID": "1.2.840.113704.1.111.4380.1342451248.1"
+      }
+   ], 
+   "ReferencedRawDataSequence": [
+      {
+         "ReferencedSOPClassUID": "1.2.840.10008.5.1.4.1.1.66", 
+         "ReferencedSOPInstanceUID": "1.3.46.670589.28.2.15.2216773740.3.28677.0.1342451482"
+      }
+   ], 
+   "ReferencedStudySequence": [], 
+   "ReferringPhysicianName": "", 
+   "RelatedSeriesSequence": [
+      {
+         "PurposeOfReferenceCodeSequence": [
+            {
+               "CodeMeaning": "For Attenuation Correction", 
+               "CodeValue": "122403", 
+               "CodingSchemeDesignator": "DCM"
+            }
+         ], 
+         "SeriesInstanceUID": "1.2.840.113704.1.111.4380.1342451435.18", 
+         "StudyInstanceUID": "1.2.840.113704.1.111.7016.1342451220.40"
+      }
+   ], 
+   "RescaleIntercept": "0", 
+   "RescaleSlope": "0.207791", 
+   "RescaleType": "US", 
+   "Rows": "169", 
+   "SOPClassUID": "1.2.840.10008.5.1.4.1.1.128", 
+   "SOPInstanceUID": "1.3.46.670589.28.2.15.30.26407.37145.3.2116.41.1342458737", 
+   "SamplesPerPixel": "1", 
+   "ScatterCorrectionMethod": "SS-SIMUL", 
+   "SeriesDate": "20120716", 
+   "SeriesDescription": "[WB_CTAC] Body", 
+   "SeriesInstanceUID": "1.3.46.670589.28.2.12.30.26407.37145.2.2516.0.1342458737", 
+   "SeriesNumber": "587370", 
+   "SeriesTime": "171121", 
+   "SeriesType": "WHOLE BODY\\IMAGE", 
+   "SliceLocation": "-163.599976", 
+   "SliceThickness": "4", 
+   "SmallestImagePixelValue": "0", 
+   "SoftwareVersions": "9.5.1\\PMSPT1.44", 
+   "SpecificCharacterSet": "ISO_IR 100", 
+   "StationName": "r054-svr", 
+   "StudyDate": "20120716", 
+   "StudyDescription": "TestSUVce-TF", 
+   "StudyID": "23848", 
+   "StudyInstanceUID": "1.2.840.113704.1.111.7016.1342451220.40", 
+   "StudyTime": "171117", 
+   "TypeOfDetectorMotion": "NONE", 
+   "Units": "BQML", 
+   "Unknown Tag & Data": null, 
+   "WindowCenter": "1.496995e+04", 
+   "WindowWidth": "2.993990e+04"
+}

@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: Stone of Orthanc
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Sébastien
+    family-names: Jodogne
+    email: sebastien.jodogne@uclouvain.be
+    affiliation: UCLouvain
+    orcid: 'https://orcid.org/0000-0001-6685-7398'
+identifiers:
+  - type: url
+    value: 'http://hdl.handle.net/2078.1/277125'
+    description: On the Use of WebAssembly for Rendering and Segmenting Medical Images
+repository-code: 'https://orthanc.uclouvain.be/hg/orthanc-stone/'
+url: 'https://orthanc.uclouvain.be/'
+license: AGPL-3.0-or-later
+version: 2.6
+date-released: 2024-08-31

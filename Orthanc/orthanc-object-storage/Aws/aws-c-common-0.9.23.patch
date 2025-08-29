@@ -1,0 +1,12 @@
+diff -urEb aws-c-common-0.9.23.orig/include/aws/common/byte_order.inl aws-c-common-0.9.23/include/aws/common/byte_order.inl
+--- aws-c-common-0.9.23.orig/include/aws/common/byte_order.inl	2024-06-20 20:25:49.000000000 +0200
++++ aws-c-common-0.9.23/include/aws/common/byte_order.inl	2024-06-23 14:55:38.563418806 +0200
+@@ -39,7 +39,7 @@
+     uint64_t v;
+     __asm__("bswap %q0" : "=r"(v) : "0"(x));
+     return v;
+-#elif defined(_MSC_VER)
++#elif defined(_MSC_VER) || defined(__MINGW32__)
+     return _byteswap_uint64(x);
+ #else
+     uint32_t low = x & UINT32_MAX;

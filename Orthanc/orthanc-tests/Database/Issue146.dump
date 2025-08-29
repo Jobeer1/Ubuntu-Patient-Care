@@ -1,0 +1,8 @@
+# dump2dcm +Ug --write-xfer-little Issue146.dump Issue146.dcm
+
+(0010,0020) LO HELLO^A          # Patient ID
+(0010,0010) PN HELLO^B          # Patient Name
+(0008,0016) UI =MRImageStorage  # SOPClassUID
+(0008,0020) DA 20200101         # Study Date, anonymized between 2008 and 2017c
+(0050,0020) LO HELLO^C          # Device Description, anonymized between 2017c and 2019c
+(3006,0002) SH HELLO^D          # StructureSetLabel, anonymized between 2019c and 2021b

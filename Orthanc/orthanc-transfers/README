@@ -1,0 +1,58 @@
+Transfers accelerator plugin for Orthanc
+========================================
+
+
+General information
+-------------------
+
+This repository contains the source code of a plugin for Orthanc that
+speeds up the transfers of DICOM instances over Internet.
+
+Instructions for the compilation and usage of the plugin is part of
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/transfers.html
+
+
+Content
+-------
+
+* ./Framework/         - Core C++ framework
+* ./Plugin/            - Source code of the plugin
+* ./Resources/         - Static resources
+* ./UnitTestsSources/  - Unit tests
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing
+---------
+
+The transfers accelerator plugin for Orthanc is licensed under the
+AGPL license.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="Jun",
+  day="01",
+  volume="31",
+  number="3",
+  pages="341--352",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

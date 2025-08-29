@@ -1,0 +1,15 @@
+Wishlist for the Folder indexer plugin
+======================================
+
+* From Marcel Nóbrega on 2021-09-25:
+  https://groups.google.com/g/orthanc-users/c/UIwiCfczmUE/m/7VARH6UUAAAJ
+
+  "For very large databases maybe there could be an option for a
+  starting point and a timed interval (something like "sync starting
+  from today, last three days of studies"), so orthanc could be used
+  as an option a simple contingency of a main server."
+
+* From Sylvain:
+  If MaximumStorageSize is defined in Orthanc, the indexer plugin 
+  stops indexing once this limit is reached.  MaximumStorageSize should
+  be used only for Orthanc own storage, not for indexed studies.

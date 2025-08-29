@@ -1,0 +1,64 @@
+GDCM decoder/transcoder plugin for Orthanc
+==========================================
+
+
+General Information
+-------------------
+
+This repository contains the source code of a plugin for Orthanc, the
+lightweight, RESTful DICOM server, that allows to decode and transcode
+DICOM images using GDCM.
+
+This plugin, without the transcoding primitives, was part of the
+samples of Orthanc < 1.7.0.
+
+
+Dependencies
+------------
+
+This plugin is based upon the GDCM project, an open-source
+implementation of the DICOM standard with advanced features for image
+decoding, by Mathieu Malaterre <mathieu.malaterre@gmail.com>:
+http://sourceforge.net/projects/gdcm/
+
+
+Installation and usage
+----------------------
+
+Build and usage instructions are available in the Orthanc Book:
+https://orthanc.uclouvain.be/book/plugins/gdcm.html
+
+
+Contributing
+------------
+
+Instructions for contributing to the Orthanc project are included in
+the Orthanc Book:
+https://orthanc.uclouvain.be/book/developers/repositories.html
+
+
+Licensing
+---------
+
+The GDCM plugin for Orthanc is licensed under the GPLv3 license.
+
+We also kindly ask scientific works and clinical studies that make
+use of Orthanc to cite Orthanc in their associated publications.
+Similarly, we ask open-source and closed-source products that make
+use of Orthanc to warn us about this use. You can cite our work
+using the following BibTeX entry:
+
+@Article{Jodogne2018,
+  author="Jodogne, S{\'e}bastien",
+  title="The {O}rthanc Ecosystem for Medical Imaging",
+  journal="Journal of Digital Imaging",
+  year="2018",
+  month="Jun",
+  day="01",
+  volume="31",
+  number="3",
+  pages="341--352",
+  issn="1618-727X",
+  doi="10.1007/s10278-018-0082-y",
+  url="https://doi.org/10.1007/s10278-018-0082-y"
+}

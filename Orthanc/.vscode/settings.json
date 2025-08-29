@@ -1,0 +1,19 @@
+{
+  // Use Command Prompt as the integrated terminal to avoid PowerShell crashes
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "terminal.integrated.profiles.windows": {
+    "Command Prompt": {
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "args": []
+    },
+    "PowerShell": {
+      "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": []
+    }
+  },
+  // Backwards-compatible setting for older VS Code versions
+  "terminal.integrated.shell.windows": "C:\\Windows\\System32\\cmd.exe"
+}
+{
+    "cmake.sourceDirectory": "C:/Users/parkh/OneDrive/Desktop/05i_DEMO_Reinforcement/Ubuntu Patient Sorg/Ubuntu-Patient-Care/Orthanc/orthanc-authorization"
+}

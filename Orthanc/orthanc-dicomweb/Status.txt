@@ -1,0 +1,177 @@
+Reference: http://dicom.nema.org/MEDICAL/dicom/2019a/output/html/part18.html
+
+
+=======================================
+6.2 WADO-URI (previously known as WADO)
+=======================================
+
+Supported
+---------
+
+* Retrieval of JPEG images ("&requestType=WADO&...")
+* Retrieval of DICOM file ("&requestType=WADO&contentType=application/dicom&...")
+* Retrieval of PNG images ("&requestType=WADO&contentType=image/png&...")
+
+
+Not supported
+-------------
+
+* Retrieval of DICOM SR (structured reports)
+* Retrieval of a region of a DICOM image
+* Manipulation of the image (annotations, windowing, thresholding...)
+* DICOM Response with a change in the transfer syntax
+* Specification of a quality for JPEG images
+
+
+
+================================
+6.5.1 WADO-RS / RetrieveStudy
+6.5.2 WADO-RS / RetrieveSeries
+6.5.3 WADO-RS / RetrieveInstance
+================================
+
+Supported
+---------
+
+* DICOM Response, if no change in the transfer syntax
+* DICOM Response with a change in the transfer syntax (since version 1.3)
+
+
+Not supported
+-------------
+
+* Bulk data response
+* MediaType data response
+
+
+
+================================
+6.5.4 WADO-RS / RetrieveFrames
+================================
+
+Almost entirely supported.
+
+The only missing feature is returning multi-frame media types (cf. Table 6.5-1).
+
+
+
+================================
+6.5.5 WADO-RS / RetrieveBulkdata
+================================
+
+Supported
+---------
+
+* application/octet-stream response
+
+
+Not supported
+-------------
+
+* MediaType data response
+* Range query (only entire bulk data object can be returned)
+
+
+
+================================
+6.5.6 WADO-RS / RetrieveMetadata
+================================
+
+Supported.
+
+
+
+===========================================
+6.5.8 WADO-RS / RetrieveRenderedTransaction
+===========================================
+
+http://dicom.nema.org/MEDICAL/dicom/2019a/output/chtml/part18/sect_6.5.8.html
+
+Supported
+---------
+
+* Single-frame and multi-frame retrieval
+* JPEG and PNG output
+* "quality" parameter
+* "viewport" parameter
+* "window" parameter
+
+Not supported
+-------------
+
+* GIF output
+* The following "Retrieve Rendered Query Parameters" (table 6.5.8-2):
+  annotation, charset, iccprofile
+
+
+
+===========
+6.6 STOW-RS
+===========
+
+Supported
+---------
+
+* DICOM Request
+* JSON Response (DICOM JSON Model Object from Annex F of PS3.18)
+* XML Response (Native DICOM Model of PS3.19)
+
+
+Not supported
+-------------
+
+* XML Metadata + Bulk Data Request
+* JSON Metadata + Bulk Data Request
+
+
+
+
+===========
+6.7 QIDO-RS
+===========
+
+
+Not supported
+-------------
+
+* Query against sequences
+* Flag "includefield=all"
+
+
+Ignored
+-------
+
+* Flag "fuzzymatching"
+* Header "Cache-control"
+
+
+
+===================
+6.8 RS Capabilities
+===================
+
+Not supported.
+
+
+
+===================
+6.9 UPS-RS Worklist
+===================
+
+Not supported.
+
+
+
+==========================================================
+CP 1509 - Refactor media type description for web services
+==========================================================
+
+Not supported.
+
+"There are some significant changes described in CP 1509 to various
+parts of the PS3.18 standard that defines DICOMweb services. [...] The
+most important changes are cleaning up the bulk data media types,
+adding a rendered component to the URL for rendered resources,
+clarifying that compressed bulk data never contains the encapsulation
+item tags, and making JSON support required on the server side and the
+default for query responses." [David Clunie]

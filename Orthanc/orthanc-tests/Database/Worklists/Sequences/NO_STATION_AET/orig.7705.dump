@@ -1,0 +1,44 @@
+# Dicom-Meta-Information-Header
+# Used TransferSyntax: Little Endian Explicit
+(0002,0000) UL 200                                      #   4, 1 FileMetaInformationGroupLength
+(0002,0001) OB 00\01                                    #   2, 1 FileMetaInformationVersion
+(0002,0002) UI [1.2.276.0.7230010.3.1.0.1]              #  26, 1 MediaStorageSOPClassUID
+(0002,0003) UI [1.2.276.0.7230010.3.1.4.2173265676.11480.1480155293.189] #  56, 1 MediaStorageSOPInstanceUID
+(0002,0010) UI =LittleEndianExplicit                    #  20, 1 TransferSyntaxUID
+(0002,0012) UI [1.2.276.0.7230010.3.0.3.6.0]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [OFFIS_DCMTK_360]                        #  16, 1 ImplementationVersionName
+
+# Dicom-Data-Set
+# Used TransferSyntax: Little Endian Explicit
+(0008,0005) CS [ISO_IR 100]                             #  10, 1 SpecificCharacterSet
+(0008,0050) SH [AN123456]                               #  14, 1 AccessionNumber
+(0008,0090) PN [ReferringPhysicianName]                 #  12, 1 ReferringPhysicianName
+(0008,1050) PN [PerformingPhysicianName]                #  12, 1 PerformingPhysicianName
+(0010,0010) PN [PatientName]                            #   4, 1 PatientName
+(0010,0020) LO [01234567]                               #  10, 1 PatientID
+(0010,0030) DA [20120201]                               #   8, 1 PatientBirthDate
+(0010,0040) CS [F]                                      #   2, 1 PatientSex
+(0010,2000) LO (no value available)                     #   0, 0 MedicalAlerts
+(0010,2110) LO (no value available)                     #   0, 0 Allergies
+(0010,2201) LO [Dog]                                    #   4, 1 PatientSpeciesDescription
+(0010,2297) PN [ResponsiblePerson]                      #  16, 1 ResponsiblePerson
+(0020,000d) UI [1.2.826.0.1.12345678.8.975.1.11.123456.20161117140053.7705] #  58, 1 StudyInstanceUID
+(0032,1032) PN [RequestingPhysician]                    #  12, 1 RequestingPhysician
+(0032,1060) LO (no value available)                     #   0, 0 RequestedProcedureDescription
+(0040,0100) SQ (Sequence with explicit length #=1)      # 166, 1 ScheduledProcedureStepSequence
+  (fffe,e000) na (Item with explicit length #=11)         # 158, 1 Item
+    (0008,0060) CS [DX]                                     #   2, 1 Modality
+    (0032,1070) LO (no value available)                     #   0, 0 RequestedContrastAgent
+    (0040,0001) AE [STATION_AET]                            #   8, 1 ScheduledStationAETitle
+    (0040,0002) DA [20161117]                               #   8, 1 ScheduledProcedureStepStartDate
+    (0040,0003) TM [140053]                                 #   6, 1 ScheduledProcedureStepStartTime
+    (0040,0006) PN [ScheduledPerformingPhysicianName]                           #  12, 1 ScheduledPerformingPhysicianName
+    (0040,0009) SH (no value available)                     #   0, 0 ScheduledProcedureStepID
+    (0040,0011) SH (no value available)                     #   0, 0 ScheduledProcedureStepLocation
+    (0040,0012) LO (no value available)                     #   0, 0 PreMedication
+    (0040,0400) LT (no value available)                     #   0, 0 CommentsOnTheScheduledProcedureStep
+    (0040,1005) LO [RequestedProcedureLocation]          #  34, 1 RequestedProcedureLocation
+  (fffe,e00d) na (ItemDelimitationItem for re-encoding)   #   0, 0 ItemDelimitationItem
+(fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem
+(0040,1001) SH (no value available)                     #   0, 0 RequestedProcedureID
+(0040,1003) SH (no value available)                     #   0, 0 RequestedProcedurePriority

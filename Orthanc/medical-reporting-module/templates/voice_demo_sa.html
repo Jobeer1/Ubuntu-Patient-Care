@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">                <h1 class="text-4xl font-bold text-white mb-4">
+                    <i class="fas fa-microphone mr-3"></i>
+                    SA Medical Voice Demo 🇿🇦
+                </h1>
+                <p class="text-xl text-gray-100">
+                    Professional voice dictation optimized for South African medical terminology
+                </p>itle>Voice Demo - SA Medical Reporting</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/sa-dashboard.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --sa-green: #007A4D;
+            --sa-gold: #FFB612;
+            --sa-blue: #002395;
+        }
+        
+        .voice-container {
+            background: linear-gradient(135deg, var(--sa-green) 0%, var(--sa-blue) 50%, var(--sa-gold) 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .voice-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 1rem;
+        }
+        
+        .microphone-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .microphone-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
+        }
+        
+        .microphone-button.recording {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .microphone-button.processing {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .transcription-area {
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .transcription-area.active {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0.25rem;
+        }
+        
+        .status-ready { background: #e8f5e8; color: #2e7d32; }
+        .status-listening { background: #fff3e0; color: #ef6c00; }
+        .status-processing { background: #e3f2fd; color: #1976d2; }
+        .status-error { background: #ffebee; color: #c62828; }
+        
+        .demo-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem;
+        }
+        
+        .demo-btn-primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+        
+        .demo-btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+        
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .medical-term {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="voice-container">
+        <!-- Header -->
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-white mb-4">
+                    <i class="fas fa-microphone mr-3"></i>
+                    SA Medical Voice Demo 🇿🇦
+                </h1>
+                <p class="text-xl text-white opacity-90">
+                    Professional voice dictation optimized for South African medical terminology
+                </p>
+                <div class="inline-block bg-orange-500 text-white px-4 py-2 rounded-full mt-4">
+                    <i class="fas fa-stethoscope mr-2"></i>
+                    Optimized for SA English and medical terminology
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Voice Interface -->
+        <div class="container mx-auto px-4">
+            <div class="voice-card max-w-4xl mx-auto">
+                
+                <!-- Status Indicators -->
+                <div class="text-center mb-6">
+                    <div id="status-indicators">
+                        <div class="status-indicator status-ready" id="status-ready">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Ready
+                        </div>
+                        <div class="status-indicator status-listening hidden" id="status-listening">
+                            <i class="fas fa-microphone mr-2"></i>
+                            Listening...
+                        </div>
+                        <div class="status-indicator status-processing hidden" id="status-processing">
+                            <i class="fas fa-cog fa-spin mr-2"></i>
+                            Processing...
+                        </div>
+                        <div class="status-indicator status-error hidden" id="status-error">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Error
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Microphone Button -->
+                <div class="text-center mb-8">
+                    <button id="microphone-btn" class="microphone-button">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <div class="mt-4">
+                        <p class="text-gray-600 text-lg">Click to start voice dictation</p>
+                        <p class="text-sm text-gray-500">Optimized for SA English and medical terminology</p>
+                    </div>
+                </div>
+
+                <!-- Transcription Area -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center">
+                        <i class="fas fa-clipboard-list mr-2 text-blue-600"></i>
+                        Live Transcription
+                    </h3>
+                    <div id="transcription-area" class="transcription-area">
+                        <div class="text-gray-500 text-center">
+                            <i class="fas fa-microphone-alt text-3xl mb-3"></i>
+                            <p>Your voice transcription will appear here...</p>
+                            <p class="text-sm mt-2">Speak clearly for best results with SA English medical terms</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="text-center mb-6">
+                    <button id="clear-btn" class="demo-btn demo-btn-secondary">
+                        <i class="fas fa-trash"></i>
+                        Clear Text
+                    </button>
+                    <button id="copy-btn" class="demo-btn demo-btn-primary">
+                        <i class="fas fa-copy"></i>
+                        Copy Text
+                    </button>
+                    <button id="save-btn" class="demo-btn demo-btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Report
+                    </button>
+                </div>
+
+                <!-- SA Medical Terms Examples -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-3 flex items-center">
+                        <i class="fas fa-stethoscope mr-2 text-green-600"></i>
+                        SA Mediese Terme Herkenning
+                    </h4>
+                    <div class="text-center">
+                        <span class="medical-term">Tuberkulose</span>
+                        <span class="medical-term">Hipertensie</span>
+                        <span class="medical-term">Diabetes mellitus</span>
+                        <span class="medical-term">MVA (Motor vehicle accident)</span>
+                        <span class="medical-term">GSW (Gunshot wound)</span>
+                        <span class="medical-term">HIV/AIDS</span>
+                        <span class="medical-term">PCP (Pneumocystis)</span>
+                        <span class="medical-term">Borskas X-straal</span>
+                        <span class="medical-term">CT skandering</span>
+                        <span class="medical-term">MRI skandering</span>
+                        <span class="medical-term">Bilateraal</span>
+                        <span class="medical-term">Konsolidasie</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3 text-center">
+                        Die stelsel is geoptimaliseer om hierdie en baie meer SA mediese terme te herken
+                    </p>
+                </div>
+
+                <!-- Demo Instructions -->
+                <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                    <h4 class="text-lg font-semibold mb-2 text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Hoe om te gebruik
+                    </h4>
+                    <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• Klik die mikrofoon knoppie om opname te begin</li>
+                        <li>• Praat duidelik teen 'n normale tempo</li>
+                        <li>• Gebruik mediese terminologie - die stelsel herken SA mediese terme</li>
+                        <li>• Klik weer om opname te stop en transkripsie te sien</li>
+                        <li>• Gebruik die beheer knoppies om jou teks te bestuur</li>
+                        <li>• Ondersteun beide Engels en basiese Afrikaanse mediese terme</li>
+                    </ul>
+                </div>
+
+                <!-- Navigation -->
+                <div class="text-center">
+                    <a href="/" class="demo-btn demo-btn-secondary">
+                        <i class="fas fa-home"></i>
+                        Back to Dashboard
+                    </a>
+                    <a href="/new-report" class="demo-btn demo-btn-primary">
+                        <i class="fas fa-file-medical"></i>
+                        Create Full Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/voice-demo-enhanced.js"></script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+services:
+
+  # Orthanc with PG plugin v2
+  orthanc-pg-15-2:
+    image: orthancteam/orthanc:18.4.3
+    container_name: orthanc-pg-15-2
+    depends_on: [pg-15]
+    restart: unless-stopped
+    ports: ["8049:8042"]
+    volumes: ["storage-orthanc-pg-15:/var/lib/orthanc/db"]
+    environment:
+      VERBOSE_ENABLED: "true"
+      PG_HOST: "pg-15"
+      PG_LOCK: "false"
+      PG_INDEX_ENABLED: "true"
+      AC_AUTHENTICATION_ENABLED: "false"
+
+  # Orthanc previous version
+  orthanc-pg-15-previous-revision:
+    image: orthancteam/orthanc:25.5.1
+    container_name: orthanc-pg-15-previous-revision
+    depends_on: [pg-15]
+    restart: unless-stopped
+    ports: ["8052:8042"]
+    volumes: ["storage-orthanc-pg-15:/var/lib/orthanc/db"]
+    environment:
+      VERBOSE_ENABLED: "true"
+      ORTHANC__POSTGRESQL__HOST: "pg-15"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+
+  # Orthanc previous version to run the integration tests
+  orthanc-pg-15-previous-revision-for-integ-tests:
+    image: orthancteam/orthanc:25.5.1
+    container_name: orthanc-pg-15-previous-revision-for-integ-tests
+    depends_on: [pg-15]
+    restart: unless-stopped
+    ports: ["8053:8042"]
+    volumes: 
+      - "storage-orthanc-pg-15:/var/lib/orthanc/db"
+      - "./orthanc-for-integ-tests.json:/etc/orthanc/orthanc.json"
+      - ./docker-entrypoint-integ-tests.sh:/docker-entrypoint-integ-tests.sh
+    entrypoint: /docker-entrypoint-integ-tests.sh
+
+    environment:
+      VERBOSE_ENABLED: "true"
+      ORTHANC__POSTGRESQL__HOST: "pg-15"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+
+  orthanc-tests:
+    image: jodogne/orthanc-tests
+    container_name: orthanc-tests
+    depends_on:
+      - orthanc-pg-15-previous-revision-for-integ-tests
+    volumes:
+      - ../../:/tests/orthanc-tests
+      - ./wait-for-it.sh:/scripts/wait-for-it.sh
+      - ./run-integ-tests-from-docker.sh:/scripts/run-integ-tests-from-docker.sh
+    entrypoint: /scripts/run-integ-tests-from-docker.sh
+
+  # Orthanc latest version
+  orthanc-pg-15-under-tests:
+    image: ${ORTHANC_IMAGE_UNDER_TESTS:-orthancteam/orthanc:latest}
+    container_name: orthanc-pg-15-under-tests
+    depends_on: [pg-15]
+    restart: unless-stopped
+    ports: ["8050:8042"]
+    volumes: ["storage-orthanc-pg-15:/var/lib/orthanc/db"]
+    environment:
+      VERBOSE_ENABLED: "true"
+      ORTHANC__POSTGRESQL: |
+        {
+          "Host": "pg-15",
+          "TransactionMode": "ReadCommitted"
+        }
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+
+
+  pg-15:
+    image: postgres:15
+    container_name: pg-15
+    restart: unless-stopped
+    volumes: 
+      - "storage-pg-15:/var/lib/postgresql/data"
+      - "./downgrade.sh:/scripts/downgrade.sh"
+      - "./downgrade.sql:/scripts/downgrade.sql"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    healthcheck:
+      test: pg_isready -U postgres -d postgres
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+
+  # Orthanc latest version
+  orthanc-pg-9-under-tests:
+    image: ${ORTHANC_IMAGE_UNDER_TESTS:-orthancteam/orthanc:latest}
+    container_name: orthanc-pg-9-under-tests
+    depends_on: [pg-9]
+    restart: unless-stopped
+    ports: ["8051:8042"]
+    volumes: ["storage-orthanc-pg-9:/var/lib/orthanc/db"]
+    environment:
+      VERBOSE_ENABLED: "true"
+      ORTHANC__POSTGRESQL: |
+        {
+          "Host": "pg-9",
+          "TransactionMode": "ReadCommitted"
+        }
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+
+
+  pg-9:
+    image: postgres:9.5
+    container_name: pg-9
+    restart: unless-stopped
+    volumes: ["storage-pg-9:/var/lib/postgresql/data"]
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    healthcheck:
+      test: pg_isready -U postgres -d postgres
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+volumes:
+  storage-orthanc-pg-15:
+  storage-pg-15:
+  storage-orthanc-pg-9:
+  storage-pg-9:

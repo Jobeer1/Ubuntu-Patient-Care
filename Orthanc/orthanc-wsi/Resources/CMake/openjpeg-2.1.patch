@@ -1,0 +1,44 @@
+diff -urEb openjpeg-version.2.1.orig/src/lib/openjp2/t1.c openjpeg-version.2.1/src/lib/openjp2/t1.c
+--- openjpeg-version.2.1.orig/src/lib/openjp2/t1.c	2016-07-15 10:36:18.575913348 +0200
++++ openjpeg-version.2.1/src/lib/openjp2/t1.c	2016-07-15 10:36:45.571914446 +0200
+@@ -85,13 +85,13 @@
+                 OPJ_INT32 orient,
+                 OPJ_INT32 oneplushalf,
+                 OPJ_INT32 vsc);
+-static INLINE void opj_t1_dec_sigpass_step_mqc(
++static void opj_t1_dec_sigpass_step_mqc(
+                 opj_t1_t *t1,
+                 opj_flag_t *flagsp,
+                 OPJ_INT32 *datap,
+                 OPJ_INT32 orient,
+                 OPJ_INT32 oneplushalf);
+-static INLINE void opj_t1_dec_sigpass_step_mqc_vsc(
++static void opj_t1_dec_sigpass_step_mqc_vsc(
+                 opj_t1_t *t1,
+                 opj_flag_t *flagsp,
+                 OPJ_INT32 *datap,
+@@ -179,20 +179,20 @@
+                                     OPJ_UINT32 vsc);
+ #endif
+ 
+-static INLINE void  opj_t1_dec_refpass_step_raw(
++static void  opj_t1_dec_refpass_step_raw(
+                 opj_t1_t *t1,
+                 opj_flag_t *flagsp,
+                 OPJ_INT32 *datap,
+                 OPJ_INT32 poshalf,
+                 OPJ_INT32 neghalf,
+                 OPJ_INT32 vsc);
+-static INLINE void opj_t1_dec_refpass_step_mqc(
++static void opj_t1_dec_refpass_step_mqc(
+                 opj_t1_t *t1,
+                 opj_flag_t *flagsp,
+                 OPJ_INT32 *datap,
+                 OPJ_INT32 poshalf,
+                 OPJ_INT32 neghalf);
+-static INLINE void opj_t1_dec_refpass_step_mqc_vsc(
++static void opj_t1_dec_refpass_step_mqc_vsc(
+                 opj_t1_t *t1,
+                 opj_flag_t *flagsp,
+                 OPJ_INT32 *datap,
+Only in openjpeg-version.2.1/src/lib/openjp2: t1.c~

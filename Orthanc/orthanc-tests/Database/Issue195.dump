@@ -1,0 +1,4 @@
+# dump2dcm +Ug --write-xfer-little Issue195.dump Issue195.dcm
+
+(0008,1030) LO (no value available)        #   0, 1 StudyDescription
+(0008,103e) LO [Hello1]                    #   0, 1 SeriesDescription

@@ -1,0 +1,73 @@
+Build & develop instructions
+============================
+
+Prerequisites:
+-------------
+
+- Install the usual build tools to build an Orthanc plugin (a good reference is the orthanc base image Dockerfile): https://github.com/jodogne/OrthancDocker/blob/master/base/Dockerfile
+- Install EMSDK (a good reference is the wasm-builder image Dockerfile): https://github.com/jodogne/OrthancDocker/tree/master/wasm-builder
+
+Create your build environment:
+-----------------------------
+
+mkdir ~/dev
+cd ~/dev
+hg clone https://orthanc.uclouvain.be/hg/orthanc/
+hg clone https://orthanc.uclouvain.be/hg/orthanc-stone/
+hg clone https://orthanc.uclouvain.be/hg/orthanc-dicomweb/
+mkdir -p ~/dev/build/orthanc
+mkdir -p ~/dev/build/orthanc-dicomweb
+mkdir -p ~/dev/build/wasm-stone-viewer
+mkdir -p ~/dev/build/stone-viewer-plugin
+
+# build orthanc
+cd ~/dev/build/orthanc
+cmake -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_CIVETWEB=OFF -DALLOW_DOWNLOADS=ON ../../orthanc/OrthancServer
+make -j 6
+
+# build orthanc-dicomweb
+cd ~/dev/build/orthanc-dicomweb
+cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC_BUILD -DALLOW_DOWNLOADS=ON ../../orthanc-dicomweb
+make -j 6
+
+# build the StoneViewer WASM code
+# note: for fast link time: use -DCMAKE_BUILD_TYPE=RelWithDebInfo.  However, this produces an output that is too large to be embedded in the plugin
+# therefore, when you build the plugin, build the WASM code with -DCMAKE_BUILD_TYPE=Release
+cd ~/dev/build/wasm-stone-viewer
+cmake ../../orthanc-stone/Applications/StoneWebViewer/WebAssembly -DLIBCLANG=/usr/lib/x86_64-linux-gnu/libclang-10.so -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DALLOW_DOWNLOADS=ON -G Ninja
+ninja install
+
+# build the StoneViewer Plugin
+cd ~/dev/build/stone-viewer-plugin
+cmake ../../orthanc-stone/Applications/StoneWebViewer/Plugin -DUSE -DCMAKE_BUILD_TYPE=Release -DSTATIC_BUILD=ON -DALLOW_DOWNLOADS=ON
+make -j 6
+
+
+Updating the code:
+-----------------
+
+To avoid rebuilding the plugin everytime you update the HTML/CSS/JS or C++ code from the WebAssembly, you can use the ServeFolders plugin
+to host this part of the code.  Here's a sample configuration file that works well for StoneViewer development:
+
+{
+    "AuthenticationEnabled": false,
+    "HttpPort": 8043,
+    "Plugins": [
+        "/home/alain/dev/build/stone-viewer-plugin/libStoneWebViewer.so",
+        "/home/alain/dev/build/orthanc-dicomweb/libOrthancDicomWeb.so",
+        "/home/alain/dev/build/orthanc/libServeFolders.so"
+    ],
+
+    "ServeFolders": {
+        "/stone-webviewer-live" : "/home/alain/o/orthanc-stone/wasm-binaries/StoneWebViewer/"
+    }
+}
+
+Everytime you modify the HTML/CSS/JS or C++ code from the WebAssembly, you don't need to restart Orthanc and can simply run
+cd ~/dev/build/wasm-stone-viewer && ninja install
+Then, the viewer is available on http://localhost:8043/stone-webviewer-live/index.html?study=1.2.3.4.5
+
+If you modify the plugin code, you must of course rebuild the plugin and restart Orthanc
+
+If you modify the scss files, you'll need to run:
+- Applications/StoneWebViewer/Resources$ ./node_modules/node-sass/bin/node-sass ./Styles/styles.scss > ../WebApplication/app.css as explained in Applications/StoneWebViewer/Resources/Styles.txt

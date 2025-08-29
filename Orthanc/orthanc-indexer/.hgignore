@@ -1,0 +1,4 @@
+syntax: glob
+*.cpp.orig
+*.h.orig
+*~
