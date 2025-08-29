@@ -1,0 +1,294 @@
+/* Orthanc Manager Styles - South African Healthcare Theme */
+
+.orthanc-manager {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Status Indicators */
+.status-online {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  animation: pulse-green 2s infinite;
+}
+
+.status-offline {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  animation: pulse-red 2s infinite;
+}
+
+.status-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  animation: pulse-yellow 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+}
+
+/* Server Control Buttons */
+.server-control-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.server-control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.server-control-btn:active {
+  transform: translateY(0);
+}
+
+.server-control-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Stats Cards */
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-icon {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+  transform: scale(1.1);
+}
+
+/* Quick Setup Panel */
+.quick-setup-panel {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-setup-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8, #3b82f6);
+  background-size: 200% 100%;
+  animation: gradient-flow 3s ease infinite;
+}
+
+@keyframes gradient-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Form Inputs */
+.orthanc-input {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.orthanc-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.orthanc-input:hover {
+  border-color: #9ca3af;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  border-bottom: 2px solid #f3f4f6;
+  background: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.tab-button {
+  padding: 16px 24px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: rgba(59, 130, 246, 0.05);
+  color: #3b82f6;
+}
+
+.tab-button.active {
+  border-bottom-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
+/* Server Status Panel */
+.server-status-panel {
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.status-item {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: between;
+  align-items: center;
+}
+
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.status-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.status-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.status-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Loading States */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f4f6;
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* South African Healthcare Colors */
+.sa-primary {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.sa-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.sa-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.sa-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 16px;
+  }
+  
+  .server-control-btn {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .quick-setup-panel {
+    margin: 16px 0;
+  }
+}
+
+/* Accessibility */
+.server-control-btn:focus,
+.tab-button:focus,
+.orthanc-input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .server-control-btn,
+  .tab-nav {
+    display: none;
+  }
+  
+  .stat-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}

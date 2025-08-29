@@ -1,0 +1,50 @@
+{
+  "155.235.81.1": {
+    "custom_name": "HP switch 1",
+    "mac_address": "74:46:a0:19:a1:c0",
+    "renamed_date": "2025-08-15T11:00:00Z",
+    "renamed_by": "admin"
+  },
+  "155.235.81.2": {
+    "custom_name": "HP switch 2",
+    "mac_address": "08:2e:5f:ec:30:c0",
+    "renamed_date": "2025-08-15T11:00:00Z",
+    "renamed_by": "admin"
+  },
+  "null": {
+    "name": "CT machine",
+    "ip_address": "155.235.81.120",
+    "last_updated": "2025-08-18T12:39:48.122442",
+    "mac_address": null
+  },
+  "74:46:a0:19:a1:c0": {
+    "name": "HP Switch1",
+    "ip_address": "155.235.81.1",
+    "last_updated": "2025-08-15T16:23:35.986467",
+    "mac_address": "74:46:a0:19:a1:c0"
+  },
+  "08:2e:5f:ec:30:c0": {
+    "name": "HP switch2",
+    "ip_address": "155.235.81.2",
+    "last_updated": "2025-08-18T08:39:32.259544",
+    "mac_address": "08:2e:5f:ec:30:c0"
+  },
+  "28:c6:8e:34:ab:af": {
+    "name": "Docadmin NAS",
+    "ip_address": "155.235.81.15",
+    "last_updated": "2025-08-18T08:40:18.724474",
+    "mac_address": "28:c6:8e:34:ab:af"
+  },
+  "b8:ca:3a:fa:0b:f4": {
+    "name": "Veeam server",
+    "ip_address": "155.235.81.30",
+    "last_updated": "2025-08-20T11:29:57.216719",
+    "mac_address": "b8:ca:3a:fa:0b:f4"
+  },
+  "24:5e:be:15:fb:9a": {
+    "name": "Pandora NAS",
+    "ip_address": "155.235.81.155",
+    "last_updated": "2025-08-20T11:42:50.326806",
+    "mac_address": "24:5e:be:15:fb:9a"
+  }
+}
