@@ -36,3 +36,27 @@ Thumbs.db
 *.dmg
 *.pkg
 *.deb
+
+# Database files (may contain patient data)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Patient/medical data
+**/instance/
+**/temp/
+**/certs/*.key
+**/certs/*.pem
+discovered_devices.json
+device_database.json
+indexing_progress.json
+
+# Authentication & secrets
+auth_utils.py
+*.env
+.env.*
+secrets.json
+config/secrets.py
+
