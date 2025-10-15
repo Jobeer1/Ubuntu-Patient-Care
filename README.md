@@ -1,5 +1,200 @@
 # 🏥 Ubuntu Patient Care 🇿🇦
-Your code can fight injustice. Your passion can heal a nation.
+**Your code can fight injustice. Your passion can heal a nation.**
+
+---
+
+## 🚨 **FOR CLINICIANS & HEALTHCARE WORKERS - START HERE!** 
+
+**👨‍⚕️ Are you a doctor, nurse, or healthcare worker who needs to use this system?**  
+**👉 [Click here for SIMPLE, NON-TECHNICAL instructions](#-for-clinicians--simple-setup)**
+
+**Not technical? No problem!**  
+1. ⬇️ [Download the system](#step-1-download-one-time-only)
+2. ▶️ [Start with ONE click](#step-2-start-the-system-one-click)
+3. 🌐 [Open in your browser](#step-3-access-the-system)
+
+---
+
+## 📊 How The System Works (Visual Guide)
+
+### 🏥 System Overview
+
+```mermaid
+graph TB
+    A[👨‍⚕️ Healthcare Worker] -->|Opens browser| B[🖥️ Ubuntu Patient Care]
+    B --> C[📝 Medical Reporting<br/>Voice Dictation]
+    B --> D[🖼️ Medical Imaging<br/>X-rays, CT, MRI]
+    B --> E[💰 Billing System<br/>Medical Aid Claims]
+    
+    C -->|Saves reports| F[(💾 Secure Database)]
+    D -->|Stores images| G[(📁 NAS Storage)]
+    E -->|Processes claims| H[🏛️ Medical Aid Schemes]
+    
+    style A fill:#e1f5ff
+    style B fill:#ffe1e1
+    style C fill:#e1ffe1
+    style D fill:#ffe1ff
+    style E fill:#fff9e1
+```
+
+### 🔄 Daily Workflow (Step-by-Step)
+
+```mermaid
+sequenceDiagram
+    participant C as 👨‍⚕️ Clinician
+    participant S as 🖥️ System
+    participant I as 🖼️ Images
+    participant R as 📝 Reports
+    participant B as 💰 Billing
+    
+    C->>S: 1. Start system (one click)
+    S->>C: ✅ System ready!
+    C->>I: 2. Open patient images
+    I->>C: Show X-rays/CT scans
+    C->>R: 3. Click microphone
+    C->>R: 4. Dictate report
+    R->>R: 5. AI converts speech to text
+    R->>C: 6. Review & save report
+    C->>B: 7. Generate claim
+    B->>C: ✅ Claim submitted!
+    
+    Note over C,B: 🎉 Complete patient workflow!
+```
+
+### 📱 Access From Anywhere
+
+```mermaid
+graph LR
+    A[💻 Desktop Computer] -->|HTTPS| D[☁️ Cloudflare Tunnel]
+    B[📱 Phone/Tablet] -->|HTTPS| D
+    C[🖥️ Another Clinic] -->|HTTPS| D
+    D -->|Secure Connection| E[🏥 Your Local System]
+    
+    style D fill:#ff9900
+    style E fill:#00cc66
+```
+
+---
+
+## 👨‍⚕️ FOR CLINICIANS — SIMPLE SETUP
+
+### ⚡ What You Need (3 things):
+1. ✅ A Windows computer (most clinics have this)
+2. ✅ Python installed (we'll show you how)
+3. ✅ 10 minutes of your time
+
+---
+
+### 📥 Step 1: Download (One-time only)
+
+**Option A: If you have Git (recommended)**
+1. Open PowerShell (search "PowerShell" in Windows start menu)
+2. Copy and paste this command:
+   ```powershell
+   cd $HOME\Desktop; git clone https://github.com/Jobeer1/Ubuntu-Patient-Care.git; cd Ubuntu-Patient-Care
+   ```
+3. Press Enter and wait for download to complete
+
+**Option B: Direct Download (easier)**
+1. Click this link: https://github.com/Jobeer1/Ubuntu-Patient-Care/archive/refs/heads/main.zip
+2. Extract the ZIP file to your Desktop
+3. Rename the folder to `Ubuntu-Patient-Care`
+
+---
+
+### 🐍 Install Python (One-time only)
+
+**Is Python already installed?** Check by opening PowerShell and typing:
+```powershell
+py --version
+```
+
+**If you see "Python 3.x.x" → You're good! Skip to Step 2.**
+
+**If you see an error:**
+1. Download Python from: https://www.python.org/downloads/
+2. Run the installer
+3. ✅ **IMPORTANT:** Check the box "Add Python to PATH"
+4. Click "Install Now"
+5. Restart your computer
+
+---
+
+### ▶️ Step 2: Start the System (ONE CLICK!)
+
+**This is the easiest way:**
+
+1. Go to: `Desktop\Ubuntu-Patient-Care\Orthanc\`
+2. Find the file: `START_SYSTEM.ps1`
+3. **Right-click** on it
+4. Select **"Run with PowerShell"**
+5. Wait for this message: **✅ SYSTEM READY!**
+
+**That's it!** The system is now running.
+
+**⚠️ Keep the PowerShell window open while you work!**
+
+---
+
+### 🌐 Step 3: Access the System
+
+**On the same computer:**
+- **Medical Reporting (Voice Dictation):** https://127.0.0.1:5443
+- **Medical Imaging (View X-rays/CT):** http://127.0.0.1:5000
+
+**From your phone or tablet:**
+1. You need a secure link (HTTPS) for microphone to work
+2. Open a NEW PowerShell window
+3. Run this command:
+   ```powershell
+   & "$env:USERPROFILE\cloudflared\cloudflared.exe" tunnel --url "https://127.0.0.1:5443" --no-tls-verify
+   ```
+4. Look for a link like: `https://something.trycloudflare.com`
+5. Open that link on any device!
+
+**Install Cloudflare Tunnel (one-time setup):**
+```powershell
+$dest = "$env:USERPROFILE\cloudflared"
+New-Item -ItemType Directory -Path $dest -Force
+Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile "$dest\cloudflared.exe"
+```
+
+---
+
+### 🛑 How to Stop the System
+
+**When you're done for the day:**
+1. Go to the PowerShell window
+2. Press `Ctrl + C` on your keyboard
+3. Wait for it to say "✅ All services stopped"
+4. Close the window
+
+**DON'T just close the window!** Always press `Ctrl + C` first.
+
+---
+
+### ⚠️ Common Problems & Quick Fixes
+
+| Problem | Solution |
+|---------|----------|
+| **"Python not found"** | Install Python from python.org (check "Add to PATH") |
+| **"Port already in use"** | Close PowerShell, wait 10 seconds, try again |
+| **Microphone doesn't work** | Use the Cloudflare Tunnel link (see above) |
+| **Can't access from phone** | Use Cloudflare Tunnel to get HTTPS link |
+| **System won't start** | Make sure Python is installed and in PATH |
+
+---
+
+### 📞 Need Help?
+
+**Don't struggle alone!** We're here to help:
+- 📧 Email: support@ubuntu-patient-care.com
+- 💬 GitHub: https://github.com/Jobeer1/Ubuntu-Patient-Care/issues
+- 📱 Take a screenshot and send it to us!
+
+**We want this to work for you! ❤️**
+
+---
 
 ## 🏆 HACKATHON DEMO - Try It Now!
 
@@ -27,27 +222,36 @@ bash setup_hackathon.sh
 - ✅ **Offline-First Design** - Works without internet
 - ✅ **Open Source & Free** - No licensing fees
 
+---
+
 ## 💔 The Problem. Our Problem.
+
 This is a story you know. A doctor needs an ultrasound to save a life, but the machine is "end of life." A multi-billion dollar company, like Philips, tells you, "Sorry, we can't offer any services or parts. Please buy a new machine."
 
 The frustration is real. Perfectly good machines are being decommissioned and shipped overseas as e-waste, deemed worthless by corporate mandates. Meanwhile, millions of our loved ones suffer because they cannot afford the systems that are built for profit, not for our people.
 
 This is not a business problem. It's a moral failure of a system that serves those who can pay, while leaving millions of our loved ones behind.
 
+---
+
 ## ✊ Our Mission. Our Rebellion.
+
 We are a small team of passionate developers who said: **ENOUGH!**
 
 We are building a free, open-source medical system to end this injustice. Ubuntu Patient Care is a comprehensive Radiology Information System (RIS), Picture Archiving and Communication System (PACS), and medical billing platform.
 
 We are building it to be accessible, maintainable, and ethically sound.
 
-🌍 Built for the people: Full offline functionality for clinics in remote areas with unreliable internet access.
+🌍 **Built for the people:** Full offline functionality for clinics in remote areas with unreliable internet access.
 
-💪 Built on strength: Powered by the open-source excellence of Orthanc, Whisper, and openEMR.
+💪 **Built on strength:** Powered by the open-source excellence of Orthanc, Whisper, and openEMR.
 
-🇿🇦 Built for our reality: A system deeply tailored for the unique needs of South Africa 🇿🇦, where over 52 million people are excluded from quality healthcare.
+🇿🇦 **Built for our reality:** A system deeply tailored for the unique needs of South Africa 🇿🇦, where over 52 million people are excluded from quality healthcare.
 
-## ❤️ Why Your Contribution Matters.
+---
+
+## ❤️ Why Your Contribution Matters
+
 We are a small team of four from different countries, united by this purpose. We are fighting a massive, powerful enemy, but we have a secret weapon: **You**.
 
 This isn't just about building software. It's about writing code that's helping to save lives of our loved ones.
@@ -62,9 +266,11 @@ This isn't just about building software. It's about writing code that's helping 
 
 This isn't a one-time effort. It is a continuous rebellion. It is a long, hard fight. But every line of code you contribute, every bug you fix, and every idea you share is a stand against a system that puts profit over our loved ones.
 
+---
+
 ## 🌟 World-First Features That Set Us Apart
 
-### �*🇦 **Uniquely South African**
+### 🇿🇦 **Uniquely South African**
 - **🗣️ 11 Official Languages Support** - Full interface in English, Afrikaans, isiZulu, isiXhosa, Sesotho, Setswana, Sepedi, Tshivenda, Xitsonga, siSwati, and isiNdebele
 - **🤝 Ubuntu Care Philosophy** - Community-centered healthcare with family involvement
 - **🌿 Traditional Medicine Integration** - World's first digital bridge between traditional African healing and modern medicine
@@ -73,7 +279,7 @@ This isn't a one-time effort. It is a continuous rebellion. It is a long, hard f
 
 ### 🚀 **Revolutionary Technology**
 - **🔄 Offline-First Architecture** - Full functionality without internet connection
-- **🏥 Advanced Patient Management** - Customized OpenEMR for South African workflows  
+- **🏥 Advanced Patient Management** - Customized OpenEMR for South African workflows
 - **📸 Enterprise DICOM Storage** - Orthanc PACS with intelligent NAS integration
 - **👁️ Professional Medical Imaging** - Browser-based DICOM viewer with AI enhancement
 - **💰 Intelligent Billing System** - Automated claims processing for all SA medical aids
@@ -81,279 +287,55 @@ This isn't a one-time effort. It is a continuous rebellion. It is a long, hard f
 - **📊 Real-Time Dashboard** - Live patient status and workflow management
 - **🤖 AI-Powered Insights** - Predictive analytics for better patient outcomes
 
-## 🚀 Quick Start
+---
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Jobeer1/Ubuntu-Patient-Care)
+## 📖 Full Documentation
 
-**🎯 For Hackathon Judges: Click the Gitpod button above to try our SA RIS system instantly!**
-
-### Prerequisites
-- Docker & Docker Compose
-- Ubuntu 20.04+ or compatible Linux distribution
-- Network Attached Storage (NAS) for image storage
-
-### Installation
-
-1. **Clone the repository:**
-```bash
-git clone https://github.com/Jobeer1/Ubuntu-Patient-Care.git
-cd Ubuntu-Patient-Care
-```
-
-2. **Run setup script:**
-```bash
-# For Linux/macOS
-./scripts/setup-github-project.sh
-
-# For Windows PowerShell
-.\scripts\setup-github-project.ps1
-```
-
-3. **Start the services:**
-```bash
-docker-compose up -d
-```
-
-4. **Access the system:**
-- Patient Management: http://localhost:8080
-- DICOM Viewer: http://localhost:8042
-- Dashboard: http://localhost:3000
-
-## 📋 Current Development Status
-
-### ✅ Completed
-- [x] Project structure and documentation
-- [x] GitHub project board setup
-- [x] Development workflow automation
-
-### 🚧 In Progress
-- [ ] **Design Offline-First Data Sync** - Local database with sync capabilities
-- [ ] **Containerize OpenEMR & Orthanc** - Docker deployment setup
-- [ ] **Customize OpenEMR for Local Radiology** - SA-specific forms and workflows
-- [ ] **Build Visual Dashboard/Worklist** - Real-time patient status interface
-- [ ] **Add Local Billing Codes** - ICD-10, NRPL integration
-- [ ] **Generate Invoices & Claims** - SA medical aid compatibility
-- [ ] **Ensure POPI Act Compliance** - Data encryption and audit logging
-
-## 🏗️ Architecture
-
-### Core Components
-
-1. **OpenEMR** - Patient management and electronic health records
-2. **Orthanc PACS** - DICOM image storage and retrieval
-3. **DICOM Viewer** - Web-based medical image viewing
-4. **Sync Service** - Offline-first data synchronization
-5. **Billing Engine** - SA medical aid integration
-6. **Dashboard** - Unified workflow interface
-
-### Data Flow
-```
-Patient Registration → OpenEMR → Dashboard
-					↓
-DICOM Images → Orthanc PACS → NAS Storage
-					↓
-Image Viewing → DICOM Viewer → Status Updates
-					↓
-Report Generation → Billing Engine → Medical Aid Claims
-```
-
-## 🛠️ Development
-
-### Team Structure
-- **Developer 1:** UI/UX, OpenEMR customization, dashboards
-- **Developer 2:** Backend, integration, billing, compliance, deployment
-
-### Development Workflow
-1. Create feature branch from `main`
-2. Implement changes following the project plan
-3. Submit pull request with detailed description
-4. Code review and testing
-5. Merge to main after approval
-
-### Project Management
-- **GitHub Projects** for task tracking
-- **Issues** for bug reports and feature requests
-- **Pull Requests** for code review
-- **Actions** for automated testing and deployment
-
-## 📁 Project Structure
-[📊 **Progress Tracker:** [South African Medical Imaging System Progress Tracker](orthanc-source/NASIntegration/SOUTH_AFRICAN_PROGRESS_TRACKER.md)]
-
-```
-├── scripts/                 # Setup and deployment scripts
-- **GEMS** (Government Employees) - Direct government integration
-- **Bonitas Medical Fund** - Automated claim processing
-- **Momentum Health** - Vitality program integration
-- **Medihelp** - XML-based claim submission
-- **Fedhealth** - Batch processing support
-- **Bestmed** - Real-time eligibility verification
-- **POLMED** (Police Medical) - Specialized law enforcement support
-- **SAMWUMED** (Municipal Workers) - Union-specific features
-- **Compensation Fund (COIDA)** - Workplace injury claims
-- **Road Accident Fund (RAF)** - Accident-related claims
-
-### 🌿 **Traditional Medicine Integration**
-- **Sangoma Consultation System** - Digital integration with traditional healers
-- **Herbal Medicine Database** - Comprehensive South African medicinal plants
-- **Drug-Herb Interaction Checker** - Safety monitoring for traditional remedies
-- **Cultural Sensitivity Engine** - Ubuntu philosophy in patient care
-- **Traditional Healer Referral Network** - Verified practitioner directory
-
-### ⚡ **Load Shedding Intelligence**
-- **Real-Time Eskom Integration** - Live load shedding schedules
-- **Intelligent Backup Management** - Automated power switching
-- **Critical Equipment Protection** - Priority power allocation
-- **Patient Notification System** - Automatic appointment adjustments
-- **Emergency Protocol Activation** - Seamless crisis management
-
-### 🔒 **POPI Act Excellence**
-- **Military-Grade Encryption** - AES-256 data protection
-- **Comprehensive Audit Trails** - Every action logged and monitored
-- **Patient Consent Management** - Digital consent with cultural considerations
-- **Data Retention Policies** - 7-year medical record compliance
-- **Cross-Border Data Protection** - International patient privacy
-
-## 📁 Detailed Project Structure
-
-### 🖥️ South African Tailored PACS & Reporting - **Orthanc**
-
-```plaintext
-Orthanc/
-├── LICENSE
-├── package.json
-├── README.md
-├── tsconfig.json
-├── UbuntuPatientSorg_Plan.md
-├── orthanc-source/
-│   ├── AUTHORS
-│   ├── CITATION.cff
-│   ├── COPYING
-│   ├── DarwinCompilation.txt
-│   ├── INSTALL
-│   ├── LinuxCompilation.txt
-│   ├── NAS_INTEGRATION_PLAN.md
-│   ├── NAS_REQUIREMENTS.md
-│   ├── NEWS
-│   ├── README
-│   ├── STRUCTURE.md
-│   ├── TODO
-│   ├── NASIntegration/
-│   │   └── SOUTH_AFRICAN_PROGRESS_TRACKER.md
-│   ├── OrthancFramework/
-│   └── OrthancServer/
-├── React phones/
-├── scripts/
-└── (other directories)
-```
-
-### 🩺 RIS / Medical Billing - **OpenEMR Components**
-
-```plaintext
-openemr/
-├── admin.php
-├── index.php
-├── build.xml
-├── README.md
-├── composer.json
-├── (other configuration files...)
-├── apis/
-├── controllers/
-├── modules/
-├── public/
-└── src/
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=patient_care
-DB_USER=admin
-DB_PASS=secure_password
-
-# NAS Configuration
-NAS_HOST=192.168.1.100
-NAS_SHARE=/medical_images
-NAS_USER=orthanc
-NAS_PASS=nas_password
-
-# Orthanc Configuration
-ORTHANC_HTTP_PORT=8042
-ORTHANC_DICOM_PORT=4242
-```
-
-### Docker Compose Services
-- `openemr` - Patient management system
-- `orthanc` - DICOM server
-- `postgres` - Database server
-- `nginx` - Web server and reverse proxy
-- `dashboard` - Custom workflow interface
-
-## 🧪 Testing
-
-### Running Tests
-```bash
-# Unit tests
-npm test
-
-# Integration tests
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-
-# End-to-end tests
-npm run test:e2e
-```
-
-### Test Coverage
-- Patient registration workflows
-- DICOM image upload and retrieval
-- Billing code validation
-- Offline sync functionality
-- Security and compliance checks
-
-## 📚 Documentation
-
-- [📋 Project Plan](UbuntuPatientSorg_Plan.md) - Detailed development roadmap
-- [💾 NAS Requirements](orthanc-source/NAS_REQUIREMENTS.md) - NAS integration specifications  
-- [🔌 API Documentation](docs/api.md) - REST API reference
-- [👥 User Guide](docs/user-guide.md) - End-user documentation
-- [🚀 Deployment Guide](docs/deployment.md) - Production setup instructions
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Code Standards
-- Follow existing code style and conventions
-- Write comprehensive tests for new features
-- Update documentation for any API changes
-- Ensure POPI Act compliance for all data handling
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Issues:** [GitHub Issues](https://github.com/Jobeer1/Ubuntu-Patient-Care/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Jobeer1/Ubuntu-Patient-Care/discussions)
-- **Email:** [support@ubuntu-patient-care.com](mailto:support@ubuntu-patient-care.com)
-
-## 🙏 Acknowledgments
-
-- [Orthanc](https://www.orthanc-server.com/) - DICOM server foundation
-- [OpenEMR](https://www.open-emr.org/) - Electronic health records system
-- South African medical community for requirements and feedback
+**For detailed technical documentation:**
+- 📋 [Complete Clinician Guide](Orthanc/README.md) - Step-by-step for healthcare workers
+- 📊 [Clinician Documentation Summary](Orthanc/CLINICIAN_DOCS_SUMMARY.md) - Overview of features
+- 🔧 [Developer Documentation](#) - For contributors and developers
+- 🏥 [PACS/RIS Integration Guide](#) - Medical imaging setup
 
 ---
 
-**Built with ❤️ for South African healthcare providers**
+## 🤝 Contributing
 
+We welcome contributions from the global community fighting healthcare injustice!
 
+### How to Contribute
+1. 🍴 Fork the repository
+2. 🌿 Create a feature branch (`git checkout -b feature/heal-the-world`)
+3. 💾 Commit your changes (`git commit -m 'Add life-saving feature'`)
+4. 📤 Push to branch (`git push origin feature/heal-the-world`)
+5. 🔄 Open a Pull Request
 
+---
+
+## 📄 License
+
+This project is licensed under the **GPL-3.0 License** - making healthcare accessible to all.
+
+---
+
+## 🙏 Acknowledgments
+
+- **🏥 Orthanc Project** - DICOM server foundation
+- **📋 OpenEMR** - Electronic health records system
+- **🇿🇦 South African Medical Community** - Requirements and validation
+- **🌍 Global Open Source Community** - Collaborative development
+
+---
+
+<div align="center">
+
+**🏥 Ubuntu Patient Care - Healthcare Revolution Through Code 🏥**
+
+*"Your code can fight injustice. Your passion can heal a nation."* 🇿🇦
+
+[![Star this repo](https://img.shields.io/github/stars/Jobeer1/Ubuntu-Patient-Care?style=social)](https://github.com/Jobeer1/Ubuntu-Patient-Care)
+[![Fork this repo](https://img.shields.io/github/forks/Jobeer1/Ubuntu-Patient-Care?style=social)](https://github.com/Jobeer1/Ubuntu-Patient-Care/fork)
+
+**🏆 Code with Kiro Hackathon 2025 - Fighting Healthcare Injustice 🏆**
+
+</div>
