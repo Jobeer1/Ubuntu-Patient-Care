@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "type": "smb",
+  "host": "",
+  "port": 445,
+  "share": "",
+  "username": "",
+  "password": "",
+  "domain": "",
+  "path": "/dicom",
+  "timeout": 30,
+  "retry_attempts": 3,
+  "retry_delay": 5,
+  "auto_reconnect": true,
+  "connection_pool_size": 5
+}

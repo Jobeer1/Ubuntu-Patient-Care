@@ -1,0 +1,421 @@
+/* SA Medical Dashboard Styles */
+
+/* Recording button animations */
+.recording {
+    background-color: #ef4444 !important;
+    color: white !important;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.05); 
+        opacity: 0.8; 
+    }
+    100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+}
+
+/* Processing state */
+.processing {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+/* Audio visualizer */
+.audio-bar {
+    width: 4px;
+    background-color: #3b82f6;
+    margin: 0 1px;
+    border-radius: 2px;
+    transition: height 0.1s ease;
+}
+
+/* Status indicators */
+.status-indicator {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 8px 0;
+}
+
+.status-ready {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.status-listening {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+.status-processing {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.status-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Microphone button specific */
+.microphone-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto;
+}
+
+/* Support UIManager status 'listening' on various button variants
+   - some templates use .microphone-button, others use .microphone-btn or utility classes
+   - UIManager adds the class 'listening' at runtime, so ensure it maps to the recording style */
+.microphone-button.listening,
+.microphone-btn.listening,
+.listening {
+    background-color: #ef4444 !important; /* red */
+    color: white !important;
+    animation: pulse 1.5s infinite;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Transcription area */
+.transcription-area {
+    min-height: 300px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.transcription-area:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Template buttons */
+.template-btn {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 4px;
+}
+
+.template-btn:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+/* Control buttons */
+.control-btn {
+    background-color: #6b7280;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 0 4px;
+    transition: background-color 0.2s ease;
+}
+
+.control-btn:hover {
+    background-color: #4b5563;
+}
+
+.control-btn.clear {
+    background-color: #ef4444;
+}
+
+.control-btn.clear:hover {
+    background-color: #dc2626;
+}
+
+.control-btn.copy {
+    background-color: #10b981;
+}
+
+.control-btn.copy:hover {
+    background-color: #059669;
+}
+
+.control-btn.save {
+    background-color: #8b5cf6;
+}
+
+.control-btn.save:hover {
+    background-color: #7c3aed;
+}
+
+/* Processing indicator */
+.processing-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(59, 130, 246, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10;
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.notification.success {
+    background-color: #10b981;
+}
+
+.notification.error {
+    background-color: #ef4444;
+}
+
+.notification.info {
+    background-color: #3b82f6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .microphone-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .transcription-area {
+        min-height: 200px;
+        font-size: 14px;
+    }
+    
+    .btn-primary {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .template-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Accessibility improvements */
+.btn-primary:focus,
+.control-btn:focus,
+.template-btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .recording {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 2px solid #fff !important;
+    }
+    
+    .status-indicator {
+        border-width: 2px;
+    }
+}
+
+/* Training interface styles */
+.training-interface {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.training-interface .bg-blue-50 {
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+}
+
+.training-feedback {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shortcut interface styles */
+.create-shortcut-interface {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.shortcut-item {
+    transition: all 0.2s ease;
+}
+
+.shortcut-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mode tabs */
+.mode-tab {
+    transition: all 0.2s ease;
+}
+
+.mode-tab.active {
+    background-color: #2563eb;
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.mode-tab:not(.active) {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.mode-tab:not(.active):hover {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+/* Training category cards */
+.training-category {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.training-category:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress bars */
+.progress-bar {
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background-color: #3b82f6;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Audio feedback indicators */
+.audio-feedback {
+    padding: 12px;
+    border-radius: 8px;
+    margin: 8px 0;
+}
+
+.audio-feedback.success {
+    background-color: #d1fae5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+}
+
+.audio-feedback.warning {
+    background-color: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.audio-feedback.error {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+/* Form validation styles */
+input:invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+input:valid {
+    border-color: #10b981;
+}
+
+/* Disabled button styles */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .recording {
+        animation: none;
+    }
+    
+    .btn-primary:hover {
+        transform: none;
+    }
+    
+    .training-category:hover {
+        transform: none;
+    }
+    
+    * {
+        transition: none !important;
+    }
+}

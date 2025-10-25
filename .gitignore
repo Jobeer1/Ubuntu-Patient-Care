@@ -1,0 +1,85 @@
+# Ignore large model weights globally (but allow base.pt - required for Whisper speech-to-text)
+**/*.pt
+!**/models/whisper/base.pt
+**/cache/
+**/models/whisper/cache/
+
+# Ignore large log files
+**/robocopy_log.txt
+**/robocopy_verbose_log.txt
+
+# Ignore all markdown documentation files (moved to separate folder for Google Drive)
+*.md
+!README.md
+!LICENSE
+
+# Environment & secrets - handled in separate Complete-Package folder
+.env
+.env.local
+.env.*.local
+.env.template
+secrets/
+**/.env*
+
+# Python caches and virtualenvs
+__pycache__/
+*.pyc
+**/__pycache__/
+venv/
+*.egg-info/
+
+# Node modules and build artifacts
+**/node_modules/
+**/dist/
+**/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+
+# Documentation files with secrets (stored in Complete-Package)
+docs/ONEDRIVE_COMPLETE.md
+docs/ONEDRIVE_VISUAL_GUIDE.md
+docs/CLOUD_STORAGE_READY.md
+docs/ALL_INTEGRATIONS_COMPLETE.md
+
+# IDE
+.vscode/
+.idea/
+
+# Large files
+*.gz
+*.zip
+*.tar
+*.exe
+*.dmg
+*.pkg
+*.deb
+
+# Database files (may contain patient data)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Patient/medical data
+**/instance/
+**/temp/
+**/certs/*.key
+**/certs/*.pem
+discovered_devices.json
+device_database.json
+indexing_progress.json
+
+# Authentication & secrets
+auth_utils.py
+*.env
+.env.*
+secrets.json
+config/secrets.py
+

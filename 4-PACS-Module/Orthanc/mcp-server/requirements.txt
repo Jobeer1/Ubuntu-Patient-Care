@@ -1,0 +1,72 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Authentication & Security
+authlib==1.2.1
+pyjwt==2.8.0
+cryptography==41.0.7
+python-jose[cryptography]==3.3.0
+
+# Database
+sqlalchemy==2.0.35
+alembic==1.13.3
+
+# HTTP Client
+httpx==0.25.2
+requests==2.31.0
+
+# Environment & Config
+python-dotenv==1.0.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# Session & Cache
+redis==5.0.1
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Password Hashing
+bcrypt==4.1.2
+
+# Google Drive Integration
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.111.0
+
+# Microsoft Graph Integration
+msal==1.26.0
+
+# PACS Advanced Tools - Phase 1-5
+# Image Processing
+SimpleITK==2.2.1
+scikit-image==0.21.0
+scipy==1.10.0
+opencv-python==4.7.0
+numpy==1.24.0
+Pillow==10.0.0
+
+# Deep Learning & ML
+torch==2.0.0
+torchvision==0.15.0
+monai==1.2.0
+onnxruntime==1.15.1
+
+# Data Processing
+pandas==1.5.3
+
+# PDF Generation
+reportlab==4.0.4
+python-pptx==0.6.21
+
+# Speech Recognition (Optional - choose one)
+google-cloud-speech==2.21.0
+# azure-cognitiveservices-speech==1.31.1  # Alternative
+
+# Visualization
+matplotlib==3.8.0
+plotly==5.17.0

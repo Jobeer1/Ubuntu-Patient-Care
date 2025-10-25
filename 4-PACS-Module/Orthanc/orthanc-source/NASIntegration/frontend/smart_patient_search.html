@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Smart Patient Search - Ubuntu Patient Care</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* South African Medical Imaging System Theme */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #5a67d8;
+        }
+
+        .search-section {
+            padding: 40px;
+            background: white;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 20px 25px;
+            font-size: 1.2rem;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-type-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .search-tab {
+            padding: 12px 24px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .search-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-tab:hover:not(.active) {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .suggestions-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+
+        .suggestion-group {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .suggestion-group:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-header {
+            padding: 15px 20px 10px;
+            font-weight: 600;
+            color: #2d3748;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+            border-left-color: #667eea;
+        }
+
+        .suggestion-item.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left-color: #667eea;
+        }
+
+        .suggestion-text {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .suggestion-meta {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .stats-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #718096;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .results-section {
+            padding: 0 40px 40px;
+            display: none;
+            background: white;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .results-header h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .result-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+            border-color: #667eea;
+        }
+
+        .patient-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .patient-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #718096;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f1f5f9;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+            color: #718096;
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .no-results h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/nas-integration" class="back-link">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+            <h1>🏥🇿🇦 Smart Patient Search</h1>
+            <p>Intelligent medical record search with real-time suggestions</p>
+            <nav aria-label="breadcrumb" class="mt-3">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item">
+                        <a href="/nas-integration" style="color: #667eea;">NAS Integration</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" style="color: #718096;">Patient Search</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="search-section">
+            <div class="search-type-tabs">
+                <button class="search-tab active" data-type="all">
+                    <i class="fas fa-search me-2"></i>All Types
+                </button>
+                <button class="search-tab" data-type="names">
+                    <i class="fas fa-user me-2"></i>Patient Names
+                </button>
+                <button class="search-tab" data-type="ids">
+                    <i class="fas fa-id-card me-2"></i>Patient IDs
+                </button>
+                <button class="search-tab" data-type="dates">
+                    <i class="fas fa-calendar me-2"></i>Study Dates
+                </button>
+            </div>
+
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-box" 
+                    id="searchBox"
+                    placeholder="Start typing patient name, ID, or date... (e.g., 'Smith', '000000123', '2024-09')"
+                    autocomplete="off"
+                >
+                
+                <div class="suggestions-container" id="suggestionsContainer">
+                    <!-- Suggestions will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-grid" id="statsGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading database statistics...
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 id="resultsTitle">Search Results</h2>
+                <span id="resultsCount"></span>
+            </div>
+            <div id="resultsContainer">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SmartPatientSearch {
+            constructor() {
+                this.searchBox = document.getElementById('searchBox');
+                this.suggestionsContainer = document.getElementById('suggestionsContainer');
+                this.resultsSection = document.getElementById('resultsSection');
+                this.resultsContainer = document.getElementById('resultsContainer');
+                this.statsGrid = document.getElementById('statsGrid');
+                
+                this.currentSearchType = 'all';
+                this.selectedSuggestionIndex = -1;
+                this.suggestions = [];
+                this.debounceTimeout = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.loadStats();
+                this.bindEvents();
+            }
+            
+            bindEvents() {
+                // Search input events
+                this.searchBox.addEventListener('input', (e) => {
+                    this.handleSearchInput(e.target.value);
+                });
+                
+                this.searchBox.addEventListener('keydown', (e) => {
+                    this.handleKeyDown(e);
+                });
+                
+                this.searchBox.addEventListener('blur', () => {
+                    // Hide suggestions after a short delay
+                    setTimeout(() => {
+                        this.hideSuggestions();
+                    }, 200);
+                });
+                
+                this.searchBox.addEventListener('focus', () => {
+                    if (this.searchBox.value.trim()) {
+                        this.getSuggestions(this.searchBox.value.trim());
+                    }
+                });
+                
+                // Search type tab events
+                document.querySelectorAll('.search-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.setSearchType(e.target.dataset.type);
+                    });
+                });
+                
+                // Click outside to hide suggestions
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-container')) {
+                        this.hideSuggestions();
+                    }
+                });
+            }
+            
+            setSearchType(type) {
+                this.currentSearchType = type;
+                
+                // Update tab appearance
+                document.querySelectorAll('.search-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.type === type);
+                });
+                
+                // Update placeholder
+                const placeholders = {
+                    all: 'Start typing patient name, ID, or date...',
+                    names: 'Type patient name (e.g., Smith, Johnson)...',
+                    ids: 'Type patient ID (e.g., 000000123)...',
+                    dates: 'Type study date (e.g., 2024, 2024-09)...'
+                };
+                
+                this.searchBox.placeholder = placeholders[type] || placeholders.all;
+                
+                // Refresh suggestions if there's text
+                if (this.searchBox.value.trim()) {
+                    this.getSuggestions(this.searchBox.value.trim());
+                }
+            }
+            
+            handleSearchInput(value) {
+                clearTimeout(this.debounceTimeout);
+                
+                if (value.trim().length === 0) {
+                    this.hideSuggestions();
+                    this.hideResults();
+                    return;
+                }
+                
+                // Debounce the suggestions API call
+                this.debounceTimeout = setTimeout(() => {
+                    this.getSuggestions(value.trim());
+                }, 300);
+            }
+            
+            handleKeyDown(e) {
+                if (!this.suggestionsContainer.style.display || this.suggestionsContainer.style.display === 'none') {
+                    if (e.key === 'Enter') {
+                        this.performSearch(this.searchBox.value.trim());
+                    }
+                    return;
+                }
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.selectNextSuggestion();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.selectPrevSuggestion();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        this.selectCurrentSuggestion();
+                        break;
+                    case 'Escape':
+                        this.hideSuggestions();
+                        break;
+                }
+            }
+            
+            selectNextSuggestion() {
+                const items = this.suggestionsContainer.querySelectorAll('.suggestion-item');
+                if (items.length === 0) return;
+                
+                this.selectedSuggestionIndex = Math.min(this.selectedSuggestionIndex + 1, items.length - 1);
+                this.updateSuggestionSelection(items);
+            }
+            
+            selectPrevSuggestion() {
+                const items = this.suggestionsContainer.querySelectorAll('.suggestion-item');
+                if (items.length === 0) return;
+                
+                this.selectedSuggestionIndex = Math.max(this.selectedSuggestionIndex - 1, -1);
+                this.updateSuggestionSelection(items);
+            }
+            
+            updateSuggestionSelection(items) {
+                items.forEach((item, index) => {
+                    item.classList.toggle('selected', index === this.selectedSuggestionIndex);
+                });
+                
+                // Scroll selected item into view
+                if (this.selectedSuggestionIndex >= 0) {
+                    items[this.selectedSuggestionIndex].scrollIntoView({
+                        block: 'nearest'
+                    });
+                }
+            }
+            
+            selectCurrentSuggestion() {
+                const items = this.suggestionsContainer.querySelectorAll('.suggestion-item');
+                if (this.selectedSuggestionIndex >= 0 && items[this.selectedSuggestionIndex]) {
+                    const selectedItem = items[this.selectedSuggestionIndex];
+                    const suggestionText = selectedItem.dataset.text;
+                    this.searchBox.value = suggestionText;
+                    this.hideSuggestions();
+                    this.performSearch(suggestionText);
+                }
+            }
+            
+            async getSuggestions(query) {
+                try {
+                    const response = await fetch(
+                        `/api/nas/search/suggestions?q=${encodeURIComponent(query)}&type=${this.currentSearchType}&limit=15`
+                    );
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get suggestions');
+                    }
+                    
+                    const data = await response.json();
+                    this.displaySuggestions(data.suggestions);
+                    
+                } catch (error) {
+                    console.error('Suggestions error:', error);
+                    this.hideSuggestions();
+                }
+            }
+            
+            displaySuggestions(suggestions) {
+                this.selectedSuggestionIndex = -1;
+                
+                const hasAnyOptions = Object.values(suggestions).some(group => group.length > 0);
+                
+                if (!hasAnyOptions) {
+                    this.hideSuggestions();
+                    return;
+                }
+                
+                let html = '';
+                
+                // Patient Names
+                if (suggestions.patient_names && suggestions.patient_names.length > 0) {
+                    html += `<div class="suggestion-group">`;
+                    html += `<div class="suggestion-header">👤 Patient Names</div>`;
+                    suggestions.patient_names.forEach(item => {
+                        html += `
+                            <div class="suggestion-item" data-text="${item.text}" data-type="name">
+                                <div class="suggestion-text">${item.text}</div>
+                                <div class="suggestion-meta">${item.count} studies</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                
+                // Patient IDs
+                if (suggestions.patient_ids && suggestions.patient_ids.length > 0) {
+                    html += `<div class="suggestion-group">`;
+                    html += `<div class="suggestion-header">🆔 Patient IDs</div>`;
+                    suggestions.patient_ids.forEach(item => {
+                        html += `
+                            <div class="suggestion-item" data-text="${item.text}" data-type="id">
+                                <div class="suggestion-text">${item.text}</div>
+                                <div class="suggestion-meta">${item.display.split(' - ')[1]}</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                
+                // Study Dates
+                if (suggestions.study_dates && suggestions.study_dates.length > 0) {
+                    html += `<div class="suggestion-group">`;
+                    html += `<div class="suggestion-header">📅 Study Dates</div>`;
+                    suggestions.study_dates.forEach(item => {
+                        html += `
+                            <div class="suggestion-item" data-text="${item.text}" data-type="date">
+                                <div class="suggestion-text">${item.formatted || item.text}</div>
+                                <div class="suggestion-meta">${item.count} studies on this date</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                
+                this.suggestionsContainer.innerHTML = html;
+                this.showSuggestions();
+                
+                // Bind click events
+                this.suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const suggestionText = item.dataset.text;
+                        this.searchBox.value = suggestionText;
+                        this.hideSuggestions();
+                        this.performSearch(suggestionText);
+                    });
+                });
+            }
+            
+            showSuggestions() {
+                this.suggestionsContainer.style.display = 'block';
+            }
+            
+            hideSuggestions() {
+                this.suggestionsContainer.style.display = 'none';
+                this.selectedSuggestionIndex = -1;
+            }
+            
+            async performSearch(query) {
+                if (!query.trim()) return;
+                
+                this.showResults();
+                this.resultsContainer.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Searching for "${query}"...
+                    </div>
+                `;
+                
+                try {
+                    const response = await fetch('/api/nas/search/patient', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            patient_id: query,
+                            patient_name: query,
+                            study_date: query
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Search failed');
+                    }
+                    
+                    const data = await response.json();
+                    this.displayResults(data, query);
+                    
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">⚠️</div>
+                            <h3>Search Error</h3>
+                            <p>Failed to perform search. Please try again.</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            displayResults(data, query) {
+                const results = data.patients || [];
+                
+                document.getElementById('resultsTitle').textContent = `Search Results for "${query}"`;
+                document.getElementById('resultsCount').textContent = 
+                    `${results.length} ${results.length === 1 ? 'result' : 'results'} found`;
+                
+                if (results.length === 0) {
+                    this.resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">🔍</div>
+                            <h3>No Results Found</h3>
+                            <p>Try adjusting your search terms or use the suggestions above.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                results.forEach(patient => {
+                    html += `
+                        <div class="result-card">
+                            <div class="patient-name">${patient.patient_name || 'Unknown Patient'}</div>
+                            <div class="patient-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Patient ID:</span>
+                                    <span class="detail-value">${patient.patient_id}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Study Date:</span>
+                                    <span class="detail-value">${this.formatDate(patient.study_date)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Source:</span>
+                                    <span class="detail-value">${patient.source}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Files:</span>
+                                    <span class="detail-value">${patient.file_count || 'N/A'}</span>
+                                </div>
+                            </div>
+                            ${patient.folder_path ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">Location:</span>
+                                    <span class="detail-value" style="font-family: monospace; font-size: 0.9rem;">${patient.folder_path}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                this.resultsContainer.innerHTML = html;
+            }
+            
+            formatDate(dateStr) {
+                if (!dateStr || dateStr.length < 8) return dateStr;
+                
+                try {
+                    const year = dateStr.substr(0, 4);
+                    const month = dateStr.substr(4, 2);
+                    const day = dateStr.substr(6, 2);
+                    return `${year}-${month}-${day}`;
+                } catch (error) {
+                    return dateStr;
+                }
+            }
+            
+            showResults() {
+                this.resultsSection.style.display = 'block';
+            }
+            
+            hideResults() {
+                this.resultsSection.style.display = 'none';
+            }
+            
+            async loadStats() {
+                try {
+                    const response = await fetch('/api/nas/search/stats');
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load stats');
+                    }
+                    
+                    const data = await response.json();
+                    this.displayStats(data.stats);
+                    
+                } catch (error) {
+                    console.error('Stats error:', error);
+                    this.statsGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; color: #e74c3c;">
+                            <p>Failed to load database statistics</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            displayStats(stats) {
+                const html = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_patients.toLocaleString()}</div>
+                        <div class="stat-label">Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_studies.toLocaleString()}</div>
+                        <div class="stat-label">Studies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${this.formatDate(stats.date_range.earliest)} - ${this.formatDate(stats.date_range.latest)}</div>
+                        <div class="stat-label">Date Range</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.top_modalities[0]?.name || 'N/A'}</div>
+                        <div class="stat-label">Top Modality (${stats.top_modalities[0]?.count || 0})</div>
+                    </div>
+                `;
+                
+                this.statsGrid.innerHTML = html;
+            }
+        }
+        
+        // Initialize the search interface
+        document.addEventListener('DOMContentLoaded', () => {
+            new SmartPatientSearch();
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

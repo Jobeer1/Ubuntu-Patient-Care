@@ -1,0 +1,16 @@
+{
+  "status": "idle",
+  "message": "South African PACS system ready for healthcare operations",
+  "details": null,
+  "nas_type": "dicom",
+  "timestamp": "2025-09-19T10:11:28.230404",
+  "sa_context": {
+    "timezone": "Africa/Johannesburg",
+    "supported_formats": [
+      ".dcm",
+      ".dicom",
+      ".ima",
+      ""
+    ]
+  }
+}

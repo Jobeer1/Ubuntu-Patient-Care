@@ -1,0 +1,14 @@
+"""
+DISABLED LEGACY ROUTES FILE: device_routes_old.py
+
+This file previously contained a broken/half-merged implementation and
+caused syntax errors during static analysis. It has been renamed to
+`device_routes_old.py.disabled` to avoid accidental imports while
+preserving the original content for later manual recovery.
+
+If you need to restore portions of it, copy the relevant functions back
+into a proper routes module and ensure imports and decorators are
+correctly ordered.
+"""
+
+# Original content backed up here.

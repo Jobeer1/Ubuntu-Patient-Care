@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MCP Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #006533;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            background: #006533;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005580;
+        }
+        .btn-microsoft {
+            background: #00a4ef;
+        }
+        .btn-google {
+            background: #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 MCP Server Integration Test</h1>
+    
+    <div class="test-card">
+        <h2>1. Server Status</h2>
+        <div id="serverStatus" class="status info">Checking...</div>
+        <button onclick="checkServers()">Refresh Status</button>
+    </div>
+
+    <div class="test-card">
+        <h2>2. Test OAuth Endpoints</h2>
+        <p>Click these buttons to test OAuth redirects:</p>
+        <button class="btn-microsoft" onclick="testMicrosoft()">Test Microsoft OAuth</button>
+        <button class="btn-google" onclick="testGoogle()">Test Google OAuth</button>
+        <div id="oauthStatus" class="status info" style="margin-top: 10px;">Click a button to test</div>
+    </div>
+
+    <div class="test-card">
+        <h2>3. Access Login Pages</h2>
+        <button onclick="window.open('http://localhost:5000/login', '_blank')">
+            Open PACS Login (Port 5000)
+        </button>
+        <button onclick="window.open('http://localhost:8080/login', '_blank')">
+            Open MCP Login (Port 8080)
+        </button>
+    </div>
+
+    <div class="test-card">
+        <h2>4. API Documentation</h2>
+        <button onclick="window.open('http://localhost:8080/docs', '_blank')">
+            Open MCP API Docs
+        </button>
+    </div>
+
+    <script>
+        async function checkServers() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = 'Checking servers...';
+
+            let status = '';
+            let allGood = true;
+
+            // Check MCP Server
+            try {
+                const mcpResponse = await fetch('http://localhost:8080/docs');
+                if (mcpResponse.ok) {
+                    status += '✅ MCP Server (Port 8080): Running<br>';
+                } else {
+                    status += '❌ MCP Server (Port 8080): Error<br>';
+                    allGood = false;
+                }
+            } catch (e) {
+                status += '❌ MCP Server (Port 8080): Not running<br>';
+                allGood = false;
+            }
+
+            // Check PACS Backend
+            try {
+                const pacsResponse = await fetch('http://localhost:5000/api/health');
+                if (pacsResponse.ok) {
+                    status += '✅ PACS Backend (Port 5000): Running<br>';
+                } else {
+                    status += '❌ PACS Backend (Port 5000): Error<br>';
+                    allGood = false;
+                }
+            } catch (e) {
+                status += '❌ PACS Backend (Port 5000): Not running<br>';
+                allGood = false;
+            }
+
+            statusDiv.className = allGood ? 'status success' : 'status error';
+            statusDiv.innerHTML = status;
+        }
+
+        function testMicrosoft() {
+            const statusDiv = document.getElementById('oauthStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = 'Redirecting to Microsoft OAuth...';
+            
+            // Redirect to MCP server Microsoft OAuth
+            window.location.href = 'http://localhost:8080/auth/microsoft';
+        }
+
+        function testGoogle() {
+            const statusDiv = document.getElementById('oauthStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = 'Redirecting to Google OAuth...';
+            
+            // Redirect to MCP server Google OAuth
+            window.location.href = 'http://localhost:8080/auth/google';
+        }
+
+        // Check servers on load
+        window.onload = checkServers;
+    </script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcium Scoring Analyzer - GPU Accelerated</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h2 .icon {
+            font-size: 1.2em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group input[type="range"] {
+            cursor: pointer;
+        }
+        
+        .range-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results-section {
+            background: white;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .score-display .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .score-display .value {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .score-display .unit {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .metric-card .label {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-card .value {
+            color: #667eea;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+        
+        .risk-category {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .risk-category.minimal {
+            border-left-color: #28a745;
+            background: #f1f8f5;
+        }
+        
+        .risk-category.mild {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .risk-category.moderate {
+            border-left-color: #fd7e14;
+            background: #fff5f0;
+        }
+        
+        .risk-category.severe {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .risk-category h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .risk-category p {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .recommendations {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .recommendations h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        
+        .recommendations li {
+            color: #666;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .recommendations li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fff5f5;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 4px;
+            color: #721c24;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #f1f8f5;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 4px;
+            color: #155724;
+            margin-bottom: 20px;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            color: #004085;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .gpu-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        
+        .gpu-status .indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        
+        .gpu-status.unavailable .indicator {
+            background: #dc3545;
+        }
+        
+        .performance-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .performance-info div {
+            margin-bottom: 8px;
+        }
+        
+        .performance-info strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🩻 Calcium Scoring Analyzer</h1>
+            <p>GPU-Accelerated Agatston Score Calculation • Clinical Grade Analysis</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Input Section -->
+            <div class="section">
+                <h2><span class="icon">⚙️</span> Analysis Parameters</h2>
+                
+                <!-- GPU Status -->
+                <div id="gpuStatus" class="gpu-status">
+                    <span class="indicator"></span>
+                    <span id="gpuStatusText">Initializing GPU...</span>
+                </div>
+                
+                <!-- Patient Information -->
+                <div class="form-group">
+                    <label for="patientAge">Patient Age (years)</label>
+                    <input type="number" id="patientAge" min="18" max="120" placeholder="Enter age" value="55">
+                </div>
+                
+                <div class="form-group">
+                    <label for="patientGender">Patient Gender</label>
+                    <select id="patientGender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+                
+                <!-- Scanning Parameters -->
+                <div class="form-group">
+                    <label for="huThreshold">HU Threshold <span class="range-value" id="thresholdValue">130</span></label>
+                    <input type="range" id="huThreshold" min="90" max="200" value="130" step="10">
+                    <small style="color: #666; margin-top: 5px; display: block;">Higher = more conservative detection</small>
+                </div>
+                
+                <!-- Volume Upload -->
+                <div class="form-group">
+                    <label for="volumeFile">DICOM Volume Data (RAW Binary)</label>
+                    <input type="file" id="volumeFile" accept=".raw,.bin">
+                    <small style="color: #666; margin-top: 5px; display: block;">Select raw volume data file for analysis</small>
+                </div>
+                
+                <!-- Pixel Spacing -->
+                <div class="form-group">
+                    <label for="voxelSpacing">Voxel Spacing (mm)</label>
+                    <input type="text" id="voxelSpacing" placeholder="0.625,0.625,3.0" value="0.625,0.625,3.0">
+                </div>
+                
+                <!-- Action Buttons -->
+                <button id="analyzeBtn" onclick="startAnalysis()">
+                    🚀 Analyze with GPU
+                </button>
+                
+                <button id="generateTestBtn" onclick="generateTestData()" style="margin-top: 10px; background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);">
+                    📊 Generate Test Data
+                </button>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="section results-section">
+                <h2><span class="icon">📈</span> Analysis Results</h2>
+                
+                <div id="resultsContainer" style="display: none;">
+                    <!-- Agatston Score -->
+                    <div class="score-display">
+                        <div class="label">AGATSTON SCORE</div>
+                        <div class="value" id="agatstonScore">-</div>
+                        <div class="unit">Agatston Units</div>
+                    </div>
+                    
+                    <!-- Key Metrics -->
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="label">Volume</div>
+                            <div class="value" id="volumeScore">-</div>
+                            <small>mm³</small>
+                        </div>
+                        <div class="metric-card">
+                            <div class="label">Mass</div>
+                            <div class="value" id="massScore">-</div>
+                            <small>mg</small>
+                        </div>
+                        <div class="metric-card">
+                            <div class="label">Percentile</div>
+                            <div class="value" id="percentileRank">-</div>
+                            <small>th</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Vessel Scores -->
+                    <div class="info-box">
+                        <strong>Coronary Vessel Involvement:</strong>
+                        <div style="margin-top: 10px;">
+                            LAD: <strong id="ladScore">-</strong> | 
+                            LCX: <strong id="lcxScore">-</strong> | 
+                            RCA: <strong id="rcaScore">-</strong> | 
+                            LM: <strong id="lmScore">-</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Category -->
+                    <div id="riskCategory" class="risk-category minimal">
+                        <h3 id="riskCategoryTitle">Risk Category</h3>
+                        <p id="riskCategoryDescription">-</p>
+                        <div class="recommendations">
+                            <h4>Clinical Recommendations:</h4>
+                            <ul id="recommendationsList">
+                                <li>Please run analysis first</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Info -->
+                    <div class="performance-info">
+                        <div><strong>Backend:</strong> <span id="backend">-</span></div>
+                        <div><strong>Processing Time:</strong> <span id="processingTime">-</span> ms</div>
+                        <div><strong>GPU Acceleration:</strong> <span id="gpuAccel">-</span></div>
+                    </div>
+                </div>
+                
+                <div id="loadingContainer" style="display: none;">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Analyzing calcium deposits on GPU...</p>
+                        <small style="color: #666;">This usually takes 1-3 seconds</small>
+                    </div>
+                </div>
+                
+                <div id="placeholderContainer">
+                    <div class="info-box">
+                        <strong>👋 Welcome!</strong><br>
+                        Upload a DICOM volume or generate test data to see calcium scoring analysis results here. All computation happens on your GPU for instant results!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/static/js/compute/webgl-utils.js"></script>
+    <script src="/static/js/compute/calcium-scoring-gpu.js"></script>
+    
+    <script>
+        // Initialize on page load
+        let calciumScorer = null;
+        
+        window.addEventListener('load', function() {
+            calciumScorer = new ClientCalciumScoring();
+            updateGPUStatus();
+        });
+        
+        // Update GPU threshold value display
+        document.getElementById('huThreshold').addEventListener('input', function(e) {
+            document.getElementById('thresholdValue').textContent = e.target.value;
+        });
+        
+        // Update GPU status
+        function updateGPUStatus() {
+            if (calciumScorer && calciumScorer.initialize()) {
+                document.getElementById('gpuStatus').classList.remove('unavailable');
+                document.getElementById('gpuStatusText').textContent = 
+                    '✓ GPU Ready: ' + (calciumScorer.capabilities?.renderer || 'WebGL 2.0');
+            } else {
+                document.getElementById('gpuStatus').classList.add('unavailable');
+                document.getElementById('gpuStatusText').textContent = 
+                    '✗ GPU Not Available - Using CPU Fallback';
+            }
+        }
+        
+        // Generate test data
+        function generateTestData() {
+            console.log('Generating test volume...');
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            setTimeout(async () => {
+                const testVolume = calciumScorer.generateMockVolume(64);
+                await runAnalysis(testVolume);
+                document.getElementById('analyzeBtn').disabled = false;
+            }, 100);
+        }
+        
+        // Start analysis from file
+        async function startAnalysis() {
+            const fileInput = document.getElementById('volumeFile');
+            
+            if (fileInput.files.length === 0) {
+                alert('Please select a volume file or generate test data');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                const arrayBuffer = e.target.result;
+                const volumeData = new Float32Array(arrayBuffer);
+                await runAnalysis(volumeData);
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Run analysis
+        async function runAnalysis(volumeData) {
+            document.getElementById('placeholderContainer').style.display = 'none';
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            
+            try {
+                const age = parseInt(document.getElementById('patientAge').value);
+                const gender = document.getElementById('patientGender').value;
+                const threshold = parseInt(document.getElementById('huThreshold').value);
+                const spacingStr = document.getElementById('voxelSpacing').value;
+                const [dx, dy, dz] = spacingStr.split(',').map(x => parseFloat(x.trim()));
+                
+                const result = await calciumScorer.analyzeCalcium(volumeData, {
+                    age: age,
+                    gender: gender,
+                    thresholdHU: threshold,
+                    pixelSpacing: [dx, dy, dz]
+                });
+                
+                displayResults(result);
+            } catch (error) {
+                console.error('Analysis error:', error);
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('placeholderContainer').style.display = 'block';
+                alert('Error during analysis: ' + error.message);
+            }
+        }
+        
+        // Display results
+        function displayResults(result) {
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+            // Update scores
+            document.getElementById('agatstonScore').textContent = 
+                result.agatstonScore.toFixed(1);
+            document.getElementById('volumeScore').textContent = 
+                (result.volumeScore || 0).toFixed(1);
+            document.getElementById('massScore').textContent = 
+                (result.massScore || 0).toFixed(1);
+            document.getElementById('percentileRank').textContent = 
+                result.percentileRank ? result.percentileRank.toFixed(1) : 'N/A';
+            
+            // Update vessel scores
+            const vesselScores = result.vesselScores || {};
+            document.getElementById('ladScore').textContent = (vesselScores.LAD || 0).toFixed(1);
+            document.getElementById('lcxScore').textContent = (vesselScores.LCX || 0).toFixed(1);
+            document.getElementById('rcaScore').textContent = (vesselScores.RCA || 0).toFixed(1);
+            document.getElementById('lmScore').textContent = (vesselScores.LM || 0).toFixed(1);
+            
+            // Update risk category
+            const riskElement = document.getElementById('riskCategory');
+            riskElement.className = 'risk-category ' + (result.riskCategory || 'minimal').toLowerCase();
+            document.getElementById('riskCategoryTitle').textContent = result.riskCategory || 'Unknown';
+            document.getElementById('riskCategoryDescription').textContent = result.riskDescription || '';
+            
+            // Update recommendations
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
+            (result.recommendations || []).forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+            
+            // Update performance info
+            document.getElementById('backend').textContent = result.backend || 'unknown';
+            document.getElementById('processingTime').textContent = 
+                (result.processingTime || 0).toFixed(2);
+            document.getElementById('gpuAccel').textContent = 
+                result.backend === 'webgl2' ? 'Yes (GPU)' : 'No (CPU Fallback)';
+        }
+    </script>
+</body>
+</html>

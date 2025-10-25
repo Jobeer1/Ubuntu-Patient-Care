@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebM to WAV Conversion Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .recording {
+            background: #dc3545 !important;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #007bff; }
+        .warning { color: #ffc107; }
+        .audio-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 WebM to WAV Conversion Test</h1>
+        <p>This test verifies that client-side audio conversion works properly for the STT system.</p>
+        
+        <div>
+            <button id="startBtn" class="button">🎤 Start Recording</button>
+            <button id="stopBtn" class="button" disabled>⏹️ Stop Recording</button>
+            <button id="testBtn" class="button">🧪 Test Conversion</button>
+            <button id="clearBtn" class="button">🗑️ Clear Log</button>
+        </div>
+        
+        <div id="audioInfo" class="audio-info" style="display: none;">
+            <strong>Recording Info:</strong>
+            <div id="formatInfo"></div>
+            <div id="sizeInfo"></div>
+        </div>
+        
+        <div id="log" class="log"></div>
+        
+        <audio id="originalAudio" controls style="display: none; width: 100%; margin: 10px 0;">
+            <source id="originalSource" type="audio/webm">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <audio id="convertedAudio" controls style="display: none; width: 100%; margin: 10px 0;">
+            <source id="convertedSource" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <script>
+        class WebMConversionTest {
+            constructor() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.testBtn = document.getElementById('testBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.log = document.getElementById('log');
+                this.audioInfo = document.getElementById('audioInfo');
+                this.formatInfo = document.getElementById('formatInfo');
+                this.sizeInfo = document.getElementById('sizeInfo');
+                this.originalAudio = document.getElementById('originalAudio');
+                this.convertedAudio = document.getElementById('convertedAudio');
+                
+                this.setupEventListeners();
+                this.logMessage('🚀 WebM Conversion Test initialized', 'info');
+            }
+            
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startRecording());
+                this.stopBtn.addEventListener('click', () => this.stopRecording());
+                this.testBtn.addEventListener('click', () => this.runConversionTest());
+                this.clearBtn.addEventListener('click', () => this.clearLog());
+            }
+            
+            logMessage(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = type;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                this.log.appendChild(logEntry);
+                this.log.scrollTop = this.log.scrollHeight;
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+            
+            clearLog() {
+                this.log.innerHTML = '';
+                this.audioInfo.style.display = 'none';
+                this.originalAudio.style.display = 'none';
+                this.convertedAudio.style.display = 'none';
+            }
+            
+            async startRecording() {
+                try {
+                    this.logMessage('🎤 Requesting microphone access...', 'info');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                    
+                    this.logMessage('✅ Microphone access granted', 'success');
+                    
+                    // Test different formats
+                    const formats = [
+                        'audio/webm;codecs=opus',
+                        'audio/webm',
+                        'audio/ogg;codecs=opus',
+                        'audio/mp4'
+                    ];
+                    
+                    let selectedFormat = null;
+                    for (const format of formats) {
+                        if (MediaRecorder.isTypeSupported(format)) {
+                            selectedFormat = format;
+                            break;
+                        }
+                    }
+                    
+                    this.logMessage(`📊 Selected format: ${selectedFormat || 'default'}`, 'info');
+                    
+                    this.mediaRecorder = new MediaRecorder(stream, 
+                        selectedFormat ? { mimeType: selectedFormat } : {}
+                    );
+                    
+                    this.audioChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                            this.logMessage(`📦 Received chunk: ${event.data.size} bytes`, 'info');
+                        }
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        this.processRecording();
+                    };
+                    
+                    this.mediaRecorder.start(1000); // 1 second chunks
+                    this.isRecording = true;
+                    
+                    this.startBtn.disabled = true;
+                    this.startBtn.classList.add('recording');
+                    this.stopBtn.disabled = false;
+                    
+                    this.logMessage('🔴 Recording started...', 'success');
+                    
+                } catch (error) {
+                    this.logMessage(`❌ Recording failed: ${error.message}`, 'error');
+                }
+            }
+            
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    this.isRecording = false;
+                    
+                    this.startBtn.disabled = false;
+                    this.startBtn.classList.remove('recording');
+                    this.stopBtn.disabled = true;
+                    
+                    this.logMessage('⏹️ Recording stopped', 'info');
+                }
+            }
+            
+            async processRecording() {
+                try {
+                    if (this.audioChunks.length === 0) {
+                        this.logMessage('❌ No audio data recorded', 'error');
+                        return;
+                    }
+                    
+                    const originalBlob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
+                    this.logMessage(`📊 Original recording: ${originalBlob.size} bytes, type: ${originalBlob.type}`, 'info');
+                    
+                    // Show original audio info
+                    this.formatInfo.textContent = `Format: ${originalBlob.type}`;
+                    this.sizeInfo.textContent = `Size: ${originalBlob.size} bytes`;
+                    this.audioInfo.style.display = 'block';
+                    
+                    // Play original audio
+                    const originalUrl = URL.createObjectURL(originalBlob);
+                    document.getElementById('originalSource').src = originalUrl;
+                    this.originalAudio.load();
+                    this.originalAudio.style.display = 'block';
+                    
+                    // Test conversion
+                    this.logMessage('🔄 Starting WebM to WAV conversion...', 'info');
+                    const convertedBlob = await this.convertWebMToWAV(originalBlob);
+                    
+                    if (convertedBlob) {
+                        this.logMessage(`✅ Conversion successful: ${convertedBlob.size} bytes`, 'success');
+                        
+                        // Play converted audio
+                        const convertedUrl = URL.createObjectURL(convertedBlob);
+                        document.getElementById('convertedSource').src = convertedUrl;
+                        this.convertedAudio.load();
+                        this.convertedAudio.style.display = 'block';
+                        
+                        // Test server upload
+                        await this.testServerUpload(convertedBlob);
+                        
+                    } else {
+                        this.logMessage('❌ Conversion failed', 'error');
+                    }
+                    
+                } catch (error) {
+                    this.logMessage(`❌ Processing failed: ${error.message}`, 'error');
+                }
+            }
+            
+            async convertWebMToWAV(webmBlob) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const fileReader = new FileReader();
+                        
+                        fileReader.onload = async (e) => {
+                            try {
+                                this.logMessage('🔄 Decoding audio data...', 'info');
+                                const arrayBuffer = e.target.result;
+                                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                                
+                                this.logMessage(`📊 Decoded: ${audioBuffer.length} samples, ${audioBuffer.numberOfChannels} channels, ${audioBuffer.sampleRate}Hz`, 'info');
+                                
+                                const wavBlob = this.audioBufferToWAV(audioBuffer);
+                                resolve(wavBlob);
+                                
+                            } catch (decodeError) {
+                                this.logMessage(`❌ Audio decode error: ${decodeError.message}`, 'error');
+                                reject(decodeError);
+                            }
+                        };
+                        
+                        fileReader.onerror = () => {
+                            const error = new Error('Failed to read audio blob');
+                            this.logMessage(`❌ FileReader error: ${error.message}`, 'error');
+                            reject(error);
+                        };
+                        
+                        fileReader.readAsArrayBuffer(webmBlob);
+                        
+                    } catch (error) {
+                        this.logMessage(`❌ Conversion setup failed: ${error.message}`, 'error');
+                        reject(error);
+                    }
+                });
+            }
+            
+            audioBufferToWAV(audioBuffer) {
+                const numberOfChannels = audioBuffer.numberOfChannels;
+                const sampleRate = audioBuffer.sampleRate;
+                const length = audioBuffer.length;
+                const bitsPerSample = 16;
+                const bytesPerSample = bitsPerSample / 8;
+                const blockAlign = numberOfChannels * bytesPerSample;
+                const byteRate = sampleRate * blockAlign;
+                const dataSize = length * blockAlign;
+                const bufferSize = 44 + dataSize;
+                
+                const arrayBuffer = new ArrayBuffer(bufferSize);
+                const view = new DataView(arrayBuffer);
+                
+                // WAV header
+                const writeString = (offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                writeString(0, 'RIFF');
+                view.setUint32(4, bufferSize - 8, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, numberOfChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, byteRate, true);
+                view.setUint16(32, blockAlign, true);
+                view.setUint16(34, bitsPerSample, true);
+                writeString(36, 'data');
+                view.setUint32(40, dataSize, true);
+                
+                // Convert audio data
+                let offset = 44;
+                for (let i = 0; i < length; i++) {
+                    for (let channel = 0; channel < numberOfChannels; channel++) {
+                        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+                        view.setInt16(offset, sample * 0x7FFF, true);
+                        offset += 2;
+                    }
+                }
+                
+                this.logMessage(`📊 WAV created: ${bufferSize} bytes, ${numberOfChannels} channels, ${sampleRate}Hz`, 'info');
+                return new Blob([arrayBuffer], { type: 'audio/wav' });
+            }
+            
+            async testServerUpload(wavBlob) {
+                try {
+                    this.logMessage('🚀 Testing server upload...', 'info');
+                    
+                    const formData = new FormData();
+                    formData.append('audio', wavBlob, 'test_conversion.wav');
+                    formData.append('session_id', 'test_session');
+                    formData.append('chunk_id', 'test_conversion_chunk');
+                    formData.append('sequence_number', '0');
+                    
+                    const response = await fetch('/api/voice/transcribe-chunk', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.logMessage(`✅ Server processing successful: "${result.transcription}"`, 'success');
+                            this.logMessage(`📊 Processing time: ${result.processing_time}s`, 'info');
+                        } else {
+                            this.logMessage(`❌ Server processing failed: ${result.error}`, 'error');
+                        }
+                    } else {
+                        this.logMessage(`❌ Server upload failed: ${response.status}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    this.logMessage(`❌ Server test failed: ${error.message}`, 'error');
+                }
+            }
+            
+            async runConversionTest() {
+                this.logMessage('🧪 Running conversion compatibility test...', 'info');
+                
+                // Test AudioContext support
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.logMessage('✅ AudioContext supported', 'success');
+                    audioContext.close();
+                } catch (error) {
+                    this.logMessage('❌ AudioContext not supported', 'error');
+                    return;
+                }
+                
+                // Test MediaRecorder support
+                if (typeof MediaRecorder !== 'undefined') {
+                    this.logMessage('✅ MediaRecorder supported', 'success');
+                    
+                    const formats = [
+                        'audio/webm;codecs=opus',
+                        'audio/webm',
+                        'audio/ogg;codecs=opus',
+                        'audio/mp4',
+                        'audio/wav'
+                    ];
+                    
+                    for (const format of formats) {
+                        const supported = MediaRecorder.isTypeSupported(format);
+                        this.logMessage(`${supported ? '✅' : '❌'} ${format}: ${supported ? 'supported' : 'not supported'}`, 
+                                      supported ? 'success' : 'warning');
+                    }
+                } else {
+                    this.logMessage('❌ MediaRecorder not supported', 'error');
+                }
+                
+                // Test getUserMedia support
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    this.logMessage('✅ getUserMedia supported', 'success');
+                } else {
+                    this.logMessage('❌ getUserMedia not supported', 'error');
+                }
+                
+                this.logMessage('🎯 Test complete. Try recording to test full workflow.', 'info');
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WebMConversionTest();
+        });
+    </script>
+</body>
+</html>
