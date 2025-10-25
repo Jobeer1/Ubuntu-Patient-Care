@@ -8,12 +8,19 @@
 **/robocopy_log.txt
 **/robocopy_verbose_log.txt
 
+# Environment & secrets - handled in separate Complete-Package folder
+.env
+.env.local
+.env.*.local
+.env.template
+secrets/
+**/.env*
+
 # Python caches and virtualenvs
 __pycache__/
 *.pyc
 **/__pycache__/
 venv/
-.env
 *.egg-info/
 
 # Node modules and build artifacts
@@ -28,6 +35,12 @@ Thumbs.db
 # Temporary files
 *.log
 *.tmp
+
+# Documentation files with secrets (stored in Complete-Package)
+docs/ONEDRIVE_COMPLETE.md
+docs/ONEDRIVE_VISUAL_GUIDE.md
+docs/CLOUD_STORAGE_READY.md
+docs/ALL_INTEGRATIONS_COMPLETE.md
 
 # IDE
 .vscode/
