@@ -8,6 +8,11 @@
 **/robocopy_log.txt
 **/robocopy_verbose_log.txt
 
+# Ignore all markdown documentation files (moved to separate folder for Google Drive)
+*.md
+!README.md
+!LICENSE
+
 # Environment & secrets - handled in separate Complete-Package folder
 .env
 .env.local
