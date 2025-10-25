@@ -1,5 +1,6 @@
-# Ignore large model weights globally
+# Ignore large model weights globally (but allow base.pt - required for Whisper speech-to-text)
 **/*.pt
+!**/models/whisper/base.pt
 **/cache/
 **/models/whisper/cache/
 

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Ubuntu Patient Care</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #006533 0%, #FFB81C 30%, #005580 70%, #006533 100%);
+            color: white;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .user-details {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Admin SSO Control Panel */
+        .admin-sso-control {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            border-left: 5px solid #FFB81C;
+        }
+
+        .sso-control-header h3 {
+            color: #006533;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sso-control-header p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .sso-control-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .sso-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1em;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sso-toggle-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sso-toggle-btn.enable {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .sso-toggle-btn.disable {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .sso-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sso-toggle-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .welcome {
+            margin-bottom: 40px;
+        }
+
+        .welcome h2 {
+            font-size: 32px;
+            color: #006533;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .welcome p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #006533;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card.has-access {
+            cursor: pointer;
+        }
+
+        .module-card.has-access:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 101, 51, 0.15);
+        }
+
+        .module-card.no-access {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+
+        .module-card.offline {
+            border-left-color: #dc3545;
+        }
+
+        .module-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .module-status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .module-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .module-status.checking {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .access-badge {
+            position: absolute;
+            top: 50px;
+            right: 16px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .access-badge.granted {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .access-badge.denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .module-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #006533;
+            margin-bottom: 8px;
+        }
+
+        .module-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .module-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #999;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .module-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #155724;
+        }
+
+        .lock-icon {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            font-size: 24px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 Ubuntu Patient Care</h1>
+        <div class="user-info">
+            <div class="user-details">
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-role" id="userRole"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        <div id="successMessage" class="success" style="display: none;"></div>
+        
+        <!-- Admin SSO Control Panel (only visible for admins) -->
+        <div id="adminSSOControl" class="admin-sso-control" style="display: none;">
+            <div class="sso-control-header">
+                <h3>🔐 SSO Authentication Control</h3>
+                <p>Enable or disable Single Sign-On for all users</p>
+            </div>
+            <div class="sso-control-body">
+                <div class="sso-status">
+                    <span id="ssoStatusText">Loading...</span>
+                    <span id="ssoStatusBadge" class="status-badge"></span>
+                </div>
+                <button id="ssoToggleBtn" class="sso-toggle-btn" onclick="toggleSSO()">
+                    <span id="ssoToggleBtnText">Loading...</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="welcome">
+            <h2 id="welcomeMessage">Welcome!</h2>
+            <p>Ubuntu Patient Care System - All Modules</p>
+        </div>
+
+        <div id="modulesContainer" class="modules-grid loading">
+            Loading modules...
+        </div>
+    </div>
+
+    <script>
+        // ALL 4 MODULES - Always displayed to everyone
+        const MODULES = {
+            ris: {
+                icon: '📋',
+                title: 'RIS Module',
+                description: 'Radiology Information System - Patient scheduling & workflow management',
+                url: 'https://127.0.0.1:5443',
+                port: 5443,
+                category: 'Core System'
+            },
+            billing: {
+                icon: '💰',
+                title: 'Medical Billing',
+                description: 'Billing, invoicing & financial management system',
+                url: 'http://localhost:3001',
+                port: 3001,
+                category: 'Administration'
+            },
+            dictation: {
+                icon: '🎤',
+                title: 'Dictation & Reporting',
+                description: 'Voice dictation & automated report generation',
+                url: 'http://localhost:3002',
+                port: 3002,
+                category: 'Clinical'
+            },
+            pacs: {
+                icon: '🏥',
+                title: 'PACS Module',
+                description: 'Picture Archiving & Communication System - Medical image management',
+                url: 'http://localhost:5000',
+                port: 5000,
+                category: 'Core System'
+            }
+        };
+
+        // Role-based access control
+        const ROLE_ACCESS = {
+            'Admin': ['ris', 'billing', 'dictation', 'pacs'],
+            'Radiologist': ['ris', 'dictation', 'pacs'],
+            'Technician': ['ris', 'pacs'],
+            'Typist': ['dictation', 'pacs'],
+            'Referring Doctor': ['ris', 'pacs'],
+            'Billing Staff': ['billing', 'ris'],
+            'Patient': ['ris']
+        };
+
+        // Module status cache
+        const moduleStatus = {};
+        let currentUser = null;
+        let userModules = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadUserInfo();
+                
+                // Auto-redirect logic for non-admin users
+                if (shouldRedirectToPACS()) {
+                    redirectToPACS();
+                    return; // Stop further initialization
+                }
+                
+                // Load SSO status if user is admin
+                if (currentUser && currentUser.role === 'Admin') {
+                    document.getElementById('adminSSOControl').style.display = 'block';
+                    await loadSSOStatus();
+                }
+                
+                await loadModuleStatuses();
+                await renderModules();
+            } catch (error) {
+                showError('Failed to initialize dashboard: ' + error.message);
+            }
+        });
+
+        // Load user information
+        async function loadUserInfo() {
+            let response;
+            try {
+                response = await fetch('/auth/status', { credentials: 'include' });
+            } catch (err) {
+                console.error('Failed to reach auth status endpoint', err);
+                window.location.href = '/';
+                return;
+            }
+
+            if (!response.ok) {
+                window.location.href = '/';
+                return;
+            }
+
+            const payload = await response.json();
+            if (!payload || !payload.authenticated) {
+                window.location.href = '/';
+                return;
+            }
+
+            const data = payload.user || {};
+            currentUser = data;
+
+            // Get user's accessible modules based on role
+            userModules = ROLE_ACCESS[data.role] || [];
+
+            // Update UI - Keep personal greeting!
+            const displayName = data.name || (data.email ? data.email.split('@')[0] : 'User');
+            document.getElementById('userName').textContent = displayName;
+            const firstName = (displayName || 'User').split(' ')[0];
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${firstName}!`;
+
+            // Display user role
+            const roleText = data.role || 'User';
+            document.getElementById('userRole').textContent = roleText;
+
+            return data;
+        }
+
+        // Check if user should be redirected to PACS
+        function shouldRedirectToPACS() {
+            if (!currentUser) return false;
+            
+            const role = currentUser.role;
+            
+            // Admin, Radiologist, and Technician stay on dashboard
+            const dashboardRoles = ['Admin', 'Radiologist', 'Technician'];
+            
+            if (dashboardRoles.includes(role)) {
+                return false;
+            }
+            
+            // Referring Doctor and Patient redirect to PACS
+            const redirectRoles = ['Referring Doctor', 'Patient'];
+            
+            return redirectRoles.includes(role);
+        }
+
+        // Redirect to PACS with MCP token
+        function redirectToPACS() {
+            try {
+                // Get token from cookie
+                const token = getCookie('access_token');
+                
+                if (!token) {
+                    console.error('No access token found');
+                    showError('Authentication token not found. Please log in again.');
+                    setTimeout(() => window.location.href = '/', 2000);
+                    return;
+                }
+                
+                // Store token in localStorage for PACS to access
+                localStorage.setItem('mcp_token', token);
+                
+                // Build PACS URL with token
+                const pacsUrl = 'http://localhost:5000/patients';
+                const redirectUrl = `${pacsUrl}?mcp_token=${encodeURIComponent(token)}`;
+                
+                console.log(`Redirecting ${currentUser.role} to PACS...`);
+                
+                // Show loading message
+                document.getElementById('modulesContainer').innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🏥</div>
+                        <h3 style="color: #006533; margin-bottom: 10px;">Redirecting to Patient Images...</h3>
+                        <p>Please wait while we connect you to the PACS system.</p>
+                    </div>
+                `;
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Redirect error:', error);
+                showError('Failed to redirect to PACS. Please try again.');
+            }
+        }
+
+        // Helper function to get cookie value
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // Check module online/offline status
+        async function checkModuleStatus(moduleKey) {
+            const module = MODULES[moduleKey];
+            if (!module) return false;
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(module.url, {
+                    method: 'HEAD',
+                    signal: controller.signal,
+                    mode: 'no-cors'
+                });
+                
+                clearTimeout(timeoutId);
+                moduleStatus[moduleKey] = true;
+                return true;
+            } catch (error) {
+                moduleStatus[moduleKey] = false;
+                return false;
+            }
+        }
+
+        // Load status for ALL modules
+        async function loadModuleStatuses() {
+            const allModuleKeys = Object.keys(MODULES);
+            const checks = allModuleKeys.map(key => checkModuleStatus(key));
+            await Promise.all(checks);
+        }
+
+        // Render ALL 4 module cards
+        async function renderModules() {
+            const container = document.getElementById('modulesContainer');
+            
+            const allModuleKeys = Object.keys(MODULES);
+            
+            const html = allModuleKeys.map(moduleKey => {
+                const module = MODULES[moduleKey];
+                const hasAccess = userModules.includes(moduleKey);
+                const isOnline = moduleStatus[moduleKey] !== false;
+                const canClick = hasAccess && isOnline;
+
+                return `
+                    <div class="module-card ${hasAccess ? 'has-access' : 'no-access'} ${!isOnline ? 'offline' : ''}" 
+                         ${canClick ? `onclick="openModule('${moduleKey}')"` : ''}
+                         title="${!hasAccess ? 'Access denied - Contact admin for permissions' : (!isOnline ? 'Module is offline' : 'Click to open')}">
+                        
+                        <div class="module-status ${isOnline ? 'online' : 'offline'}">
+                            ${isOnline ? '🟢 Online' : '🔴 Offline'}
+                        </div>
+                        
+                        ${!hasAccess ? '<div class="access-badge denied">🔒 No Access</div>' : '<div class="access-badge granted">✓ Access</div>'}
+                        
+                        <div class="module-icon">${module.icon}</div>
+                        <div class="module-title">${module.title}</div>
+                        <div class="module-description">${module.description}</div>
+                        
+                        <div class="module-meta">
+                            <span>📂 ${module.category}</span>
+                            <span>🔌 Port ${module.port}</span>
+                        </div>
+                        
+                        ${!hasAccess ? '<div class="lock-icon">🔒</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Open module in new tab (only if user has access and module is online)
+        function openModule(moduleKey) {
+            const module = MODULES[moduleKey];
+            const hasAccess = userModules.includes(moduleKey);
+            const isOnline = moduleStatus[moduleKey];
+            
+            if (hasAccess && isOnline) {
+                window.open(module.url, '_blank');
+            } else if (!hasAccess) {
+                showError('Access denied. Please contact your administrator for permissions.');
+            } else {
+                showError('This module is currently offline. Please try again later.');
+            }
+        }
+
+        // Utility functions
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        async function logout() {
+            try {
+                await fetch('/auth/logout', { credentials: 'include' });
+            } catch (err) {
+                console.warn('Logout request failed:', err);
+            }
+            window.location.href = '/';
+        }
+
+        // Refresh module statuses every 30 seconds
+        setInterval(async () => {
+            await loadModuleStatuses();
+            await renderModules();
+        }, 30000);
+
+        // ============================================================================
+        // SSO Admin Control Functions
+        // ============================================================================
+
+        let currentSSOStatus = true;
+
+        // Load SSO status
+        async function loadSSOStatus() {
+            try {
+                const response = await fetch('/auth/sso/status', { credentials: 'include' });
+                const data = await response.json();
+                
+                currentSSOStatus = data.enabled;
+                updateSSOUI(data.enabled);
+            } catch (error) {
+                console.error('Failed to load SSO status:', error);
+                showError('Failed to load SSO status');
+            }
+        }
+
+        // Update SSO UI elements
+        function updateSSOUI(enabled) {
+            const statusText = document.getElementById('ssoStatusText');
+            const statusBadge = document.getElementById('ssoStatusBadge');
+            const toggleBtn = document.getElementById('ssoToggleBtn');
+            const toggleBtnText = document.getElementById('ssoToggleBtnText');
+            
+            if (!statusText || !statusBadge || !toggleBtn || !toggleBtnText) {
+                return;
+            }
+            
+            if (enabled) {
+                statusText.textContent = 'SSO Authentication: ';
+                statusBadge.textContent = '🟢 Enabled';
+                statusBadge.className = 'status-badge enabled';
+                toggleBtn.className = 'sso-toggle-btn disable';
+                toggleBtnText.textContent = '🔒 Disable SSO';
+            } else {
+                statusText.textContent = 'SSO Authentication: ';
+                statusBadge.textContent = '🔴 Disabled';
+                statusBadge.className = 'status-badge disabled';
+                toggleBtn.className = 'sso-toggle-btn enable';
+                toggleBtnText.textContent = '🔓 Enable SSO';
+            }
+        }
+
+        // Toggle SSO status
+        async function toggleSSO() {
+            const toggleBtn = document.getElementById('ssoToggleBtn');
+            const toggleBtnText = document.getElementById('ssoToggleBtnText');
+            
+            if (!toggleBtn || !toggleBtnText) return;
+            
+            // Disable button during request
+            toggleBtn.disabled = true;
+            const originalText = toggleBtnText.textContent;
+            toggleBtnText.textContent = '⏳ Processing...';
+            
+            try {
+                const newStatus = !currentSSOStatus;
+                
+                const response = await fetch('/auth/sso/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ enabled: newStatus })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    currentSSOStatus = newStatus;
+                    updateSSOUI(newStatus);
+                    showSuccess(`SSO ${newStatus ? 'enabled' : 'disabled'} successfully`);
+                } else {
+                    throw new Error(data.detail || data.error || 'Failed to toggle SSO');
+                }
+            } catch (error) {
+                console.error('Failed to toggle SSO:', error);
+                showError(error.message || 'Failed to toggle SSO');
+                toggleBtnText.textContent = originalText;
+            } finally {
+                toggleBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

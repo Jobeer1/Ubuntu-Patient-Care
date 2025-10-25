@@ -1,0 +1,53 @@
+{
+  "nas": {
+    "server": "155.235.81.155",
+    "share": "Image Archiving",
+    "username": "admin",
+    "password": "CH@R!$M@",
+    "domain": "WORKGROUP",
+    "connection_timeout": 30
+  },
+  "orthanc": {
+    "url": "http://localhost:8042",
+    "username": "orthanc",
+    "password": "orthanc",
+    "timeout": 30
+  },
+  "import_settings": {
+    "scan_subdirectories": true,
+    "file_extensions": [".dcm", ".dicom", ".ima", ""],
+    "batch_size": 100,
+    "max_file_size_mb": 500,
+    "skip_duplicates": true,
+    "verify_dicom": true,
+    "parallel_imports": 4
+  },
+  "south_african_context": {
+    "medical_aid_mapping": true,
+    "sa_patient_id_validation": true,
+    "timezone": "Africa/Johannesburg",
+    "default_language": "en-ZA",
+    "common_sa_hospitals": [
+      "Netcare",
+      "Life Healthcare",
+      "Mediclinic",
+      "Chris Hani Baragwanath",
+      "Groote Schuur",
+      "Charlotte Maxeke"
+    ],
+    "sa_medical_schemes": [
+      "Discovery Health",
+      "Momentum Health",
+      "Bonitas",
+      "Medihelp",
+      "Fedhealth",
+      "Bestmed"
+    ]
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "nas_importer.log",
+    "max_size_mb": 100,
+    "backup_count": 5
+  }
+}

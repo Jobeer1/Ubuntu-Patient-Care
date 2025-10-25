@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OHIF Viewer (Embedded)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <style>
+    html, body { height: 100%; margin: 0; background: #111; }
+    .frame { position: fixed; inset: 0; display: flex; flex-direction: column; }
+    .bar { height: 48px; background: #1f2937; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #374151; }
+    .bar .left { display: flex; gap: 10px; align-items: center; }
+    .bar .right { display: flex; gap: 8px; align-items: center; }
+    .bar button { background: #006533; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .bar button:hover { background: #0a7b44; }
+    iframe { flex: 1; border: none; width: 100%; }
+    .warn { color: #ffb81c; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="bar">
+      <div class="left">
+        <strong>OHIF Viewer (Embedded)</strong>
+        <span>Patient: <span id="p"></span></span>
+        <span>Study: <span id="s"></span></span>
+      </div>
+      <div class="right">
+        <button onclick="reloadOHIF()">Reload</button>
+        <button onclick="window.history.back()">Close</button>
+      </div>
+    </div>
+    <iframe id="ohif" title="OHIF"></iframe>
+  </div>
+  <script>
+    const patientId = '{{ patient_id }}';
+    const studyUID = '{{ study_uid }}';
+    document.getElementById('p').textContent = patientId || '—';
+    document.getElementById('s').textContent = studyUID || '—';
+
+    // Where to serve a local OHIF build
+    // Put your built OHIF app under /static/ohif/ (index.html plus assets)
+    const ohifBase = `${window.location.origin}/static/ohif/index.html`;
+
+    async function ensureStudyUID() {
+      if (studyUID) return studyUID;
+      if (!patientId) return '';
+      // Try to resolve studies via proxy
+      try {
+        const base = `${window.location.origin}/api/nas/orthanc-proxy`;
+        const patients = await fetch(`${base}/patients`).then(r => r.json());
+        for (const pid of patients) {
+          const pd = await fetch(`${base}/patients/${pid}`).then(r => r.json());
+          if (pd?.MainDicomTags?.PatientID === patientId || pd?.ID === patientId) {
+            // Return first study UID
+            if (pd.Studies && pd.Studies.length) {
+              const sd = await fetch(`${base}/studies/${pd.Studies[0]}`).then(r => r.json());
+              return sd?.MainDicomTags?.StudyInstanceUID || pd.Studies[0];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to resolve StudyInstanceUID:', e);
+      }
+      return '';
+    }
+
+    async function loadOHIF() {
+      const sUID = await ensureStudyUID();
+      const url = new URL(ohifBase);
+      // OHIF expects StudyInstanceUIDs and a dicomweb url param for external mode
+      const params = new URLSearchParams();
+      if (sUID) params.set('StudyInstanceUIDs', sUID);
+      params.set('url', `${window.location.origin}/api/nas/dicom-web`);
+      document.getElementById('ohif').src = `${ohifBase}?${params.toString()}`;
+    }
+
+    function reloadOHIF() {
+      loadOHIF();
+    }
+
+    loadOHIF();
+  </script>
+</body>
+</html>

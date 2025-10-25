@@ -1,0 +1,517 @@
+/* =============================================================================
+   PACS Report Styling - Professional Medical Report CSS
+   
+   Styling for rendered medical reports from all analysis types
+   (Cardiac, Coronary, Perfusion, Mammography, Generic)
+   
+   Features:
+   - Professional medical report layout
+   - Print-optimized styling
+   - Responsive design for screens and print
+   - Accessible color contrast
+   - Medical-grade typography
+   ============================================================================= */
+
+/* =============================================================================
+   Reset and Base Styles
+   ============================================================================= */
+
+.report-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #0066cc;
+}
+
+.report-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #cccccc;
+    font-size: 0.9em;
+    color: #666666;
+    text-align: center;
+}
+
+/* =============================================================================
+   Typography
+   ============================================================================= */
+
+.report-container h1 {
+    font-size: 2.5em;
+    font-weight: 600;
+    color: #003366;
+    margin: 0 0 20px 0;
+    letter-spacing: -0.5px;
+}
+
+.report-container h2 {
+    font-size: 1.8em;
+    font-weight: 600;
+    color: #0066cc;
+    margin: 30px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.report-container h3 {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #004499;
+    margin: 20px 0 10px 0;
+}
+
+.report-title {
+    font-size: 2.2em;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #003366;
+}
+
+.report-heading {
+    color: #0066cc;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.report-paragraph {
+    font-size: 1em;
+    line-height: 1.8;
+    margin-bottom: 15px;
+    text-align: justify;
+    color: #1a1a1a;
+}
+
+/* =============================================================================
+   Study Information Section
+   ============================================================================= */
+
+.study-info,
+.cardiac-function,
+.bi-rads-classification,
+.perfusion-params,
+.calcium-info {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.report-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.field {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.field:last-child {
+    margin-bottom: 0;
+}
+
+.field .label {
+    font-weight: 600;
+    color: #003366;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.95em;
+}
+
+.field .value {
+    color: #1a1a1a;
+    display: block;
+    font-size: 1.05em;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+/* =============================================================================
+   Tables
+   ============================================================================= */
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.report-table th {
+    background-color: #0066cc;
+    color: #ffffff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #0052a3;
+}
+
+.report-table td {
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+}
+
+.report-table tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+.report-table tr:hover td {
+    background-color: #f0f0f0;
+}
+
+/* =============================================================================
+   Lists
+   ============================================================================= */
+
+.report-list {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.report-list ul,
+.report-list ol {
+    padding-left: 20px;
+}
+
+.report-list li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+    color: #1a1a1a;
+}
+
+/* =============================================================================
+   Specialty Sections
+   ============================================================================= */
+
+/* Cardiac Section */
+.cardiac-function {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #d32f2f;
+}
+
+.cardiac-function .label {
+    color: #c62828;
+}
+
+/* Perfusion Section */
+.perfusion-params {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #1976d2;
+}
+
+.perfusion-params .label {
+    color: #1565c0;
+}
+
+/* Mammography Section */
+.bi-rads-classification {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #f57c00;
+}
+
+.bi-rads-classification .label {
+    color: #e65100;
+}
+
+/* Calcium/Coronary Section */
+.calcium-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #388e3c;
+}
+
+.calcium-info .label {
+    color: #2e7d32;
+}
+
+/* =============================================================================
+   Visual Elements
+   ============================================================================= */
+
+.spacer {
+    margin-bottom: 15px;
+}
+
+.report-divider {
+    border: none;
+    border-top: 2px solid #0066cc;
+    margin: 30px 0;
+    opacity: 0.3;
+}
+
+.report-divider:last-child {
+    display: none;
+}
+
+/* =============================================================================
+   Value Formatting
+   ============================================================================= */
+
+/* Abnormal values - highlight with warning color */
+.value.abnormal {
+    color: #d32f2f;
+    font-weight: 700;
+    background-color: #ffebee;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Normal values - use standard color */
+.value.normal {
+    color: #388e3c;
+    font-weight: 600;
+}
+
+/* Critical values - high visibility */
+.value.critical {
+    color: #fff;
+    background-color: #d32f2f;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Warning values */
+.value.warning {
+    color: #f57c00;
+    font-weight: 600;
+    background-color: #fff3e0;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* =============================================================================
+   Print Styles
+   ============================================================================= */
+
+@media print {
+    .report-container {
+        padding: 20px;
+        max-width: 100%;
+        background-color: white;
+    }
+
+    .report-header {
+        page-break-after: avoid;
+    }
+
+    .report-heading {
+        page-break-after: avoid;
+    }
+
+    .report-paragraph {
+        orphans: 3;
+        widows: 3;
+    }
+
+    .report-table {
+        page-break-inside: avoid;
+    }
+
+    .report-table thead {
+        display: table-header-group;
+    }
+
+    .report-table tr {
+        page-break-inside: avoid;
+    }
+
+    body {
+        font-size: 11pt;
+        line-height: 1.5;
+    }
+
+    .report-container h1 {
+        font-size: 1.8em;
+    }
+
+    .report-container h2 {
+        font-size: 1.3em;
+    }
+
+    .no-print {
+        display: none;
+    }
+}
+
+/* =============================================================================
+   Responsive Design
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+    .report-container {
+        padding: 30px;
+    }
+
+    .report-fields {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .report-container {
+        padding: 20px;
+        margin: 0;
+    }
+
+    .report-container h1 {
+        font-size: 1.8em;
+    }
+
+    .report-container h2 {
+        font-size: 1.3em;
+    }
+
+    .report-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .report-table {
+        font-size: 0.9em;
+    }
+
+    .report-table th,
+    .report-table td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-container {
+        padding: 15px;
+    }
+
+    .report-container h1 {
+        font-size: 1.5em;
+    }
+
+    .report-container h2 {
+        font-size: 1.1em;
+    }
+
+    .report-container h3 {
+        font-size: 1em;
+    }
+
+    .report-paragraph {
+        text-align: left;
+        font-size: 0.95em;
+    }
+
+    .field {
+        padding: 10px;
+    }
+
+    .field .label {
+        font-size: 0.9em;
+    }
+
+    .field .value {
+        font-size: 1em;
+    }
+
+    .report-table {
+        font-size: 0.85em;
+    }
+
+    .report-table th,
+    .report-table td {
+        padding: 6px;
+    }
+}
+
+/* =============================================================================
+   Accessibility
+   ============================================================================= */
+
+.report-container {
+    color-scheme: light;
+}
+
+.field:focus-visible {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
+.report-table th {
+    color: #ffffff;
+    background-color: #0066cc;
+}
+
+/* Ensure sufficient contrast */
+.report-title,
+.report-heading,
+.field .label {
+    color: #003366;
+}
+
+.report-paragraph,
+.field .value {
+    color: #1a1a1a;
+}
+
+/* =============================================================================
+   Medical-Specific Elements
+   ============================================================================= */
+
+/* Measurement values */
+.measurement {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+/* Clinical reference ranges */
+.reference-range {
+    font-size: 0.9em;
+    color: #666666;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* Important note emphasis */
+.clinical-note {
+    background-color: #fef3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 4px;
+}
+
+.clinical-note strong {
+    color: #856404;
+}
+
+/* Recommendation styling */
+.recommendation {
+    background-color: #d1ecf1;
+    border-left: 4px solid #17a2b8;
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 4px;
+}
+
+.recommendation strong {
+    color: #0c5460;
+}
+
+/* =============================================================================
+   End of Report Styling
+   ============================================================================= */

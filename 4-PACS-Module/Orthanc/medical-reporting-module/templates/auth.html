@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical STT - Authentication</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sa-dashboard.css') }}">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-demo {
+            background: #28a745;
+        }
+        
+        .btn-demo:hover {
+            background: #1e7e34;
+        }
+        
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .auth-toggle a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .consent-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .consent-checkbox {
+            margin-bottom: 10px;
+        }
+        
+        .consent-checkbox input {
+            width: auto;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2 id="auth-title">Medical STT System</h2>
+        
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+        
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form active">
+            <div class="form-group">
+                <label for="login-username">Username:</label>
+                <input type="text" id="login-username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" name="password" required>
+            </div>
+            
+            <button type="submit" class="btn">Login</button>
+            <button type="button" class="btn btn-demo" onclick="demoLogin()">Demo Login</button>
+            
+            <div class="auth-toggle">
+                <a href="#" onclick="showRegisterForm()">Don't have an account? Register</a>
+            </div>
+        </form>
+        
+        <!-- Register Form -->
+        <form id="register-form" class="auth-form">
+            <div class="form-group">
+                <label for="register-username">Username:</label>
+                <input type="text" id="register-username" name="username" required minlength="3">
+            </div>
+            
+            <div class="form-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="register-password">Password:</label>
+                <input type="password" id="register-password" name="password" required minlength="6">
+            </div>
+            
+            <div class="form-group">
+                <label for="register-role">Role:</label>
+                <select id="register-role" name="role">
+                    <option value="doctor">Doctor</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+            
+            <div class="consent-section">
+                <h4>Data Processing Consent (POPIA Compliance)</h4>
+                <div class="consent-checkbox">
+                    <input type="checkbox" id="consent-processing" required>
+                    <label for="consent-processing">I consent to the processing of my personal data for medical STT training and voice shortcuts.</label>
+                </div>
+                <div class="consent-checkbox">
+                    <input type="checkbox" id="consent-retention" required>
+                    <label for="consent-retention">I understand that my data will be retained for up to 7 years for medical training purposes.</label>
+                </div>
+                <p><small>You can withdraw consent and request data deletion at any time from your profile settings.</small></p>
+            </div>
+            
+            <button type="submit" class="btn">Register</button>
+            
+            <div class="auth-toggle">
+                <a href="#" onclick="showLoginForm()">Already have an account? Login</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Form switching
+        function showLoginForm() {
+            document.getElementById('login-form').classList.add('active');
+            document.getElementById('register-form').classList.remove('active');
+            document.getElementById('auth-title').textContent = 'Medical STT System - Login';
+            clearMessages();
+        }
+        
+        function showRegisterForm() {
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('register-form').classList.add('active');
+            document.getElementById('auth-title').textContent = 'Medical STT System - Register';
+            clearMessages();
+        }
+        
+        // Message handling
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+        }
+        
+        function clearMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+        
+        // Login form handler
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/enhanced-voice-demo';
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Login failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            }
+        });
+        
+        // Register form handler
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const role = document.getElementById('register-role').value;
+            
+            // Check consent checkboxes
+            const consentProcessing = document.getElementById('consent-processing').checked;
+            const consentRetention = document.getElementById('consent-retention').checked;
+            
+            if (!consentProcessing || !consentRetention) {
+                showError('Please provide consent for data processing to register.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password, role })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Registration successful! Please login with your credentials.');
+                    setTimeout(() => {
+                        showLoginForm();
+                    }, 2000);
+                } else {
+                    showError(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            }
+        });
+        
+        // Demo login
+        async function demoLogin() {
+            try {
+                const response = await fetch('/api/auth/demo/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Demo login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/enhanced-voice-demo';
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Demo login failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            }
+        }
+        
+        // Check if already logged in
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/auth/session/validate');
+                const data = await response.json();
+                
+                if (data.valid) {
+                    window.location.href = '/enhanced-voice-demo';
+                }
+            } catch (error) {
+                // Not logged in, stay on auth page
+            }
+        }
+        
+        // Check session on page load
+        checkSession();
+    </script>
+</body>
+</html>

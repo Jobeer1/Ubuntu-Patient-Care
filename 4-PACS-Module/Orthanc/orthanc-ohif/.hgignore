@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2023-2025 Sebastien Jodogne, ICTEAM UCLouvain, Belgium
+# SPDX-License-Identifier: CC0-1.0
+
+syntax: glob
+*~
+ThirdPartyDownloads/
+OHIF/Viewers-*.tar.gz
+OHIF/dist
+i/
+.vscode/
+*.orig

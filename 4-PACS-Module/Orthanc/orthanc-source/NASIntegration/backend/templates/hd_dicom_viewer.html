@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇿🇦 HD Medical DICOM Viewer - {{ patient_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- High-Definition Medical Imaging Libraries -->
+    <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-math@0.1.10/dist/cornerstoneMath.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-tools@6.0.10/dist/cornerstoneTools.es5.min.js"></script>
+    <script src="https://unpkg.com/dicom-parser@1.8.21/dist/dicomParser.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader@4.13.2/dist/cornerstoneWADOImageLoader.bundle.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .viewer-container {
+            display: flex;
+            height: 100vh;
+            background: #1a1a1a;
+        }
+
+        /* Header Bar */
+        .viewer-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #006533 0%, #FFB81C 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-info h1 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .patient-header {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .viewer-content {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+        }
+
+        /* Sidebar */
+        .viewer-sidebar {
+            width: 320px;
+            background: #2d2d2d;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #444;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+            background: #3d3d3d;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .sidebar-section h3 {
+            color: #FFB81C;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #FFB81C;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            color: #FFB81C;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: #555;
+            border-radius: 3px;
+            outline: none;
+            accent-color: #FFB81C;
+        }
+
+        .slider-value {
+            position: absolute;
+            right: 0;
+            top: -25px;
+            color: #FFB81C;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .preset-select {
+            width: 100%;
+            background: #4d4d4d;
+            color: white;
+            border: 1px solid #666;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            background: #006533;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #005580;
+        }
+
+        .control-btn.active {
+            background: #FFB81C;
+            color: #000;
+        }
+
+        /* Main Viewer */
+        .viewer-main {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .viewer-toolbar {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #444;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .tool-group-label {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        .tool-btn {
+            background: #3d3d3d;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tool-btn:hover {
+            background: #4d4d4d;
+        }
+
+        .tool-btn.active {
+            background: #006533;
+            border-color: #006533;
+        }
+
+        /* Viewport */
+        .dicom-viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #dicomCanvas {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            cursor: crosshair;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #333;
+            border-top: 4px solid #FFB81C;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #FFB81C;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .loading-details {
+            color: #ccc;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Overlays */
+        .viewport-overlay {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .overlay-top-left {
+            top: 15px;
+            left: 15px;
+        }
+
+        .overlay-top-right {
+            top: 15px;
+            right: 15px;
+        }
+
+        .overlay-bottom-left {
+            bottom: 15px;
+            left: 15px;
+        }
+
+        .overlay-bottom-right {
+            bottom: 15px;
+            right: 15px;
+            text-align: right;
+        }
+
+        .overlay-line {
+            margin-bottom: 4px;
+        }
+
+        .overlay-value {
+            color: #FFB81C;
+            font-weight: bold;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: #2d2d2d;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            border-top: 1px solid #444;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-icon {
+            color: #FFB81C;
+        }
+
+        /* Error States */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ff6b6b;
+            max-width: 500px;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .retry-btn {
+            background: #006533;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .retry-btn:hover {
+            background: #005580;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .viewer-sidebar {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .viewer-container {
+                flex-direction: column;
+            }
+            
+            .viewer-sidebar {
+                width: 100%;
+                height: 200px;
+                order: 2;
+            }
+            
+            .viewer-main {
+                order: 1;
+                height: calc(100vh - 260px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <!-- Header -->
+        <div class="viewer-header">
+            <div class="header-info">
+                <h1>🏥🇿🇦 HD Medical DICOM Viewer</h1>
+                <div class="patient-header">
+                    Patient: <span id="headerPatientId">{{ patient_id or 'Loading...' }}</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="header-btn" onclick="refreshPatientData()">
+                    <i class="fas fa-refresh"></i> Refresh
+                </button>
+                <button class="header-btn" onclick="openInNewWindow()">
+                    <i class="fas fa-external-link-alt"></i> New Window
+                </button>
+                <button class="header-btn" onclick="closeViewer()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="viewer-content">
+            <!-- Sidebar -->
+            <div class="viewer-sidebar">
+                <!-- Patient Information -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-user-md"></i> Patient Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Patient ID:</span>
+                            <span class="info-value" id="patientId">{{ patient_id or 'Loading...' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Patient Name:</span>
+                            <span class="info-value" id="patientName">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Study Date:</span>
+                            <span class="info-value" id="studyDate">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Modality:</span>
+                            <span class="info-value" id="modality">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Institution:</span>
+                            <span class="info-value">SA Medical 🇿🇦</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Study Information -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-images"></i> Study Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Total Slices:</span>
+                            <span class="info-value" id="totalSlices">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Current Slice:</span>
+                            <span class="info-value" id="currentSlice">1</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Image Size:</span>
+                            <span class="info-value" id="imageSize">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Data Quality:</span>
+                            <span class="info-value" id="dataQuality">HD</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Window/Level Controls -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-adjust"></i> Image Controls</h3>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Window Preset:</label>
+                        <select class="preset-select" id="windowPreset" onchange="applyWindowPreset()">
+                            <option value="custom">Custom</option>
+                            <option value="lung">Lung (-600/1600)</option>
+                            <option value="mediastinal">Mediastinal (50/400)</option>
+                            <option value="bone">Bone (400/4000)</option>
+                            <option value="brain">Brain (40/80)</option>
+                            <option value="liver">Liver (60/160)</option>
+                            <option value="soft_tissue" selected>Soft Tissue (40/400)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Window Width:</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="windowWidthSlider" 
+                                   min="1" max="4000" value="400" 
+                                   oninput="updateWindowWidth(this.value)">
+                            <span class="slider-value" id="windowWidthValue">400</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Window Level:</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="windowLevelSlider" 
+                                   min="-1000" max="1000" value="40" 
+                                   oninput="updateWindowLevel(this.value)">
+                            <span class="slider-value" id="windowLevelValue">40</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Zoom Level:</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="zoomSlider" 
+                                   min="10" max="500" value="100" 
+                                   oninput="updateZoom(this.value)">
+                            <span class="slider-value" id="zoomValue">100%</span>
+                        </div>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="resetView()">
+                            <i class="fas fa-refresh"></i> Reset
+                        </button>
+                        <button class="control-btn" onclick="invertImage()">
+                            <i class="fas fa-adjust"></i> Invert
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Slice Navigation -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-layer-group"></i> Slice Navigation</h3>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Slice Position:</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sliceSlider" 
+                                   min="1" max="1" value="1" 
+                                   oninput="navigateToSlice(this.value)">
+                            <span class="slider-value" id="slicePosition">1/1</span>
+                        </div>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="previousSlice()">
+                            <i class="fas fa-chevron-up"></i> Previous
+                        </button>
+                        <button class="control-btn" onclick="nextSlice()">
+                            <i class="fas fa-chevron-down"></i> Next
+                        </button>
+                        <button class="control-btn" onclick="playSlices()" id="playBtn">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                        <button class="control-btn" onclick="jumpToMiddle()">
+                            <i class="fas fa-dot-circle"></i> Middle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Viewer -->
+            <div class="viewer-main">
+                <!-- Toolbar -->
+                <div class="viewer-toolbar">
+                    <div class="tool-group">
+                        <span class="tool-group-label">Tools:</span>
+                        <button class="tool-btn active" onclick="setTool('wwwl')" data-tool="wwwl">
+                            <i class="fas fa-adjust"></i> W/L
+                        </button>
+                        <button class="tool-btn" onclick="setTool('pan')" data-tool="pan">
+                            <i class="fas fa-hand-paper"></i> Pan
+                        </button>
+                        <button class="tool-btn" onclick="setTool('zoom')" data-tool="zoom">
+                            <i class="fas fa-search-plus"></i> Zoom
+                        </button>
+                        <button class="tool-btn" onclick="setTool('scroll')" data-tool="scroll">
+                            <i class="fas fa-arrows-alt-v"></i> Scroll
+                        </button>
+                    </div>
+
+                    <div class="tool-group">
+                        <span class="tool-group-label">Quality:</span>
+                        <button class="tool-btn" onclick="toggleHighQuality()" id="qualityBtn">
+                            <i class="fas fa-hd-video-camera"></i> HD Mode
+                        </button>
+                        <button class="tool-btn" onclick="optimizeContrast()">
+                            <i class="fas fa-magic"></i> Auto
+                        </button>
+                    </div>
+
+                    <div class="tool-group">
+                        <span class="tool-group-label">View:</span>
+                        <button class="tool-btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                        <button class="tool-btn" onclick="exportImage()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DICOM Viewport -->
+                <div class="dicom-viewport">
+                    <!-- Loading Overlay -->
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text" id="loadingTitle">Loading Patient Data</div>
+                        <div class="loading-details" id="loadingDetails">Connecting to medical database...</div>
+                    </div>
+
+                    <!-- Canvas -->
+                    <canvas id="dicomCanvas"></canvas>
+
+                    <!-- Viewport Overlays -->
+                    <div class="viewport-overlay overlay-top-left">
+                        <div class="overlay-line">Patient: <span class="overlay-value" id="overlayPatient">{{ patient_id or 'Unknown' }}</span></div>
+                        <div class="overlay-line">Study: <span class="overlay-value" id="overlayStudyDate">Loading...</span></div>
+                        <div class="overlay-line">Modality: <span class="overlay-value" id="overlayModality">Loading...</span></div>
+                    </div>
+
+                    <div class="viewport-overlay overlay-top-right">
+                        <div class="overlay-line">Slice: <span class="overlay-value" id="overlaySliceNumber">1</span></div>
+                        <div class="overlay-line">Total: <span class="overlay-value" id="overlayTotalSlices">1</span></div>
+                        <div class="overlay-line">Quality: <span class="overlay-value">HD</span></div>
+                    </div>
+
+                    <div class="viewport-overlay overlay-bottom-left">
+                        <div class="overlay-line">WW: <span class="overlay-value" id="overlayWindowWidth">400</span></div>
+                        <div class="overlay-line">WL: <span class="overlay-value" id="overlayWindowLevel">40</span></div>
+                        <div class="overlay-line">Zoom: <span class="overlay-value" id="overlayZoom">100%</span></div>
+                    </div>
+
+                    <div class="viewport-overlay overlay-bottom-right">
+                        <div class="overlay-line">SA Medical Imaging</div>
+                        <div class="overlay-line">🇿🇦 South Africa</div>
+                        <div class="overlay-line">HD DICOM Viewer</div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="error-message" id="errorMessage" style="display: none;">
+                        <i class="fas fa-exclamation-triangle error-icon"></i>
+                        <h3>Unable to Load Patient Data</h3>
+                        <p id="errorDetails">Please check the patient ID and try again.</p>
+                        <button class="retry-btn" onclick="retryLoad()">
+                            <i class="fas fa-refresh"></i> Retry Loading
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div class="status-left">
+                        <span class="status-item">
+                            <i class="fas fa-database status-icon"></i>
+                            <span id="connectionStatus">Connecting...</span>
+                        </span>
+                        <span class="status-item">
+                            <i class="fas fa-images status-icon"></i>
+                            <span id="imageStatus">Loading...</span>
+                        </span>
+                    </div>
+                    <div class="status-right">
+                        <span class="status-item">
+                            <i class="fas fa-clock status-icon"></i>
+                            <span id="currentTime"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // HD DICOM Viewer Implementation
+        class HDDicomViewer {
+            constructor() {
+                this.patientId = '{{ patient_id }}' || null;
+                this.currentSliceIndex = 0;
+                this.totalSlices = 0;
+                this.dicomSlices = [];
+                this.currentTool = 'wwwl';
+                this.isPlaying = false;
+                this.playInterval = null;
+                this.highQualityMode = true;
+                this.inverted = false;
+                
+                // Image parameters
+                this.windowWidth = 400;
+                this.windowLevel = 40;
+                this.zoom = 1.0;
+                this.pan = { x: 0, y: 0 };
+                
+                // Canvas and context
+                this.canvas = null;
+                this.ctx = null;
+                
+                this.init();
+            }
+
+            init() {
+                console.log('🏥 Initializing HD DICOM Viewer for patient:', this.patientId);
+                
+                this.canvas = document.getElementById('dicomCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.updateClock();
+                setInterval(() => this.updateClock(), 1000);
+                
+                // Load patient data with fresh request
+                this.loadPatientData();
+            }
+
+            setupCanvas() {
+                const viewport = this.canvas.parentElement;
+                this.canvas.width = viewport.offsetWidth;
+                this.canvas.height = viewport.offsetHeight;
+                
+                // Enable high-quality rendering
+                this.ctx.imageSmoothingEnabled = this.highQualityMode;
+                this.ctx.imageSmoothingQuality = 'high';
+                
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            resizeCanvas() {
+                const viewport = this.canvas.parentElement;
+                this.canvas.width = viewport.offsetWidth;
+                this.canvas.height = viewport.offsetHeight;
+                this.redrawCurrentSlice();
+            }
+
+            setupEventListeners() {
+                // Mouse events
+                let isDragging = false;
+                let lastMouse = { x: 0, y: 0 };
+
+                this.canvas.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    lastMouse = { x: e.clientX, y: e.clientY };
+                    e.preventDefault();
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - lastMouse.x;
+                    const deltaY = e.clientY - lastMouse.y;
+                    
+                    this.handleMouseMove(deltaX, deltaY);
+                    lastMouse = { x: e.clientX, y: e.clientY };
+                });
+
+                this.canvas.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    
+                    if (this.currentTool === 'scroll' || e.ctrlKey) {
+                        const direction = e.deltaY > 0 ? 1 : -1;
+                        this.navigateSlice(direction);
+                    } else {
+                        const zoomDelta = e.deltaY > 0 ? -10 : 10;
+                        this.updateZoom(this.zoom * 100 + zoomDelta);
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                    
+                    switch(e.key) {
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.previousSlice();
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.nextSlice();
+                            break;
+                        case ' ':
+                            e.preventDefault();
+                            this.playSlices();
+                            break;
+                        case 'r':
+                        case 'R':
+                            e.preventDefault();
+                            this.resetView();
+                            break;
+                        case 'i':
+                        case 'I':
+                            e.preventDefault();
+                            this.invertImage();
+                            break;
+                    }
+                });
+            }
+
+            handleMouseMove(deltaX, deltaY) {
+                switch (this.currentTool) {
+                    case 'wwwl':
+                        this.windowWidth = Math.max(1, this.windowWidth + deltaX * 4);
+                        this.windowLevel = this.windowLevel + deltaY * 2;
+                        this.updateWindowLevelUI();
+                        this.redrawCurrentSlice();
+                        break;
+                    case 'pan':
+                        this.pan.x += deltaX;
+                        this.pan.y += deltaY;
+                        this.redrawCurrentSlice();
+                        break;
+                    case 'zoom':
+                        const zoomDelta = deltaY > 0 ? -5 : 5;
+                        this.updateZoom(this.zoom * 100 + zoomDelta);
+                        break;
+                    case 'scroll':
+                        const sliceDirection = deltaY > 0 ? 1 : -1;
+                        this.navigateSlice(sliceDirection);
+                        break;
+                }
+            }
+
+            async loadPatientData() {
+                if (!this.patientId) {
+                    this.showError('No patient ID provided');
+                    return;
+                }
+
+                this.updateLoadingStatus('Searching for patient data...', `Loading patient: ${this.patientId}`);
+                
+                try {
+                    // Clear any cached data
+                    this.dicomSlices = [];
+                    this.currentSliceIndex = 0;
+                    
+                    // Force fresh patient search with timestamp to prevent caching
+                    const timestamp = Date.now();
+                    const response = await fetch('/api/nas/search/patient', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache',
+                            'X-Timestamp': timestamp.toString()
+                        },
+                        body: JSON.stringify({
+                            query: this.patientId,
+                            search_type: 'patient_id',
+                            limit: 1,
+                            force_refresh: true,
+                            timestamp: timestamp
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('🔍 Patient search response:', data);
+                        
+                        if (data.success && data.patients && data.patients.length > 0) {
+                            const patient = data.patients[0];
+                            
+                            // Verify we got the correct patient
+                            if (patient.patient_id === this.patientId) {
+                                console.log('✅ Correct patient found:', patient.patient_id);
+                                this.displayPatientInfo(patient);
+                                await this.loadDicomFiles(patient);
+                            } else {
+                                console.warn('⚠️ Patient ID mismatch:', patient.patient_id, 'vs requested:', this.patientId);
+                                this.showError(`Patient data mismatch. Requested: ${this.patientId}, Found: ${patient.patient_id}`);
+                            }
+                        } else {
+                            console.error('❌ No patient found for ID:', this.patientId);
+                            this.showError(`No patient found with ID: ${this.patientId}`);
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Error loading patient data:', error);
+                    this.showError(`Failed to load patient data: ${error.message}`);
+                }
+            }
+
+            displayPatientInfo(patient) {
+                // Update patient information with fresh data
+                document.getElementById('patientId').textContent = patient.patient_id;
+                document.getElementById('headerPatientId').textContent = patient.patient_id;
+                document.getElementById('patientName').textContent = patient.patient_name || 'Unknown';
+                document.getElementById('studyDate').textContent = patient.study_date || 'Unknown';
+                document.getElementById('modality').textContent = patient.modality || 'Unknown';
+                
+                // Update overlays
+                document.getElementById('overlayPatient').textContent = patient.patient_id;
+                document.getElementById('overlayStudyDate').textContent = patient.study_date || 'Unknown';
+                document.getElementById('overlayModality').textContent = patient.modality || 'Unknown';
+                
+                console.log('📋 Patient info updated:', {
+                    id: patient.patient_id,
+                    name: patient.patient_name,
+                    date: patient.study_date,
+                    modality: patient.modality
+                });
+            }
+
+            async loadDicomFiles(patient) {
+                this.updateLoadingStatus('Searching for DICOM files...', `Analyzing ${patient.file_count || 'multiple'} files`);
+                
+                try {
+                    const response = await fetch('/api/nas/search/dicom-files', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            patient_id: patient.patient_id,
+                            folder_path: patient.folder_path
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.files && data.files.length > 0) {
+                            console.log('✅ Found DICOM files:', data.files.length);
+                            await this.processDicomFiles(data.files, patient);
+                        } else {
+                            console.log('📂 No DICOM files found, showing patient info');
+                            this.showPatientWithoutImages(patient);
+                        }
+                    } else {
+                        throw new Error('Failed to search DICOM files');
+                    }
+                } catch (error) {
+                    console.error('Error loading DICOM files:', error);
+                    this.showPatientWithoutImages(patient);
+                }
+            }
+
+            async processDicomFiles(files, patient) {
+                this.updateLoadingStatus('Processing DICOM files...', `Loading ${files.length} medical images`);
+                
+                // Sort files by filename to ensure proper slice order
+                files.sort((a, b) => {
+                    const aNum = this.extractSliceNumber(a.filename);
+                    const bNum = this.extractSliceNumber(b.filename);
+                    return aNum - bNum;
+                });
+                
+                this.dicomSlices = [];
+                let loadedCount = 0;
+                const maxSlices = Math.min(files.length, 100); // Limit for performance
+                
+                for (let i = 0; i < maxSlices; i++) {
+                    const file = files[i];
+                    this.updateLoadingStatus(
+                        `Loading slice ${i + 1}/${maxSlices}...`,
+                        `Processing: ${file.filename}`
+                    );
+                    
+                    try {
+                        const imageData = await this.loadDicomSlice(file, patient);
+                        if (imageData) {
+                            this.dicomSlices.push({
+                                imageData: imageData,
+                                filename: file.filename,
+                                index: i,
+                                processed: true
+                            });
+                            loadedCount++;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to load slice:', file.filename, error);
+                    }
+                }
+                
+                if (this.dicomSlices.length > 0) {
+                    this.totalSlices = this.dicomSlices.length;
+                    this.currentSliceIndex = Math.floor(this.dicomSlices.length / 2); // Start in middle
+                    
+                    this.updateUI();
+                    this.hideLoading();
+                    this.redrawCurrentSlice();
+                    
+                    document.getElementById('connectionStatus').textContent = 'HD Images Loaded';
+                    document.getElementById('imageStatus').textContent = `${this.dicomSlices.length} slices ready`;
+                    
+                    console.log('✅ HD DICOM viewer ready with', this.dicomSlices.length, 'slices');
+                } else {
+                    this.showError('No DICOM images could be processed');
+                }
+            }
+
+            extractSliceNumber(filename) {
+                // Extract slice number from DICOM filename
+                const matches = filename.match(/(\d+)/g);
+                if (matches) {
+                    // Use the last number in the filename as slice indicator
+                    return parseInt(matches[matches.length - 1]);
+                }
+                return 0;
+            }
+
+            async loadDicomSlice(file, patient) {
+                try {
+                    const response = await fetch('/api/nas/dicom/image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            file_path: file.file_path,
+                            patient_id: patient.patient_id
+                        })
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        return await this.createHDImageData(blob);
+                    }
+                    return null;
+                } catch (error) {
+                    console.warn('Error loading DICOM slice:', error);
+                    return null;
+                }
+            }
+
+            async createHDImageData(blob) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        // Use original image dimensions for HD quality
+                        tempCanvas.width = img.width;
+                        tempCanvas.height = img.height;
+                        
+                        // Enable high-quality rendering
+                        tempCtx.imageSmoothingEnabled = true;
+                        tempCtx.imageSmoothingQuality = 'high';
+                        
+                        tempCtx.drawImage(img, 0, 0);
+                        const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+                        
+                        URL.revokeObjectURL(img.src);
+                        resolve(imageData);
+                    };
+                    
+                    img.onerror = () => {
+                        URL.revokeObjectURL(img.src);
+                        reject(new Error('Failed to load image'));
+                    };
+                    
+                    img.src = URL.createObjectURL(blob);
+                });
+            }
+
+            redrawCurrentSlice() {
+                if (this.dicomSlices.length === 0 || !this.dicomSlices[this.currentSliceIndex]) return;
+                
+                const slice = this.dicomSlices[this.currentSliceIndex];
+                if (!slice.imageData) return;
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Apply transformations
+                this.ctx.save();
+                this.ctx.translate(this.canvas.width / 2 + this.pan.x, this.canvas.height / 2 + this.pan.y);
+                this.ctx.scale(this.zoom, this.zoom);
+                
+                // Apply window/level and create adjusted image
+                const adjustedImageData = this.applyWindowLevel(slice.imageData);
+                
+                // Create temporary canvas for the adjusted image
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = adjustedImageData.width;
+                tempCanvas.height = adjustedImageData.height;
+                
+                // Enable high-quality rendering
+                tempCtx.imageSmoothingEnabled = this.highQualityMode;
+                tempCtx.imageSmoothingQuality = 'high';
+                
+                tempCtx.putImageData(adjustedImageData, 0, 0);
+                
+                // Draw the adjusted image to main canvas
+                this.ctx.drawImage(tempCanvas, -tempCanvas.width / 2, -tempCanvas.height / 2);
+                
+                this.ctx.restore();
+                
+                // Update image size display
+                document.getElementById('imageSize').textContent = `${adjustedImageData.width}x${adjustedImageData.height}`;
+            }
+
+            applyWindowLevel(imageData) {
+                const data = new Uint8ClampedArray(imageData.data);
+                const { windowWidth, windowLevel, inverted } = this;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const intensity = data[i]; // Assuming grayscale
+                    
+                    // Apply window/level transformation
+                    let newIntensity = ((intensity - (windowLevel - windowWidth / 2)) / windowWidth) * 255;
+                    newIntensity = Math.max(0, Math.min(255, newIntensity));
+                    
+                    // Apply inversion if enabled
+                    if (inverted) {
+                        newIntensity = 255 - newIntensity;
+                    }
+                    
+                    data[i] = newIntensity;     // R
+                    data[i + 1] = newIntensity; // G
+                    data[i + 2] = newIntensity; // B
+                    // Alpha channel (i + 3) remains unchanged
+                }
+                
+                return new ImageData(data, imageData.width, imageData.height);
+            }
+
+            updateUI() {
+                document.getElementById('totalSlices').textContent = this.totalSlices;
+                document.getElementById('overlayTotalSlices').textContent = this.totalSlices;
+                
+                const sliceSlider = document.getElementById('sliceSlider');
+                sliceSlider.max = this.totalSlices;
+                sliceSlider.value = this.currentSliceIndex + 1;
+                
+                this.updateSlicePosition();
+            }
+
+            updateSlicePosition() {
+                const current = this.currentSliceIndex + 1;
+                document.getElementById('currentSlice').textContent = current;
+                document.getElementById('overlaySliceNumber').textContent = current;
+                document.getElementById('slicePosition').textContent = `${current}/${this.totalSlices}`;
+                
+                const sliceSlider = document.getElementById('sliceSlider');
+                sliceSlider.value = current;
+            }
+
+            updateWindowLevelUI() {
+                document.getElementById('windowWidthSlider').value = this.windowWidth;
+                document.getElementById('windowWidthValue').textContent = Math.round(this.windowWidth);
+                document.getElementById('overlayWindowWidth').textContent = Math.round(this.windowWidth);
+                
+                document.getElementById('windowLevelSlider').value = this.windowLevel;
+                document.getElementById('windowLevelValue').textContent = Math.round(this.windowLevel);
+                document.getElementById('overlayWindowLevel').textContent = Math.round(this.windowLevel);
+                
+                document.getElementById('windowPreset').value = 'custom';
+            }
+
+            showPatientWithoutImages(patient) {
+                this.hideLoading();
+                
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                this.ctx.fillStyle = '#FFB81C';
+                this.ctx.font = 'bold 28px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('🏥 PATIENT RECORD FOUND', centerX, centerY - 80);
+                
+                this.ctx.fillStyle = '#FFF';
+                this.ctx.font = 'bold 20px Arial';
+                this.ctx.fillText(`Patient: ${patient.patient_id}`, centerX, centerY - 40);
+                this.ctx.font = '16px Arial';
+                this.ctx.fillText(`Name: ${patient.patient_name || 'Available in Records'}`, centerX, centerY - 10);
+                this.ctx.fillText(`Study Date: ${patient.study_date || 'Available in Records'}`, centerX, centerY + 15);
+                this.ctx.fillText(`Files: ${patient.file_count || 'Unknown'} files found`, centerX, centerY + 40);
+                
+                this.ctx.fillStyle = '#FFB81C';
+                this.ctx.font = '14px Arial';
+                this.ctx.fillText('Medical images are not currently accessible', centerX, centerY + 75);
+                this.ctx.fillText('Contact system administrator for image access', centerX, centerY + 95);
+                
+                document.getElementById('connectionStatus').textContent = 'Patient Found';
+                document.getElementById('imageStatus').textContent = 'Images not accessible';
+            }
+
+            showError(message) {
+                this.hideLoading();
+                document.getElementById('errorDetails').textContent = message;
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('connectionStatus').textContent = 'Error';
+                document.getElementById('imageStatus').textContent = 'Failed to load';
+            }
+
+            updateLoadingStatus(title, details) {
+                document.getElementById('loadingTitle').textContent = title;
+                document.getElementById('loadingDetails').textContent = details;
+            }
+
+            hideLoading() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            updateClock() {
+                document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
+            }
+
+            // Control functions
+            navigateToSlice(sliceNumber) {
+                const newIndex = parseInt(sliceNumber) - 1;
+                if (newIndex >= 0 && newIndex < this.dicomSlices.length) {
+                    this.currentSliceIndex = newIndex;
+                    this.updateSlicePosition();
+                    this.redrawCurrentSlice();
+                }
+            }
+
+            previousSlice() {
+                if (this.currentSliceIndex > 0) {
+                    this.currentSliceIndex--;
+                    this.updateSlicePosition();
+                    this.redrawCurrentSlice();
+                }
+            }
+
+            nextSlice() {
+                if (this.currentSliceIndex < this.dicomSlices.length - 1) {
+                    this.currentSliceIndex++;
+                    this.updateSlicePosition();
+                    this.redrawCurrentSlice();
+                }
+            }
+
+            navigateSlice(direction) {
+                const newIndex = Math.max(0, Math.min(this.dicomSlices.length - 1, this.currentSliceIndex + direction));
+                if (newIndex !== this.currentSliceIndex) {
+                    this.currentSliceIndex = newIndex;
+                    this.updateSlicePosition();
+                    this.redrawCurrentSlice();
+                }
+            }
+
+            playSlices() {
+                const playBtn = document.getElementById('playBtn');
+                
+                if (this.isPlaying) {
+                    clearInterval(this.playInterval);
+                    this.isPlaying = false;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                } else {
+                    this.isPlaying = true;
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    
+                    this.playInterval = setInterval(() => {
+                        if (this.currentSliceIndex < this.dicomSlices.length - 1) {
+                            this.nextSlice();
+                        } else {
+                            this.currentSliceIndex = 0;
+                            this.updateSlicePosition();
+                            this.redrawCurrentSlice();
+                        }
+                    }, 200); // 5 FPS
+                }
+            }
+
+            jumpToMiddle() {
+                this.currentSliceIndex = Math.floor(this.dicomSlices.length / 2);
+                this.updateSlicePosition();
+                this.redrawCurrentSlice();
+            }
+
+            updateWindowWidth(value) {
+                this.windowWidth = parseFloat(value);
+                document.getElementById('windowWidthValue').textContent = Math.round(this.windowWidth);
+                document.getElementById('overlayWindowWidth').textContent = Math.round(this.windowWidth);
+                document.getElementById('windowPreset').value = 'custom';
+                this.redrawCurrentSlice();
+            }
+
+            updateWindowLevel(value) {
+                this.windowLevel = parseFloat(value);
+                document.getElementById('windowLevelValue').textContent = Math.round(this.windowLevel);
+                document.getElementById('overlayWindowLevel').textContent = Math.round(this.windowLevel);
+                document.getElementById('windowPreset').value = 'custom';
+                this.redrawCurrentSlice();
+            }
+
+            updateZoom(value) {
+                this.zoom = parseFloat(value) / 100;
+                document.getElementById('zoomValue').textContent = Math.round(value) + '%';
+                document.getElementById('overlayZoom').textContent = Math.round(value) + '%';
+                this.redrawCurrentSlice();
+            }
+
+            setTool(tool) {
+                this.currentTool = tool;
+                
+                // Update tool buttons
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
+                
+                // Update cursor
+                const cursors = {
+                    wwwl: 'crosshair',
+                    pan: 'grab',
+                    zoom: 'zoom-in',
+                    scroll: 'ns-resize'
+                };
+                this.canvas.style.cursor = cursors[tool] || 'default';
+            }
+
+            applyWindowPreset() {
+                const preset = document.getElementById('windowPreset').value;
+                const presets = {
+                    lung: { width: 1600, level: -600 },
+                    mediastinal: { width: 400, level: 50 },
+                    bone: { width: 4000, level: 400 },
+                    brain: { width: 80, level: 40 },
+                    liver: { width: 160, level: 60 },
+                    soft_tissue: { width: 400, level: 40 }
+                };
+                
+                if (presets[preset]) {
+                    this.windowWidth = presets[preset].width;
+                    this.windowLevel = presets[preset].level;
+                    this.updateWindowLevelUI();
+                    this.redrawCurrentSlice();
+                }
+            }
+
+            resetView() {
+                this.zoom = 1.0;
+                this.pan = { x: 0, y: 0 };
+                this.windowWidth = 400;
+                this.windowLevel = 40;
+                this.inverted = false;
+                
+                document.getElementById('zoomSlider').value = 100;
+                this.updateWindowLevelUI();
+                this.updateZoom(100);
+                this.redrawCurrentSlice();
+            }
+
+            invertImage() {
+                this.inverted = !this.inverted;
+                this.redrawCurrentSlice();
+            }
+
+            toggleHighQuality() {
+                this.highQualityMode = !this.highQualityMode;
+                this.ctx.imageSmoothingEnabled = this.highQualityMode;
+                this.ctx.imageSmoothingQuality = this.highQualityMode ? 'high' : 'low';
+                
+                const btn = document.getElementById('qualityBtn');
+                btn.innerHTML = this.highQualityMode ? 
+                    '<i class="fas fa-hd-video-camera"></i> HD Mode' : 
+                    '<i class="fas fa-video"></i> Fast Mode';
+                
+                this.redrawCurrentSlice();
+            }
+
+            optimizeContrast() {
+                // Auto-optimize contrast based on image histogram
+                if (this.dicomSlices.length === 0) return;
+                
+                const slice = this.dicomSlices[this.currentSliceIndex];
+                if (!slice.imageData) return;
+                
+                // Simple auto-contrast: set window/level based on image statistics
+                const data = slice.imageData.data;
+                let min = 255, max = 0, sum = 0, count = 0;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const intensity = data[i];
+                    min = Math.min(min, intensity);
+                    max = Math.max(max, intensity);
+                    sum += intensity;
+                    count++;
+                }
+                
+                const mean = sum / count;
+                this.windowWidth = max - min;
+                this.windowLevel = mean;
+                
+                this.updateWindowLevelUI();
+                this.redrawCurrentSlice();
+            }
+
+            toggleFullscreen() {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
+            }
+
+            exportImage() {
+                if (this.dicomSlices.length === 0) return;
+                
+                const link = document.createElement('a');
+                link.download = `patient_${this.patientId}_slice_${this.currentSliceIndex + 1}.png`;
+                link.href = this.canvas.toDataURL();
+                link.click();
+            }
+
+            refreshPatientData() {
+                // Force fresh reload of patient data
+                this.dicomSlices = [];
+                this.currentSliceIndex = 0;
+                this.totalSlices = 0;
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('errorMessage').style.display = 'none';
+                this.loadPatientData();
+            }
+
+            retryLoad() {
+                this.refreshPatientData();
+            }
+
+            openInNewWindow() {
+                const url = window.location.href;
+                window.open(url, '_blank', 'width=1400,height=900');
+            }
+
+            closeViewer() {
+                if (window.opener) {
+                    window.close();
+                } else {
+                    window.history.back();
+                }
+            }
+        }
+
+        // Global functions for UI callbacks
+        let viewer;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            viewer = new HDDicomViewer();
+        });
+
+        // UI callback functions
+        function refreshPatientData() { viewer?.refreshPatientData(); }
+        function retryLoad() { viewer?.retryLoad(); }
+        function openInNewWindow() { viewer?.openInNewWindow(); }
+        function closeViewer() { viewer?.closeViewer(); }
+        function navigateToSlice(value) { viewer?.navigateToSlice(value); }
+        function previousSlice() { viewer?.previousSlice(); }
+        function nextSlice() { viewer?.nextSlice(); }
+        function playSlices() { viewer?.playSlices(); }
+        function jumpToMiddle() { viewer?.jumpToMiddle(); }
+        function updateWindowWidth(value) { viewer?.updateWindowWidth(value); }
+        function updateWindowLevel(value) { viewer?.updateWindowLevel(value); }
+        function updateZoom(value) { viewer?.updateZoom(value); }
+        function setTool(tool) { viewer?.setTool(tool); }
+        function applyWindowPreset() { viewer?.applyWindowPreset(); }
+        function resetView() { viewer?.resetView(); }
+        function invertImage() { viewer?.invertImage(); }
+        function toggleHighQuality() { viewer?.toggleHighQuality(); }
+        function optimizeContrast() { viewer?.optimizeContrast(); }
+        function toggleFullscreen() { viewer?.toggleFullscreen(); }
+        function exportImage() { viewer?.exportImage(); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D DICOM Volumetric Viewer - PACS System</title>
+    <link rel="stylesheet" href="/static/css/viewer.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .viewer-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .viewer-header {
+            height: 60px;
+            background: linear-gradient(90deg, #6b46c1 0%, #9333ea 100%);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .header-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Canvas Area */
+        #viewerCanvas {
+            flex: 1;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: block;
+        }
+
+        /* Left Sidebar */
+        .sidebar-left {
+            width: 280px;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-panel {
+            border-bottom: 1px solid #333;
+            padding: 15px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #9333ea;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 6px 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 6px 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #333;
+            border-color: #555;
+        }
+
+        .btn-primary {
+            background: #9333ea;
+            border-color: #9333ea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #a855f7;
+            border-color: #a855f7;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slider-container {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 5px;
+            color: #999;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #444 0%, #666 100%);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Preset buttons */
+        .presets-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .preset-btn {
+            padding: 6px 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #aaa;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #333;
+            border-color: #9333ea;
+            color: #9333ea;
+        }
+
+        .preset-btn.active {
+            background: #9333ea;
+            border-color: #9333ea;
+            color: white;
+        }
+
+        /* Right Sidebar */
+        .sidebar-right {
+            width: 280px;
+            background: #1a1a1a;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Measurements */
+        .measurements-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+
+        .measurement-item {
+            padding: 8px;
+            background: #2a2a2a;
+            margin-bottom: 6px;
+            border-radius: 3px;
+            border-left: 3px solid #9333ea;
+        }
+
+        .measurement-label {
+            color: #9333ea;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .measurement-value {
+            color: #aaa;
+        }
+
+        /* Overlays */
+        .canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .overlay-loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .overlay-loading.active {
+            display: block;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #444;
+            border-top-color: #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #e0e0e0;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* Info display */
+        .info-panel {
+            position: absolute;
+            top: 70px;
+            right: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 20;
+            color: #aaa;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 10px;
+        }
+
+        .info-label {
+            color: #9333ea;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #e0e0e0;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        .viewer-footer {
+            height: 40px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .footer-left, .footer-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* Help Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .modal-backdrop.active {
+            display: block;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1001;
+            display: none;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #e0e0e0;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .keyboard-shortcut {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .shortcut-key {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: 600;
+            color: #9333ea;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .shortcut-desc {
+            flex: 1;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar-left, .sidebar-right {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-left, .sidebar-right {
+                display: none;
+            }
+
+            .info-panel {
+                right: 10px;
+                max-width: calc(100% - 20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <!-- Header -->
+        <div class="viewer-header">
+            <div class="header-title">
+                <div class="status-indicator"></div>
+                <span>3D Volumetric DICOM Viewer</span>
+            </div>
+            <div class="header-controls">
+                <button class="header-button" id="helpBtn">Help</button>
+                <button class="header-button" id="settingsBtn">Settings</button>
+                <button class="header-button" id="exportBtn">Export</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="viewer-content">
+            <!-- Left Sidebar -->
+            <div class="sidebar-left">
+                <!-- Study Selector -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">📂 Study Selection</div>
+                    <div class="form-group">
+                        <label class="form-label">Study ID</label>
+                        <input type="text" id="studyIdInput" class="form-input" placeholder="Enter study ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Series ID (Optional)</label>
+                        <input type="text" id="seriesIdInput" class="form-input" placeholder="Leave blank for first">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="loadStudyBtn">Load Study</button>
+                        <button class="btn" id="clearCacheBtn">Clear Cache</button>
+                    </div>
+                </div>
+
+                <!-- Render Controls -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">🎨 Render Mode</div>
+                    <div class="form-group">
+                        <label class="form-label">Rendering</label>
+                        <select id="renderMode" class="form-select">
+                            <option value="volume">Volume Rendering</option>
+                            <option value="mip">Maximum Intensity</option>
+                            <option value="surface">Surface Rendering</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Presets</label>
+                        <div class="presets-grid">
+                            <button class="preset-btn" data-preset="bone">Bone</button>
+                            <button class="preset-btn" data-preset="lung">Lung</button>
+                            <button class="preset-btn" data-preset="soft-tissue">Soft Tissue</button>
+                            <button class="preset-btn" data-preset="brain">Brain</button>
+                            <button class="preset-btn" data-preset="liver">Liver</button>
+                            <button class="preset-btn" data-preset="custom">Custom</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Window/Level Controls -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">⚙️ Window/Level</div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Window Center</span>
+                            <span id="windowCenterValue">40</span>
+                        </div>
+                        <input type="range" id="windowCenterSlider" min="-500" max="500" value="40">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Window Width</span>
+                            <span id="windowWidthValue">400</span>
+                        </div>
+                        <input type="range" id="windowWidthSlider" min="50" max="2000" value="400">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Opacity</span>
+                            <span id="opacityValue">100%</span>
+                        </div>
+                        <input type="range" id="opacitySlider" min="0" max="100" value="100">
+                    </div>
+                </div>
+
+                <!-- Clipping Planes -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">✂️ Clipping Planes</div>
+                    <div class="form-group">
+                        <label class="form-label">Clipping Mode</label>
+                        <select id="clippingMode" class="form-select">
+                            <option value="none">None</option>
+                            <option value="x">X-Axis</option>
+                            <option value="y">Y-Axis</option>
+                            <option value="z">Z-Axis</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Clip Position</span>
+                            <span id="clipPositionValue">0%</span>
+                        </div>
+                        <input type="range" id="clipPositionSlider" min="0" max="100" value="50">
+                    </div>
+                </div>
+
+                <!-- Animation Controls -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">🎬 Animation</div>
+                    <div class="button-group">
+                        <button class="btn" id="autoRotateBtn">Auto Rotate</button>
+                        <button class="btn" id="resetViewBtn">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas and Overlays -->
+            <div style="flex: 1; position: relative;">
+                <canvas id="viewerCanvas"></canvas>
+                
+                <!-- Info Panel -->
+                <div class="info-panel" id="infoPanel" style="display: none;">
+                    <div class="info-item">
+                        <span class="info-label">FPS:</span>
+                        <span class="info-value" id="fpsValue">60</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Memory:</span>
+                        <span class="info-value" id="memoryValue">0 MB</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Volume Size:</span>
+                        <span class="info-value" id="volSizeValue">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Voxels:</span>
+                        <span class="info-value" id="voxelsValue">-</span>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div class="overlay-loading" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading Study...</div>
+                    <div class="loading-subtext" id="loadingSubtext">Initializing...</div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar-right">
+                <!-- Measurements -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">📏 Measurements</div>
+                    <div class="button-group">
+                        <button class="btn" id="distanceToolBtn">Distance</button>
+                        <button class="btn" id="angleToolBtn">Angle</button>
+                    </div>
+                    <div class="button-group" style="margin-top: 6px;">
+                        <button class="btn" id="areaToolBtn">Area</button>
+                        <button class="btn" id="volumeToolBtn">Volume</button>
+                    </div>
+                    <div id="measurementsList" class="measurements-list"></div>
+                </div>
+
+                <!-- MPR Controls -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">⊞ Multiplanar Reconstruction</div>
+                    <div class="form-group">
+                        <label class="form-label">Axial Slice</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="range" id="axialSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
+                            <span id="axialValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sagittal Slice</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="range" id="sagittalSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
+                            <span id="sagittalValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Coronal Slice</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="range" id="coronalSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
+                            <span id="coronalValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">📤 Export</div>
+                    <div class="button-group">
+                        <button class="btn" id="exportSTLBtn">Export STL</button>
+                        <button class="btn" id="exportOBJBtn">Export OBJ</button>
+                    </div>
+                    <div class="button-group" style="margin-top: 6px;">
+                        <button class="btn" id="exportPNGBtn">Screenshot</button>
+                        <button class="btn" id="exportDICOMBtn">Export DICOM</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="viewer-footer">
+            <div class="footer-left">
+                <span id="statusText">Ready</span>
+                <span id="dimensionText">Dimensions: -</span>
+            </div>
+            <div class="footer-right">
+                <span id="renderTimeText">Render: 0ms</span>
+                <span id="cacheText">Cache: 0 MB</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-backdrop" id="helpBackdrop"></div>
+    <div class="modal" id="helpModal">
+        <div class="modal-header">
+            <h2 class="modal-title">Help & Keyboard Shortcuts</h2>
+            <button class="modal-close" id="closeHelpBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <h3 style="margin-bottom: 15px; color: #9333ea;">Mouse Controls</h3>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">Left Drag</span>
+                <span class="shortcut-desc">Rotate 3D volume</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">Right Drag</span>
+                <span class="shortcut-desc">Pan / Move view</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">Scroll</span>
+                <span class="shortcut-desc">Zoom in / Zoom out</span>
+            </div>
+
+            <h3 style="margin: 20px 0 15px; color: #9333ea;">Keyboard Shortcuts</h3>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">R</span>
+                <span class="shortcut-desc">Reset view to default</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">F</span>
+                <span class="shortcut-desc">Fullscreen / Exit fullscreen</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">A</span>
+                <span class="shortcut-desc">Toggle auto-rotate</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">I</span>
+                <span class="shortcut-desc">Show/hide info panel</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">V</span>
+                <span class="shortcut-desc">Cycle render modes</span>
+            </div>
+            <div class="keyboard-shortcut">
+                <span class="shortcut-key">S</span>
+                <span class="shortcut-desc">Take screenshot</span>
+            </div>
+
+            <h3 style="margin: 20px 0 15px; color: #9333ea;">Tips</h3>
+            <ul style="color: #aaa; font-size: 13px; line-height: 1.6;">
+                <li>Use presets to quickly adjust window/level for different anatomy</li>
+                <li>Right-click and drag to pan around the volume</li>
+                <li>Use the measurement tools for clinical measurements</li>
+                <li>Export to STL/OBJ for 3D printing or further analysis</li>
+                <li>The cache stores loaded studies for faster access</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/viewers/api-integration.js"></script>
+    <script src="/static/js/viewers/3d-renderer.js"></script>
+    <script>
+        // Application Controller
+        class ViewerController {
+            constructor() {
+                this.api = null;
+                this.renderer = null;
+                this.currentStudyId = null;
+                this.currentMetadata = null;
+                this.measurements = [];
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('[Viewer] Initializing application...');
+                
+                try {
+                    // Initialize API client
+                    this.api = initializeViewerAPI({ baseURL: '/api/viewer' });
+                    
+                    // Initialize 3D renderer
+                    this.renderer = new VolumetricRenderer('viewerCanvas');
+                    console.log('[Viewer] 3D renderer initialized');
+                    
+                    // Setup event listeners
+                    this.setupEventListeners();
+                    
+                    // Check API health
+                    await this.checkHealth();
+                    
+                    console.log('[Viewer] Application ready');
+                    this.updateStatus('Ready');
+                } catch (error) {
+                    console.error('[Viewer] Initialization failed:', error);
+                    this.updateStatus('Error: ' + error.message, 'error');
+                }
+            }
+
+            setupEventListeners() {
+                // Study loading
+                document.getElementById('loadStudyBtn').addEventListener('click', () => this.loadStudy());
+                document.getElementById('studyIdInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.loadStudy();
+                });
+
+                // Cache controls
+                document.getElementById('clearCacheBtn').addEventListener('click', () => this.clearCache());
+
+                // Render mode
+                document.getElementById('renderMode').addEventListener('change', (e) => {
+                    this.renderer.setRenderMode(e.target.value);
+                });
+
+                // Presets
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const preset = e.target.getAttribute('data-preset');
+                        this.applyPreset(preset);
+                    });
+                });
+
+                // Window/Level sliders
+                document.getElementById('windowCenterSlider').addEventListener('input', (e) => {
+                    document.getElementById('windowCenterValue').textContent = e.target.value;
+                    this.renderer.setWindowCenter(parseInt(e.target.value));
+                });
+                
+                document.getElementById('windowWidthSlider').addEventListener('input', (e) => {
+                    document.getElementById('windowWidthValue').textContent = e.target.value;
+                    this.renderer.setWindowWidth(parseInt(e.target.value));
+                });
+
+                // Opacity slider
+                document.getElementById('opacitySlider').addEventListener('input', (e) => {
+                    document.getElementById('opacityValue').textContent = e.target.value + '%';
+                    this.renderer.setOpacity(parseInt(e.target.value) / 100);
+                });
+
+                // Animation controls
+                document.getElementById('autoRotateBtn').addEventListener('click', () => {
+                    this.renderer.toggleAutoRotate();
+                    document.getElementById('autoRotateBtn').classList.toggle('btn-primary');
+                });
+
+                document.getElementById('resetViewBtn').addEventListener('click', () => {
+                    this.renderer.resetView();
+                });
+
+                // Help modal
+                document.getElementById('helpBtn').addEventListener('click', () => this.showHelp());
+                document.getElementById('closeHelpBtn').addEventListener('click', () => this.hideHelp());
+                document.getElementById('helpBackdrop').addEventListener('click', () => this.hideHelp());
+
+                // Export buttons
+                document.getElementById('exportPNGBtn').addEventListener('click', () => this.takeScreenshot());
+                document.getElementById('exportSTLBtn').addEventListener('click', () => this.exportSTL());
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+            }
+
+            async loadStudy() {
+                const studyId = document.getElementById('studyIdInput').value.trim();
+                const seriesId = document.getElementById('seriesIdInput').value.trim() || null;
+
+                if (!studyId) {
+                    alert('Please enter a Study ID');
+                    return;
+                }
+
+                try {
+                    this.showLoading(true, `Loading study ${studyId}...`);
+                    this.updateStatus('Loading study...');
+
+                    // Load study via API
+                    const studyData = await this.api.loadStudy(studyId, {
+                        seriesId: seriesId,
+                        useCache: true
+                    });
+
+                    this.currentStudyId = studyId;
+                    this.currentMetadata = studyData;
+
+                    // Get metadata
+                    const metadata = await this.api.getMetadata(studyId);
+                    console.log('[Viewer] Study metadata:', metadata);
+
+                    // Update UI
+                    this.updateStudyInfo(studyData);
+                    
+                    this.showLoading(false);
+                    this.updateStatus(`Study loaded: ${studyId}`);
+
+                } catch (error) {
+                    console.error('[Viewer] Load failed:', error);
+                    this.showLoading(false);
+                    this.updateStatus('Error: ' + error.message, 'error');
+                    alert('Failed to load study: ' + error.message);
+                }
+            }
+
+            updateStudyInfo(studyData) {
+                const dims = studyData.volume_shape.join(' × ');
+                document.getElementById('dimensionText').textContent = `Dimensions: ${dims}`;
+                document.getElementById('volSizeValue').textContent = dims;
+                
+                const voxels = Math.round(studyData.volume_shape.reduce((a, b) => a * b, 1) / 1000000);
+                document.getElementById('voxelsValue').textContent = `${voxels} M`;
+            }
+
+            async clearCache() {
+                if (!confirm('Clear all cached studies?')) return;
+                
+                try {
+                    await this.api.clearStudyCache();
+                    this.updateStatus('Cache cleared');
+                } catch (error) {
+                    console.error('[Viewer] Cache clear failed:', error);
+                    this.updateStatus('Cache clear failed', 'error');
+                }
+            }
+
+            applyPreset(preset) {
+                const presets = {
+                    bone: { center: 300, width: 1500 },
+                    lung: { center: -400, width: 1500 },
+                    'soft-tissue': { center: 40, width: 400 },
+                    brain: { center: 40, width: 80 },
+                    liver: { center: 60, width: 150 }
+                };
+
+                if (presets[preset]) {
+                    const p = presets[preset];
+                    document.getElementById('windowCenterSlider').value = p.center;
+                    document.getElementById('windowWidthSlider').value = p.width;
+                    document.getElementById('windowCenterValue').textContent = p.center;
+                    document.getElementById('windowWidthValue').textContent = p.width;
+                    
+                    this.renderer.setWindowCenter(p.center);
+                    this.renderer.setWindowWidth(p.width);
+                }
+            }
+
+            handleKeyboard(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                switch (e.key.toLowerCase()) {
+                    case 'r': this.renderer.resetView(); break;
+                    case 'f': this.toggleFullscreen(); break;
+                    case 'a': this.renderer.toggleAutoRotate(); break;
+                    case 'i': this.toggleInfo(); break;
+                    case 's': this.takeScreenshot(); break;
+                    case 'v': this.cycleRenderMode(); break;
+                }
+            }
+
+            showHelp() {
+                document.getElementById('helpBackdrop').classList.add('active');
+                document.getElementById('helpModal').classList.add('active');
+            }
+
+            hideHelp() {
+                document.getElementById('helpBackdrop').classList.remove('active');
+                document.getElementById('helpModal').classList.remove('active');
+            }
+
+            toggleFullscreen() {
+                const canvas = document.getElementById('viewerCanvas');
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    canvas.requestFullscreen().catch(err => console.error(err));
+                }
+            }
+
+            toggleInfo() {
+                const panel = document.getElementById('infoPanel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            }
+
+            cycleRenderMode() {
+                const modes = ['volume', 'mip', 'surface'];
+                const current = document.getElementById('renderMode').value;
+                const next = modes[(modes.indexOf(current) + 1) % modes.length];
+                document.getElementById('renderMode').value = next;
+                this.renderer.setRenderMode(next);
+            }
+
+            takeScreenshot() {
+                try {
+                    const canvas = document.getElementById('viewerCanvas');
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `screenshot-${Date.now()}.png`;
+                    link.click();
+                    this.updateStatus('Screenshot saved');
+                } catch (error) {
+                    console.error('[Viewer] Screenshot failed:', error);
+                    this.updateStatus('Screenshot failed', 'error');
+                }
+            }
+
+            async exportSTL() {
+                alert('STL export coming soon!');
+            }
+
+            async checkHealth() {
+                try {
+                    const health = await this.api.getHealthStatus();
+                    console.log('[Viewer] API health:', health);
+                } catch (error) {
+                    console.warn('[Viewer] API health check failed:', error);
+                }
+            }
+
+            showLoading(show, message = '') {
+                const overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.add('active');
+                    if (message) {
+                        document.getElementById('loadingSubtext').textContent = message;
+                    }
+                } else {
+                    overlay.classList.remove('active');
+                }
+            }
+
+            updateStatus(text, type = 'normal') {
+                const statusText = document.getElementById('statusText');
+                statusText.textContent = text;
+                statusText.style.color = type === 'error' ? '#ef4444' : '#e0e0e0';
+            }
+        }
+
+        // Initialize application when DOM is ready
+        let controller;
+        document.addEventListener('DOMContentLoaded', () => {
+            controller = new ViewerController();
+        });
+    </script>
+</body>
+</html>

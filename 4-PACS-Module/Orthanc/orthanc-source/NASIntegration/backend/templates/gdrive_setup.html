@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Google Drive Setup</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; background: #f7fbf7; color: #123; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); max-width:700px; margin: 40px auto; }
+    .btn { padding: 10px 14px; border-radius:6px; border:none; cursor:pointer; }
+    .primary { background:#4285f4;color:white }
+    .danger { background:#DC2626;color:white }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Google Drive / Google account setup</h2>
+    <p>This page will link a Google Drive account so the server can upload exported patient ZIPs to your chosen drive.</p>
+    <div id="status">Checking server configuration...</div>
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button id="connectBtn" class="btn primary">Connect Google Drive</button>
+      <button id="disconnectBtn" class="btn danger">Disconnect</button>
+    </div>
+    <div id="manualTokenArea" style="margin-top:18px;display:none;">
+      <label for="manualToken"><strong>Manual token (developer/test fallback)</strong></label>
+      <textarea id="manualToken" rows="4" style="width:100%;font-family:monospace;margin-top:8px;" placeholder="Paste access_token here"></textarea>
+      <div style="margin-top:8px;"><button id="saveTokenBtn" class="btn primary">Save token</button></div>
+      <p style="color:#666;margin-top:8px;font-size:0.9rem;">Use this when OAuth client is not configured. The token will be stored in the server's instance folder.</p>
+    </div>
+    <p style="margin-top:18px;font-size:0.9rem;color:#555;">After connecting, return to the Patients page and use the "Share to Google Drive" button.
+    </p>
+  </div>
+
+<script>
+async function refreshStatus() {
+  const r = await fetch('/api/nas/gdrive/status');
+  const j = await r.json();
+  const s = document.getElementById('status');
+  if (j.connected) {
+    if (j.needs_gdrive) {
+      s.innerHTML = `<strong>Authenticated via MCP</strong> as ${j.account_email || 'unknown'}<br><span style="color:#666;font-size:0.9rem;">${j.message || 'Click Connect Google Drive to link your Google Drive account.'}</span>`;
+    } else {
+      s.innerHTML = `<strong>Connected</strong> as ${j.account_email || 'unknown'} (expires: ${j.expires_at || 'n/a'})`;
+    }
+  } else {
+    s.innerHTML = '<strong>Not connected</strong> — click Connect to sign in to Google.';
+  }
+}
+
+// Fetch config to check whether the app is configured for OAuth
+async function checkConfig() {
+  try {
+    const rc = await fetch('/api/nas/gdrive/config');
+    const cfg = await rc.json();
+    const connectBtn = document.getElementById('connectBtn');
+    const s = document.getElementById('status');
+    if (!cfg.configured) {
+      // show manual token entry as a fallback
+      connectBtn.disabled = false;
+      connectBtn.title = 'GDRIVE_CLIENT_ID not configured on server — use manual token or set env vars';
+      s.innerHTML = `<strong>Not configured</strong> — Server is missing Google Drive client configuration. Set <code>GDRIVE_CLIENT_ID</code> and <code>GDRIVE_CLIENT_SECRET</code> or configure via app settings. Expected redirect URI: <code>${cfg.redirect_uri}</code>`;
+      document.getElementById('manualTokenArea').style.display = 'block';
+      // clicking Connect will just show the manual token area
+      connectBtn.addEventListener('click', () => { document.getElementById('manualTokenArea').style.display = 'block'; });
+    } else {
+      // enabled: attach click for OAuth login
+      connectBtn.addEventListener('click', () => { window.location.href = '/api/nas/gdrive/login'; });
+    }
+  } catch (e) {
+    console.error('Failed to fetch Google Drive config', e);
+  }
+}
+document.getElementById('disconnectBtn').addEventListener('click', async () => {
+  if (!confirm('Disconnect Google Drive from this server?')) return;
+  await fetch('/api/nas/gdrive/disconnect', { method: 'POST' });
+  await refreshStatus();
+});
+
+// Manual token save handler
+document.getElementById('saveTokenBtn').addEventListener('click', async () => {
+  const txt = document.getElementById('manualToken').value.trim();
+  if (!txt) return alert('Please paste an access token');
+  try {
+    const resp = await fetch('/api/nas/gdrive/manual_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access_token: txt }) });
+    const j = await resp.json();
+    if (!resp.ok || !j.success) return alert('Failed to save token: ' + (j.error || resp.statusText));
+    alert('Token saved. Refreshing status...');
+    await refreshStatus();
+    document.getElementById('manualTokenArea').style.display = 'none';
+  } catch (e) { console.error(e); alert('Failed to save token: ' + e); }
+});
+
+checkConfig();
+refreshStatus();
+</script>
+</body>
+</html>

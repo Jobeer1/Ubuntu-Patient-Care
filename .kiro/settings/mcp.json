@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "medical-auth": {
+      "command": "python",
+      "args": ["mcp-medical-server/server.py"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "validate_medical_aid",
+        "validate_preauth_requirements",
+        "estimate_patient_cost",
+        "list_pending_preauths"
+      ]
+    }
+  }
+}
