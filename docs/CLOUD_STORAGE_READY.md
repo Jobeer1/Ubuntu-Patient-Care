@@ -17,7 +17,7 @@ Status:        ✅ READY
 ### Google Drive ✅
 ```
 Client ID:     807845595525-sl5078kmp1kd22v9aohudukkhsqi3rrn
-Client Secret: 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
+Client Secret: [See .env file - keep this private!]
 Redirect URI:  http://localhost:5000/api/nas/gdrive/callback
 Status:        ✅ READY
 ```

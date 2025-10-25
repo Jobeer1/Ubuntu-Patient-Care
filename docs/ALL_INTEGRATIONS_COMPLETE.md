@@ -8,7 +8,7 @@ All authentication and cloud storage integrations are now fully configured!
 ```
 Purpose:      User authentication via Microsoft account
 Client ID:    60271c16-3fcb-4ba7-972b-9f075200a567
-Client Secret: PI98Q~oorq6EpszMSQqufmMzMT4Q2-c3gkv4lakU
+Client Secret: [See .env file - keep this private!]
 Tenant ID:    fba55b68-1de1-4d10-a7cc-efa55942f829
 Redirect:     http://localhost:8080/auth/microsoft/callback
 Status:       ✅ CONFIGURED
@@ -18,7 +18,7 @@ Status:       ✅ CONFIGURED
 ```
 Purpose:      User authentication via Google account
 Client ID:    807845595525-arfmb2rtcif5b1bmpg86aji9dlv4pmau
-Client Secret: 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
+Client Secret: [See .env file - keep this private!]
 Redirect:     http://localhost:8080/auth/google/callback
 Status:       ✅ CONFIGURED
 ```
@@ -38,7 +38,7 @@ Status:       ✅ CONFIGURED
 ```
 Purpose:      File uploads to Google Drive
 Client ID:    807845595525-sl5078kmp1kd22v9aohudukkhsqi3rrn
-Client Secret: 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
+Client Secret: [See .env file - keep this private!]
 Redirect:     http://localhost:5000/api/nas/gdrive/callback
 Status:       ✅ CONFIGURED
 ```

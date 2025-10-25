@@ -100,11 +100,15 @@ Or manually test:
 ```env
 MCP_HOST=0.0.0.0
 MCP_PORT=8080
-MICROSOFT_CLIENT_ID=60271c16-3fcb-4ba7-972b-9f075200a567
-MICROSOFT_CLIENT_SECRET=PI98Q~oorq6EpszMSQqufmMzMT4Q2-c3gkv4lakU
-GOOGLE_CLIENT_ID=807845595525-arfmb2rtcif5b1bmpg86aji9dlv4pmau.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+MICROSOFT_CLIENT_ID=your-microsoft-client-id
+MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
+
+**⚠️ Get credentials from:**
+- Microsoft Azure: https://portal.azure.com
+- Google Cloud: https://console.cloud.google.com
 
 ### JavaScript Integration
 

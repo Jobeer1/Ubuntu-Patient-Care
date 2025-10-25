@@ -27,8 +27,8 @@ Your system uses **two separate Google OAuth clients** for different purposes:
 **Configuration File**: `4-PACS-Module/Orthanc/mcp-server/.env`
 
 ```env
-GOOGLE_CLIENT_ID=807845595525-arfmb2rtcif5b1bmpg86aji9dlv4pmau.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:8080/auth/google/callback
 ```
 
