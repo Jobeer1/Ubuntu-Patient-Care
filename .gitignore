@@ -4,6 +4,10 @@
 **/cache/
 **/models/whisper/cache/
 
+# Ignore large log files
+**/robocopy_log.txt
+**/robocopy_verbose_log.txt
+
 # Python caches and virtualenvs
 __pycache__/
 *.pyc
