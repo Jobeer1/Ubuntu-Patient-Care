@@ -359,22 +359,6 @@
         <div id="errorMessage" class="error" style="display: none;"></div>
         <div id="successMessage" class="success" style="display: none;"></div>
         
-        <!-- Admin SSO Control Panel (only visible for admins) -->
-        <div id="adminSSOControl" class="admin-sso-control" style="display: none;">
-            <div class="sso-control-header">
-                <h3>🔐 SSO Authentication Control</h3>
-                <p>Enable or disable Single Sign-On for all users</p>
-            </div>
-            <div class="sso-control-body">
-                <div class="sso-status">
-                    <span id="ssoStatusText">Loading...</span>
-                    <span id="ssoStatusBadge" class="status-badge"></span>
-                </div>
-                <button id="ssoToggleBtn" class="sso-toggle-btn" onclick="toggleSSO()">
-                    <span id="ssoToggleBtnText">Loading...</span>
-                </button>
-            </div>
-        </div>
         
         <div class="welcome">
             <h2 id="welcomeMessage">Welcome!</h2>
@@ -448,12 +432,6 @@
                 if (shouldRedirectToPACS()) {
                     redirectToPACS();
                     return; // Stop further initialization
-                }
-                
-                // Load SSO status if user is admin
-                if (currentUser && currentUser.role === 'Admin') {
-                    document.getElementById('adminSSOControl').style.display = 'block';
-                    await loadSSOStatus();
                 }
                 
                 await loadModuleStatuses();
@@ -688,94 +666,6 @@
             await loadModuleStatuses();
             await renderModules();
         }, 30000);
-
-        // ============================================================================
-        // SSO Admin Control Functions
-        // ============================================================================
-
-        let currentSSOStatus = true;
-
-        // Load SSO status
-        async function loadSSOStatus() {
-            try {
-                const response = await fetch('/auth/sso/status', { credentials: 'include' });
-                const data = await response.json();
-                
-                currentSSOStatus = data.enabled;
-                updateSSOUI(data.enabled);
-            } catch (error) {
-                console.error('Failed to load SSO status:', error);
-                showError('Failed to load SSO status');
-            }
-        }
-
-        // Update SSO UI elements
-        function updateSSOUI(enabled) {
-            const statusText = document.getElementById('ssoStatusText');
-            const statusBadge = document.getElementById('ssoStatusBadge');
-            const toggleBtn = document.getElementById('ssoToggleBtn');
-            const toggleBtnText = document.getElementById('ssoToggleBtnText');
-            
-            if (!statusText || !statusBadge || !toggleBtn || !toggleBtnText) {
-                return;
-            }
-            
-            if (enabled) {
-                statusText.textContent = 'SSO Authentication: ';
-                statusBadge.textContent = '🟢 Enabled';
-                statusBadge.className = 'status-badge enabled';
-                toggleBtn.className = 'sso-toggle-btn disable';
-                toggleBtnText.textContent = '🔒 Disable SSO';
-            } else {
-                statusText.textContent = 'SSO Authentication: ';
-                statusBadge.textContent = '🔴 Disabled';
-                statusBadge.className = 'status-badge disabled';
-                toggleBtn.className = 'sso-toggle-btn enable';
-                toggleBtnText.textContent = '🔓 Enable SSO';
-            }
-        }
-
-        // Toggle SSO status
-        async function toggleSSO() {
-            const toggleBtn = document.getElementById('ssoToggleBtn');
-            const toggleBtnText = document.getElementById('ssoToggleBtnText');
-            
-            if (!toggleBtn || !toggleBtnText) return;
-            
-            // Disable button during request
-            toggleBtn.disabled = true;
-            const originalText = toggleBtnText.textContent;
-            toggleBtnText.textContent = '⏳ Processing...';
-            
-            try {
-                const newStatus = !currentSSOStatus;
-                
-                const response = await fetch('/auth/sso/toggle', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ enabled: newStatus })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    currentSSOStatus = newStatus;
-                    updateSSOUI(newStatus);
-                    showSuccess(`SSO ${newStatus ? 'enabled' : 'disabled'} successfully`);
-                } else {
-                    throw new Error(data.detail || data.error || 'Failed to toggle SSO');
-                }
-            } catch (error) {
-                console.error('Failed to toggle SSO:', error);
-                showError(error.message || 'Failed to toggle SSO');
-                toggleBtnText.textContent = originalText;
-            } finally {
-                toggleBtn.disabled = false;
-            }
-        }
     </script>
 </body>
 </html>

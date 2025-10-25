@@ -489,6 +489,25 @@
             </div>
         </div>
 
+        <!-- SSO Authentication Control Panel -->
+        <div class="card" style="margin-bottom:20px; border-left: 5px solid #FFB81C;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin-bottom: 8px;">🔐 SSO Authentication Control</h2>
+                    <p style="color: #666; margin: 0; font-size: 14px;">Enable or disable Single Sign-On for all users</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="ssoStatusText" style="font-weight: 600;">Loading...</span>
+                        <span id="ssoStatusBadge" class="badge">...</span>
+                    </div>
+                    <button id="ssoToggleBtn" class="btn" onclick="toggleSSO()" style="min-width: 140px;">
+                        <span id="ssoToggleBtnText">Loading...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="tabs">
             <button class="tab active" onclick="switchTab('users')">👥 Users</button>
             <button class="tab" onclick="switchTab('patient-access')">🔒 Patient Access</button>
@@ -1824,10 +1843,97 @@
         }
 
         // Initialize
+        // ============================================================================
+        // SSO Admin Control Functions
+        // ============================================================================
+
+        let currentSSOStatus = true;
+
+        // Load SSO status on page load
+        async function loadSSOStatus() {
+            try {
+                const response = await fetch('/auth/sso/status', {
+                    headers: {
+                        'Authorization': `Bearer ${getCookie('access_token')}`
+                    }
+                });
+                const data = await response.json();
+                
+                currentSSOStatus = data.enabled;
+                updateSSOUI(data.enabled);
+            } catch (error) {
+                console.error('Failed to load SSO status:', error);
+                showAlert('Failed to load SSO status', 'error');
+            }
+        }
+
+        // Update SSO UI elements
+        function updateSSOUI(enabled) {
+            const statusText = document.getElementById('ssoStatusText');
+            const statusBadge = document.getElementById('ssoStatusBadge');
+            const toggleBtn = document.getElementById('ssoToggleBtn');
+            const toggleBtnText = document.getElementById('ssoToggleBtnText');
+            
+            if (enabled) {
+                statusText.textContent = 'SSO Status:';
+                statusBadge.textContent = '🟢 Enabled';
+                statusBadge.className = 'badge badge-active';
+                toggleBtn.className = 'btn btn-danger';
+                toggleBtnText.textContent = '🔒 Disable SSO';
+            } else {
+                statusText.textContent = 'SSO Status:';
+                statusBadge.textContent = '🔴 Disabled';
+                statusBadge.className = 'badge badge-inactive';
+                toggleBtn.className = 'btn btn-success';
+                toggleBtnText.textContent = '🔓 Enable SSO';
+            }
+        }
+
+        // Toggle SSO status
+        async function toggleSSO() {
+            const toggleBtn = document.getElementById('ssoToggleBtn');
+            const toggleBtnText = document.getElementById('ssoToggleBtnText');
+            
+            // Disable button during request
+            toggleBtn.disabled = true;
+            const originalText = toggleBtnText.textContent;
+            toggleBtnText.textContent = '⏳ Processing...';
+            
+            try {
+                const newStatus = !currentSSOStatus;
+                
+                const response = await fetch('/auth/sso/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getCookie('access_token')}`
+                    },
+                    body: JSON.stringify({ enabled: newStatus })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    currentSSOStatus = newStatus;
+                    updateSSOUI(newStatus);
+                    showAlert(`SSO ${newStatus ? 'enabled' : 'disabled'} successfully`, 'success');
+                } else {
+                    throw new Error(data.detail || data.error || 'Failed to toggle SSO');
+                }
+            } catch (error) {
+                console.error('Failed to toggle SSO:', error);
+                showAlert(error.message || 'Failed to toggle SSO', 'error');
+                toggleBtnText.textContent = originalText;
+            } finally {
+                toggleBtn.disabled = false;
+            }
+        }
+
         window.addEventListener('load', () => {
             loadUsers();
             loadRoles();
             checkAllModules();
+            loadSSOStatus(); // Load SSO status on page load
             // Poll every 30 seconds
             setInterval(checkAllModules, 30000);
         });
