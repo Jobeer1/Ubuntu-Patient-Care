@@ -14,6 +14,7 @@ from app.routes.measurements import router as measurements_router
 from app.routes.segmentation import router as segmentation_router
 from app.routes.cardiac_analyzer import router as cardiac_analyzer_router
 from app.routes.perfusion_analyzer import router as perfusion_analyzer_router
+from app.routes.modules import router as modules_router
 import logging
 from pathlib import Path
 
@@ -73,6 +74,7 @@ app.include_router(measurements_router)
 app.include_router(segmentation_router)
 app.include_router(cardiac_analyzer_router)
 app.include_router(perfusion_analyzer_router)
+app.include_router(modules_router)
 
 @app.on_event("startup")
 async def startup_event():

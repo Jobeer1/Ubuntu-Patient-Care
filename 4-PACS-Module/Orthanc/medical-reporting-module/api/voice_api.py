@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import json
+import shutil
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from pathlib import Path
@@ -14,6 +15,10 @@ from core.user_manager import require_auth, get_current_user_id
 from core.secure_audio_handler import secure_audio_handler, store_training_audio, store_shortcut_audio
 
 logger = logging.getLogger(__name__)
+
+# Setup audio storage directory for persisting voice files for playback
+AUDIO_STORAGE_DIR = Path(__file__).parent.parent / 'audio_storage'
+AUDIO_STORAGE_DIR.mkdir(exist_ok=True)
 
 voice_bp = Blueprint("voice", __name__)
 
@@ -284,11 +289,13 @@ def transcribe_chunk():
                         if not os.path.exists(temp_audio_path):
                             raise FileNotFoundError(f"Temporary audio file not found: {temp_audio_path}")
 
+                        # For WAV/MP3, let Whisper handle directly (most reliable)
                         if file_extension in ('.wav', '.mp3'):
-                            whisper_result = model.transcribe(temp_audio_path, language="en")
+                            logger.info(f"Transcribing {file_extension} file directly with Whisper...")
+                            whisper_result = model.transcribe(temp_audio_path, language="en", fp16=False)
                         else:
-                            audio_data = convert_webm_to_numpy(temp_audio_path)
-                            whisper_result = model.transcribe(audio_data, language="en") if len(audio_data) > 0 else {"text": ""}
+                            logger.error(f"Unexpected file extension in non-webm branch: {file_extension}")
+                            whisper_result = {"text": ""}
 
                         transcription = whisper_result.get('text', '').strip()
                         processing_time = (datetime.utcnow() - start_time).total_seconds()
@@ -312,7 +319,7 @@ def transcribe_chunk():
                             'file_id': audio_storage['file_id'] if audio_storage and isinstance(audio_storage, dict) else None
                         }
 
-                        logger.info(f"Chunk {chunk_id} transcribed: '{enhanced_transcription}' ({processing_time:.2f}s)")
+                        logger.info(f"✅ Chunk {chunk_id} transcribed: '{enhanced_transcription[:100]}...' ({processing_time:.2f}s)")
 
                     except Exception as process_error:
                         import traceback
@@ -494,6 +501,8 @@ def convert_audio_to_wav(input_path, output_path):
 def convert_webm_to_numpy(webm_path):
     """Convert WebM audio to numpy array using FFmpeg"""
     try:
+        import numpy as np
+        
         # Quick size guard: tiny browser-generated WebM chunks are often
         # incomplete and will cause FFmpeg to fail when attempting to
         # parse/convert them. Avoid calling FFmpeg for very small files.
@@ -501,12 +510,10 @@ def convert_webm_to_numpy(webm_path):
             file_size = os.path.getsize(webm_path)
             if file_size < MIN_WEBM_CONVERT_BYTES:
                 logger.warning(f"WebM file too small for conversion ({file_size} bytes) -> skipping FFmpeg")
-                import numpy as np
                 return np.array([], dtype=np.float32)
         except Exception:
             # If we cannot stat the file, proceed and let FFmpeg fail
             pass
-        import numpy as np
         
         # First try to convert to WAV using FFmpeg
         temp_wav_fd, temp_wav_path = tempfile.mkstemp(suffix='.wav')
@@ -518,13 +525,35 @@ def convert_webm_to_numpy(webm_path):
                 try:
                     import soundfile as sf
                     audio_data, sample_rate = sf.read(temp_wav_path)
+                    
+                    # Check if we got valid audio data
+                    if len(audio_data) == 0:
+                        logger.warning("Converted WAV file is empty")
+                        return np.array([], dtype=np.float32)
+                    
                     logger.info(f"Successfully converted WebM to numpy: {len(audio_data)} samples at {sample_rate}Hz")
                     
-                    # Ensure float32 format
-                    return audio_data.astype(np.float32)
+                    # Ensure float32 format and proper shape
+                    if audio_data.ndim == 1:
+                        audio_data = audio_data.astype(np.float32)
+                    elif audio_data.ndim == 2:
+                        # If stereo, convert to mono by averaging channels
+                        audio_data = np.mean(audio_data, axis=1).astype(np.float32)
+                    else:
+                        logger.warning(f"Unexpected audio data shape: {audio_data.shape}")
+                        return np.array([], dtype=np.float32)
+                    
+                    # Normalize to [-1, 1] range if needed
+                    max_val = np.max(np.abs(audio_data))
+                    if max_val > 1.0:
+                        audio_data = audio_data / max_val
+                    
+                    return audio_data
                     
                 except Exception as sf_error:
                     logger.error(f"Failed to read converted WAV: {sf_error}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
                     
         finally:
             # Clean up temp WAV file
@@ -539,6 +568,8 @@ def convert_webm_to_numpy(webm_path):
         
     except Exception as e:
         logger.error(f"Failed to convert WebM to numpy: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         import numpy as np
         return np.array([], dtype=np.float32)
 
@@ -595,7 +626,8 @@ def finalize_session_transcription(session_id):
                 "improvements": context.get("improvements", [])
             })
 
-        # If there is no accumulated transcription, try to assemble stored audio chunks
+        # Assemble audio and store file path for raw transcription save
+        assembled_wav = None
         if not full_text:
             logger.info(f"No full transcription in session {session_id}; attempting to assemble audio chunks for final transcription")
             assembled_wav = assemble_session_audio(session_id)
@@ -605,11 +637,6 @@ def finalize_session_transcription(session_id):
                     if model:
                         result = model.transcribe(assembled_wav, language="en")
                         full_text = result.get('text', '').strip()
-                        # Clean up assembled file
-                        try:
-                            os.unlink(assembled_wav)
-                        except:
-                            pass
                     else:
                         logger.error("Whisper model not available for final transcription")
                 except Exception as e:
@@ -631,6 +658,35 @@ def finalize_session_transcription(session_id):
         session_contexts[session_id] = context
         
         logger.info(f"Finalized session {session_id} transcription with {len(improvements)} improvements")
+        
+        # 📦 Auto-save raw transcription to database
+        try:
+            user_id = current_session.get("user_id", "unknown") if current_session and current_session.get("session_id") == session_id else "unknown"
+            raw_transcription = full_text  # Use raw transcription before enhancements
+            
+            if assembled_wav and os.path.exists(assembled_wav):
+                # Save to RawTranscription database
+                from models.raw_transcriptions import RawTranscription
+                from models.database import db
+                
+                raw_record = RawTranscription(
+                    session_id=session_id,
+                    user_id=user_id,
+                    audio_file_path=assembled_wav,
+                    raw_transcription=raw_transcription,
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(raw_record)
+                db.session.commit()
+                logger.info(f"📦 Raw transcription auto-saved for session {session_id} (user: {user_id})")
+                
+                # Keep assembled file for audio playback
+                context["audio_file_path"] = assembled_wav
+            else:
+                logger.warning(f"⚠️ No audio file available for session {session_id} raw transcription save")
+        except Exception as e:
+            logger.error(f"Failed to auto-save raw transcription: {e}")
+            # Don't fail the finalize - raw transcription is optional
         
         return jsonify({
             "success": True,
@@ -796,6 +852,10 @@ def transcribe_audio():
         if not audio_file or audio_file.filename == '':
             return jsonify({'error': 'No audio file selected'}), 400
         
+        # Get session_id for storing audio file
+        session_id = request.form.get('session_id', str(uuid.uuid4()))
+        user_id = get_current_user_id()
+        
         # Determine file extension based on content type or filename
         file_extension = '.webm'  # Default for browser recordings
         if audio_file.content_type:
@@ -821,6 +881,9 @@ def transcribe_audio():
             except:
                 pass
             return jsonify({'error': 'Failed to save audio file'}), 500
+        
+        # Path for persistent audio storage
+        persistent_audio_path = None
         
         try:
             # Verify file exists and has content
@@ -851,57 +914,129 @@ def transcribe_audio():
                         'timestamp': datetime.utcnow().isoformat()
                     }), 500
                 
-                # Audio file is ready for processing
+                # Convert WebM to WAV if needed - BEFORE passing to Whisper
                 processed_audio_path = temp_audio_path
+                if file_extension == '.webm':
+                    logger.info(f"Converting WebM to WAV for Whisper processing...")
+                    temp_wav_fd, temp_wav_path = tempfile.mkstemp(suffix='.wav')
+                    os.close(temp_wav_fd)
+                    
+                    try:
+                        if convert_audio_to_wav(temp_audio_path, temp_wav_path):
+                            processed_audio_path = temp_wav_path
+                            logger.info(f"Successfully converted WebM to WAV: {temp_wav_path}")
+                        else:
+                            logger.warning("WebM to WAV conversion failed, trying with numpy conversion")
+                            # Fall back to numpy conversion inside Whisper
+                            os.unlink(temp_wav_path)
+                    except Exception as convert_error:
+                        logger.warning(f"WAV conversion failed: {convert_error}, will use numpy")
+                        try:
+                            os.unlink(temp_wav_path)
+                        except:
+                            pass
                 
                 # Process audio with Whisper
                 try:
-                    logger.info(f"Processing audio file: {temp_audio_path}")
+                    logger.info(f"Processing audio file with Whisper: {processed_audio_path}")
                     
                     # Verify file exists and is readable
-                    if not os.path.exists(temp_audio_path):
-                        raise FileNotFoundError(f"Temporary audio file not found: {temp_audio_path}")
+                    if not os.path.exists(processed_audio_path):
+                        raise FileNotFoundError(f"Audio file not found: {processed_audio_path}")
                     
-                    # Process audio with Whisper - prefer direct file processing for WAV/MP3
-                    if file_extension == '.wav' or file_extension == '.mp3':
-                        # For WAV/MP3, let Whisper handle directly (most reliable)
-                        result = model.transcribe(temp_audio_path, language="en")
-                    else:
-                        # For other formats (WebM), try numpy conversion as fallback
-                        audio_data = convert_webm_to_numpy(temp_audio_path)
-                        if len(audio_data) > 0:
-                            result = model.transcribe(audio_data, language="en")
-                        else:
-                            # If conversion failed, return empty result
-                            result = {"text": ""}
+                    # Check file size before processing
+                    check_size = os.path.getsize(processed_audio_path)
+                    if check_size == 0:
+                        logger.warning(f"Processed audio file is empty: {processed_audio_path}")
+                        return jsonify({
+                            'success': True,
+                            'transcription': '',
+                            'message': 'Audio file is empty after conversion',
+                            'timestamp': datetime.utcnow().isoformat()
+                        })
                     
-                    transcription = result["text"].strip()
-                    logger.info(f"Transcription completed: {len(transcription)} characters")
+                    logger.info(f"Audio file ready for transcription: {check_size} bytes")
+                    
+                    # Always use file path for transcription (most reliable)
+                    try:
+                        result = model.transcribe(processed_audio_path, language="en", fp16=False)
+                        transcription = result["text"].strip()
+                        logger.info(f"✅ Transcription completed: {len(transcription)} characters")
+                    except Exception as whisper_process_error:
+                        logger.error(f"Whisper transcription failed: {whisper_process_error}")
+                        import traceback
+                        logger.error(f"Traceback: {traceback.format_exc()}")
+                        
+                        # Try alternative approach with numpy for very problematic files
+                        try:
+                            logger.info("Attempting fallback transcription with numpy conversion...")
+                            audio_data = convert_webm_to_numpy(temp_audio_path)
+                            if len(audio_data) > 0:
+                                result = model.transcribe(audio_data, language="en", fp16=False)
+                                transcription = result["text"].strip()
+                                logger.info(f"✅ Fallback transcription successful: {len(transcription)} characters")
+                            else:
+                                logger.error("Numpy conversion returned empty audio")
+                                transcription = ""
+                        except Exception as fallback_error:
+                            logger.error(f"Fallback transcription also failed: {fallback_error}")
+                            transcription = ""
                     
                 except Exception as load_error:
                     logger.error(f"Audio processing failed: {load_error}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
                     return jsonify({
                         'success': False,
                         'error': f'Audio processing failed: {str(load_error)}',
                         'timestamp': datetime.utcnow().isoformat()
                     })
                 
-                # No need to clean up converted file since we use temp_audio_path directly
+                # 📦 Store audio file persistently before returning
+                try:
+                    if os.path.exists(processed_audio_path):
+                        # Copy processed WAV to persistent storage
+                        persistent_filename = f"{session_id}.wav"
+                        persistent_audio_path = str(AUDIO_STORAGE_DIR / persistent_filename)
+                        shutil.copy2(processed_audio_path, persistent_audio_path)
+                        logger.info(f"💾 Audio stored persistently: {persistent_audio_path}")
+                        
+                        # Save RawTranscription record to database
+                        from models.raw_transcriptions import RawTranscription
+                        from models.database import db
+                        
+                        raw_record = RawTranscription(
+                            session_id=session_id,
+                            user_id=user_id,
+                            audio_filename=persistent_filename,
+                            audio_file_path=persistent_audio_path,
+                            raw_transcription=transcription,
+                            created_at=datetime.utcnow()
+                        )
+                        db.session.add(raw_record)
+                        db.session.commit()
+                        logger.info(f"📝 RawTranscription saved: session={session_id}, user={user_id}")
+                except Exception as storage_error:
+                    logger.error(f"Failed to store audio or save record: {storage_error}")
+                    # Don't fail the request - transcription is still valid
                 
                 if transcription:
-                    logger.info(f"Transcribed: {transcription}")
+                    logger.info(f"✅ Transcribed: {transcription[:100]}...")
                     return jsonify({
                         'success': True,
                         'transcription': transcription,
                         'timestamp': datetime.utcnow().isoformat(),
-                        'confidence': 0.90
+                        'confidence': 0.90,
+                        'session_id': session_id
                     })
                 else:
+                    logger.info("No speech detected in audio")
                     return jsonify({
                         'success': True,
                         'transcription': '',
                         'message': 'No speech detected',
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'session_id': session_id
                     })
                     
             except ImportError:
@@ -913,6 +1048,8 @@ def transcribe_audio():
                 })
             except Exception as whisper_error:
                 logger.error(f"Whisper processing error: {whisper_error}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
                 return jsonify({
                     'success': False,
                     'error': f'Speech recognition failed: {str(whisper_error)}',
@@ -920,14 +1057,22 @@ def transcribe_audio():
                 })
                 
         finally:
-            # Clean up temp file
+            # Clean up temp files
             try:
                 os.unlink(temp_audio_path)
+            except:
+                pass
+            # Clean up converted WAV if it exists
+            try:
+                if file_extension == '.webm' and 'temp_wav_path' in locals():
+                    os.unlink(temp_wav_path)
             except:
                 pass
         
     except Exception as e:
         logger.error(f"Transcription error: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': 'Failed to transcribe audio'}), 500
 
 

@@ -3,1081 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D DICOM Volumetric Viewer - PACS System</title>
-    <link rel="stylesheet" href="/static/css/viewer.css">
+    <title>3D Volumetric Viewer - PACS Advanced Tools</title>
+    <link rel="stylesheet" href="../css/viewer.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0f0f0f;
-            color: #e0e0e0;
-            overflow: hidden;
-        }
-
-        .viewer-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header */
-        .viewer-header {
-            height: 60px;
-            background: linear-gradient(90deg, #6b46c1 0%, #9333ea 100%);
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .header-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .header-button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .header-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Main Content */
-        .viewer-content {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        /* Canvas Area */
-        #viewerCanvas {
-            flex: 1;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: block;
-        }
-
-        /* Left Sidebar */
-        .sidebar-left {
-            width: 280px;
-            background: #1a1a1a;
-            border-right: 1px solid #333;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-panel {
-            border-bottom: 1px solid #333;
-            padding: 15px;
-        }
-
-        .panel-title {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #9333ea;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: #aaa;
-            font-weight: 500;
-        }
-
-        .form-input,
-        .form-select {
-            width: 100%;
-            padding: 6px 10px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #e0e0e0;
-            border-radius: 3px;
-            font-size: 12px;
-            transition: border-color 0.2s;
-        }
-
-        .form-input:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: #9333ea;
-            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
-        }
-
-        .form-input::placeholder {
-            color: #666;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 6px 10px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #e0e0e0;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn:hover:not(:disabled) {
-            background: #333;
-            border-color: #555;
-        }
-
-        .btn-primary {
-            background: #9333ea;
-            border-color: #9333ea;
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #a855f7;
-            border-color: #a855f7;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .slider-container {
-            margin-bottom: 12px;
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 5px;
-            color: #999;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            border-radius: 2px;
-            background: linear-gradient(90deg, #444 0%, #666 100%);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #9333ea;
-            cursor: pointer;
-            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #9333ea;
-            cursor: pointer;
-            border: none;
-        }
-
-        /* Preset buttons */
-        .presets-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .preset-btn {
-            padding: 6px 8px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #aaa;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .preset-btn:hover {
-            background: #333;
-            border-color: #9333ea;
-            color: #9333ea;
-        }
-
-        .preset-btn.active {
-            background: #9333ea;
-            border-color: #9333ea;
-            color: white;
-        }
-
-        /* Right Sidebar */
-        .sidebar-right {
-            width: 280px;
-            background: #1a1a1a;
-            border-left: 1px solid #333;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Measurements */
-        .measurements-list {
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 11px;
-        }
-
-        .measurement-item {
-            padding: 8px;
-            background: #2a2a2a;
-            margin-bottom: 6px;
-            border-radius: 3px;
-            border-left: 3px solid #9333ea;
-        }
-
-        .measurement-label {
-            color: #9333ea;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .measurement-value {
-            color: #aaa;
-        }
-
-        /* Overlays */
-        .canvas-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .overlay-loading {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            z-index: 100;
-        }
-
-        .overlay-loading.active {
-            display: block;
-            pointer-events: all;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #444;
-            border-top-color: #9333ea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #e0e0e0;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .loading-subtext {
-            color: #999;
-            font-size: 12px;
-        }
-
-        /* Info display */
-        .info-panel {
-            position: absolute;
-            top: 70px;
-            right: 300px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 12px;
-            font-size: 12px;
-            max-width: 300px;
-            z-index: 20;
-            color: #aaa;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            gap: 10px;
-        }
-
-        .info-label {
-            color: #9333ea;
-            font-weight: 600;
-        }
-
-        .info-value {
-            color: #e0e0e0;
-            text-align: right;
-            flex-shrink: 0;
-        }
-
-        /* Footer */
-        .viewer-footer {
-            height: 40px;
-            background: #1a1a1a;
-            border-top: 1px solid #333;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #999;
-        }
-
-        .footer-left, .footer-right {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        /* Help Modal */
-        .modal-backdrop {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-        }
-
-        .modal-backdrop.active {
-            display: block;
-        }
-
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            z-index: 1001;
-            display: none;
-        }
-
-        .modal.active {
-            display: block;
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: #999;
-            font-size: 20px;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .modal-close:hover {
-            color: #e0e0e0;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .keyboard-shortcut {
-            display: flex;
-            margin-bottom: 15px;
-            gap: 15px;
-        }
-
-        .shortcut-key {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-family: monospace;
-            font-weight: 600;
-            color: #9333ea;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .shortcut-desc {
-            flex: 1;
-            color: #aaa;
-            font-size: 13px;
-        }
-
-        @media (max-width: 1200px) {
-            .sidebar-left, .sidebar-right {
-                width: 240px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar-left, .sidebar-right {
-                display: none;
-            }
-
-            .info-panel {
-                right: 10px;
-                max-width: calc(100% - 20px);
-            }
-        }
-    </style>
+    <script src="../js/viewers/3d-renderer.js" defer></script>
 </head>
 <body>
     <div class="viewer-container">
         <!-- Header -->
-        <div class="viewer-header">
-            <div class="header-title">
-                <div class="status-indicator"></div>
-                <span>3D Volumetric DICOM Viewer</span>
+        <header class="viewer-header">
+            <h1>3D Volumetric Viewer</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="btn-secondary">← Back to Dashboard</button>
+                <button id="helpBtn" class="btn-secondary">Help</button>
             </div>
-            <div class="header-controls">
-                <button class="header-button" id="helpBtn">Help</button>
-                <button class="header-button" id="settingsBtn">Settings</button>
-                <button class="header-button" id="exportBtn">Export</button>
-            </div>
-        </div>
+        </header>
 
         <!-- Main Content -->
         <div class="viewer-content">
-            <!-- Left Sidebar -->
-            <div class="sidebar-left">
-                <!-- Study Selector -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">📂 Study Selection</div>
+            <!-- Left Sidebar - Study Selector & Controls -->
+            <aside class="sidebar-left">
+                <div class="panel">
+                    <h3>Study Selection</h3>
                     <div class="form-group">
-                        <label class="form-label">Study ID</label>
-                        <input type="text" id="studyIdInput" class="form-input" placeholder="Enter study ID">
+                        <label for="studySelect">Select Study:</label>
+                        <select id="studySelect" class="form-control">
+                            <option value="">-- Select a study --</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Series ID (Optional)</label>
-                        <input type="text" id="seriesIdInput" class="form-input" placeholder="Leave blank for first">
-                    </div>
-                    <div class="button-group">
-                        <button class="btn btn-primary" id="loadStudyBtn">Load Study</button>
-                        <button class="btn" id="clearCacheBtn">Clear Cache</button>
-                    </div>
+                    <button id="loadStudyBtn" class="btn-primary" disabled>Load Study</button>
                 </div>
 
-                <!-- Render Controls -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">🎨 Render Mode</div>
+                <div class="panel">
+                    <h3>Rendering Controls</h3>
+                    
                     <div class="form-group">
-                        <label class="form-label">Rendering</label>
-                        <select id="renderMode" class="form-select">
+                        <label for="renderMode">Render Mode:</label>
+                        <select id="renderMode" class="form-control">
                             <option value="volume">Volume Rendering</option>
-                            <option value="mip">Maximum Intensity</option>
+                            <option value="mip">Maximum Intensity Projection</option>
                             <option value="surface">Surface Rendering</option>
                         </select>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label">Presets</label>
-                        <div class="presets-grid">
-                            <button class="preset-btn" data-preset="bone">Bone</button>
-                            <button class="preset-btn" data-preset="lung">Lung</button>
-                            <button class="preset-btn" data-preset="soft-tissue">Soft Tissue</button>
-                            <button class="preset-btn" data-preset="brain">Brain</button>
-                            <button class="preset-btn" data-preset="liver">Liver</button>
-                            <button class="preset-btn" data-preset="custom">Custom</button>
-                        </div>
+                        <label for="windowLevel">Window Level:</label>
+                        <input type="range" id="windowLevel" min="-1000" max="3000" value="40" class="slider">
+                        <span id="windowLevelValue">40</span>
                     </div>
-                </div>
 
-                <!-- Window/Level Controls -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">⚙️ Window/Level</div>
-                    <div class="slider-container">
-                        <div class="slider-label">
-                            <span>Window Center</span>
-                            <span id="windowCenterValue">40</span>
-                        </div>
-                        <input type="range" id="windowCenterSlider" min="-500" max="500" value="40">
-                    </div>
-                    <div class="slider-container">
-                        <div class="slider-label">
-                            <span>Window Width</span>
-                            <span id="windowWidthValue">400</span>
-                        </div>
-                        <input type="range" id="windowWidthSlider" min="50" max="2000" value="400">
-                    </div>
-                    <div class="slider-container">
-                        <div class="slider-label">
-                            <span>Opacity</span>
-                            <span id="opacityValue">100%</span>
-                        </div>
-                        <input type="range" id="opacitySlider" min="0" max="100" value="100">
-                    </div>
-                </div>
-
-                <!-- Clipping Planes -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">✂️ Clipping Planes</div>
                     <div class="form-group">
-                        <label class="form-label">Clipping Mode</label>
-                        <select id="clippingMode" class="form-select">
-                            <option value="none">None</option>
-                            <option value="x">X-Axis</option>
-                            <option value="y">Y-Axis</option>
-                            <option value="z">Z-Axis</option>
-                            <option value="custom">Custom</option>
-                        </select>
+                        <label for="windowWidth">Window Width:</label>
+                        <input type="range" id="windowWidth" min="1" max="4000" value="400" class="slider">
+                        <span id="windowWidthValue">400</span>
                     </div>
-                    <div class="slider-container">
-                        <div class="slider-label">
-                            <span>Clip Position</span>
-                            <span id="clipPositionValue">0%</span>
-                        </div>
-                        <input type="range" id="clipPositionSlider" min="0" max="100" value="50">
-                    </div>
-                </div>
 
-                <!-- Animation Controls -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">🎬 Animation</div>
-                    <div class="button-group">
-                        <button class="btn" id="autoRotateBtn">Auto Rotate</button>
-                        <button class="btn" id="resetViewBtn">Reset</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Canvas and Overlays -->
-            <div style="flex: 1; position: relative;">
-                <canvas id="viewerCanvas"></canvas>
-                
-                <!-- Info Panel -->
-                <div class="info-panel" id="infoPanel" style="display: none;">
-                    <div class="info-item">
-                        <span class="info-label">FPS:</span>
-                        <span class="info-value" id="fpsValue">60</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Memory:</span>
-                        <span class="info-value" id="memoryValue">0 MB</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Volume Size:</span>
-                        <span class="info-value" id="volSizeValue">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Voxels:</span>
-                        <span class="info-value" id="voxelsValue">-</span>
-                    </div>
-                </div>
-
-                <!-- Loading Overlay -->
-                <div class="overlay-loading" id="loadingOverlay">
-                    <div class="spinner"></div>
-                    <div class="loading-text">Loading Study...</div>
-                    <div class="loading-subtext" id="loadingSubtext">Initializing...</div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="sidebar-right">
-                <!-- Measurements -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">📏 Measurements</div>
-                    <div class="button-group">
-                        <button class="btn" id="distanceToolBtn">Distance</button>
-                        <button class="btn" id="angleToolBtn">Angle</button>
-                    </div>
-                    <div class="button-group" style="margin-top: 6px;">
-                        <button class="btn" id="areaToolBtn">Area</button>
-                        <button class="btn" id="volumeToolBtn">Volume</button>
-                    </div>
-                    <div id="measurementsList" class="measurements-list"></div>
-                </div>
-
-                <!-- MPR Controls -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">⊞ Multiplanar Reconstruction</div>
                     <div class="form-group">
-                        <label class="form-label">Axial Slice</label>
-                        <div style="display: flex; gap: 6px;">
-                            <input type="range" id="axialSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
-                            <span id="axialValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
-                        </div>
+                        <label for="opacity">Opacity:</label>
+                        <input type="range" id="opacity" min="0" max="100" value="100" class="slider">
+                        <span id="opacityValue">100%</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="autoRotate"> Auto Rotate
+                        </label>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Presets</h3>
+                    <button class="btn-preset" data-preset="bone">Bone</button>
+                    <button class="btn-preset" data-preset="lung">Lung</button>
+                    <button class="btn-preset" data-preset="soft">Soft Tissue</button>
+                    <button class="btn-preset" data-preset="brain">Brain</button>
+                    <button class="btn-preset" data-preset="liver">Liver</button>
+                </div>
+            </aside>
+
+            <!-- Center - 3D Canvas -->
+            <main class="viewer-main">
+                <div class="canvas-container">
+                    <canvas id="viewerCanvas"></canvas>
+                    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading volume...</p>
+                    </div>
+                    <div id="errorOverlay" class="error-overlay" style="display: none;">
+                        <p id="errorMessage"></p>
+                        <button id="retryBtn" class="btn-primary">Retry</button>
+                    </div>
+                </div>
+
+                <!-- Canvas Controls Overlay -->
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <button id="resetViewBtn" class="btn-icon" title="Reset View">
+                            <span>⟲</span>
+                        </button>
+                        <button id="screenshotBtn" class="btn-icon" title="Screenshot">
+                            <span>📷</span>
+                        </button>
+                        <button id="fullscreenBtn" class="btn-icon" title="Fullscreen">
+                            <span>⛶</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Overlay -->
+                <div class="info-overlay">
+                    <div id="studyInfo" class="info-panel">
+                        <p><strong>Patient:</strong> <span id="patientName">-</span></p>
+                        <p><strong>Study Date:</strong> <span id="studyDate">-</span></p>
+                        <p><strong>Modality:</strong> <span id="modality">-</span></p>
+                        <p><strong>Dimensions:</strong> <span id="dimensions">-</span></p>
+                    </div>
+                    <div id="performanceInfo" class="info-panel">
+                        <p><strong>FPS:</strong> <span id="fps">0</span></p>
+                        <p><strong>Memory:</strong> <span id="memory">0 MB</span></p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Measurement Tools -->
+            <aside class="sidebar-right">
+                <div class="panel">
+                    <h3>Measurement Tools</h3>
+                    <div class="tool-buttons">
+                        <button id="distanceTool" class="btn-tool" data-tool="distance">
+                            <span>📏</span> Distance
+                        </button>
+                        <button id="angleTool" class="btn-tool" data-tool="angle">
+                            <span>📐</span> Angle
+                        </button>
+                        <button id="areaTool" class="btn-tool" data-tool="area">
+                            <span>⬜</span> Area
+                        </button>
+                        <button id="volumeTool" class="btn-tool" data-tool="volume">
+                            <span>🧊</span> Volume
+                        </button>
+                        <button id="huTool" class="btn-tool" data-tool="hu">
+                            <span>🔢</span> HU Value
+                        </button>
+                    </div>
+                    <button id="clearMeasurements" class="btn-secondary">Clear All</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Measurements</h3>
+                    <div id="measurementsList" class="measurements-list">
+                        <p class="empty-state">No measurements yet</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Export Options</h3>
+                    <button id="exportSTL" class="btn-secondary">Export as STL</button>
+                    <button id="exportOBJ" class="btn-secondary">Export as OBJ</button>
+                    <button id="exportDICOM" class="btn-secondary">Export DICOM</button>
+                    <button id="exportReport" class="btn-primary">Generate Report</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Clipping Planes</h3>
+                    <div class="form-group">
+                        <label for="clipX">X Axis:</label>
+                        <input type="range" id="clipX" min="0" max="100" value="0" class="slider">
+                        <span id="clipXValue">0%</span>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Sagittal Slice</label>
-                        <div style="display: flex; gap: 6px;">
-                            <input type="range" id="sagittalSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
-                            <span id="sagittalValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
-                        </div>
+                        <label for="clipY">Y Axis:</label>
+                        <input type="range" id="clipY" min="0" max="100" value="0" class="slider">
+                        <span id="clipYValue">0%</span>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Coronal Slice</label>
-                        <div style="display: flex; gap: 6px;">
-                            <input type="range" id="coronalSlider" class="form-input" style="flex: 1; padding: 2px;" min="0" max="100" value="50">
-                            <span id="coronalValue" style="width: 30px; text-align: center; color: #9333ea;">50%</span>
-                        </div>
+                        <label for="clipZ">Z Axis:</label>
+                        <input type="range" id="clipZ" min="0" max="100" value="0" class="slider">
+                        <span id="clipZValue">0%</span>
                     </div>
+                    <button id="resetClipping" class="btn-secondary">Reset Clipping</button>
                 </div>
-
-                <!-- Export Options -->
-                <div class="sidebar-panel">
-                    <div class="panel-title">📤 Export</div>
-                    <div class="button-group">
-                        <button class="btn" id="exportSTLBtn">Export STL</button>
-                        <button class="btn" id="exportOBJBtn">Export OBJ</button>
-                    </div>
-                    <div class="button-group" style="margin-top: 6px;">
-                        <button class="btn" id="exportPNGBtn">Screenshot</button>
-                        <button class="btn" id="exportDICOMBtn">Export DICOM</button>
-                    </div>
-                </div>
-            </div>
+            </aside>
         </div>
 
         <!-- Footer -->
-        <div class="viewer-footer">
+        <footer class="viewer-footer">
             <div class="footer-left">
-                <span id="statusText">Ready</span>
-                <span id="dimensionText">Dimensions: -</span>
+                <span id="statusMessage">Ready</span>
             </div>
             <div class="footer-right">
-                <span id="renderTimeText">Render: 0ms</span>
-                <span id="cacheText">Cache: 0 MB</span>
+                <span>Controls: Left Click = Rotate | Right Click = Pan | Scroll = Zoom</span>
             </div>
-        </div>
+        </footer>
     </div>
 
     <!-- Help Modal -->
-    <div class="modal-backdrop" id="helpBackdrop"></div>
-    <div class="modal" id="helpModal">
-        <div class="modal-header">
-            <h2 class="modal-title">Help & Keyboard Shortcuts</h2>
-            <button class="modal-close" id="closeHelpBtn">&times;</button>
-        </div>
-        <div class="modal-body">
-            <h3 style="margin-bottom: 15px; color: #9333ea;">Mouse Controls</h3>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">Left Drag</span>
-                <span class="shortcut-desc">Rotate 3D volume</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">Right Drag</span>
-                <span class="shortcut-desc">Pan / Move view</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">Scroll</span>
-                <span class="shortcut-desc">Zoom in / Zoom out</span>
-            </div>
+    <div id="helpModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>3D Viewer Help</h2>
+            <div class="help-content">
+                <h3>Mouse Controls</h3>
+                <ul>
+                    <li><strong>Left Click + Drag:</strong> Rotate volume</li>
+                    <li><strong>Right Click + Drag:</strong> Pan view</li>
+                    <li><strong>Scroll Wheel:</strong> Zoom in/out</li>
+                    <li><strong>Double Click:</strong> Reset view</li>
+                </ul>
 
-            <h3 style="margin: 20px 0 15px; color: #9333ea;">Keyboard Shortcuts</h3>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">R</span>
-                <span class="shortcut-desc">Reset view to default</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">F</span>
-                <span class="shortcut-desc">Fullscreen / Exit fullscreen</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">A</span>
-                <span class="shortcut-desc">Toggle auto-rotate</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">I</span>
-                <span class="shortcut-desc">Show/hide info panel</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">V</span>
-                <span class="shortcut-desc">Cycle render modes</span>
-            </div>
-            <div class="keyboard-shortcut">
-                <span class="shortcut-key">S</span>
-                <span class="shortcut-desc">Take screenshot</span>
-            </div>
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><strong>R:</strong> Reset view</li>
+                    <li><strong>F:</strong> Toggle fullscreen</li>
+                    <li><strong>S:</strong> Take screenshot</li>
+                    <li><strong>Space:</strong> Toggle auto-rotate</li>
+                    <li><strong>1-5:</strong> Apply presets (Bone, Lung, Soft, Brain, Liver)</li>
+                </ul>
 
-            <h3 style="margin: 20px 0 15px; color: #9333ea;">Tips</h3>
-            <ul style="color: #aaa; font-size: 13px; line-height: 1.6;">
-                <li>Use presets to quickly adjust window/level for different anatomy</li>
-                <li>Right-click and drag to pan around the volume</li>
-                <li>Use the measurement tools for clinical measurements</li>
-                <li>Export to STL/OBJ for 3D printing or further analysis</li>
-                <li>The cache stores loaded studies for faster access</li>
-            </ul>
+                <h3>Measurement Tools</h3>
+                <ul>
+                    <li><strong>Distance:</strong> Click two points to measure distance</li>
+                    <li><strong>Angle:</strong> Click three points to measure angle</li>
+                    <li><strong>Area:</strong> Click multiple points to define ROI</li>
+                    <li><strong>Volume:</strong> Select region for volume calculation</li>
+                    <li><strong>HU Value:</strong> Click to get Hounsfield Unit value</li>
+                </ul>
+
+                <h3>Rendering Modes</h3>
+                <ul>
+                    <li><strong>Volume Rendering:</strong> Full 3D visualization</li>
+                    <li><strong>MIP:</strong> Maximum Intensity Projection</li>
+                    <li><strong>Surface:</strong> Surface-based rendering</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="/static/js/viewers/api-integration.js"></script>
-    <script src="/static/js/viewers/3d-renderer.js"></script>
     <script>
-        // Application Controller
-        class ViewerController {
-            constructor() {
-                this.api = null;
-                this.renderer = null;
-                this.currentStudyId = null;
-                this.currentMetadata = null;
-                this.measurements = [];
-                
-                this.init();
-            }
+        // Initialize viewer when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('3D Volumetric Viewer initialized');
+            
+            // Load available studies
+            loadStudies();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
 
-            async init() {
-                console.log('[Viewer] Initializing application...');
-                
-                try {
-                    // Initialize API client
-                    this.api = initializeViewerAPI({ baseURL: '/api/viewer' });
-                    
-                    // Initialize 3D renderer
-                    this.renderer = new VolumetricRenderer('viewerCanvas');
-                    console.log('[Viewer] 3D renderer initialized');
-                    
-                    // Setup event listeners
-                    this.setupEventListeners();
-                    
-                    // Check API health
-                    await this.checkHealth();
-                    
-                    console.log('[Viewer] Application ready');
-                    this.updateStatus('Ready');
-                } catch (error) {
-                    console.error('[Viewer] Initialization failed:', error);
-                    this.updateStatus('Error: ' + error.message, 'error');
-                }
-            }
-
-            setupEventListeners() {
-                // Study loading
-                document.getElementById('loadStudyBtn').addEventListener('click', () => this.loadStudy());
-                document.getElementById('studyIdInput').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.loadStudy();
-                });
-
-                // Cache controls
-                document.getElementById('clearCacheBtn').addEventListener('click', () => this.clearCache());
-
-                // Render mode
-                document.getElementById('renderMode').addEventListener('change', (e) => {
-                    this.renderer.setRenderMode(e.target.value);
-                });
-
-                // Presets
-                document.querySelectorAll('.preset-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-                        e.target.classList.add('active');
-                        const preset = e.target.getAttribute('data-preset');
-                        this.applyPreset(preset);
+        function loadStudies() {
+            // Fetch studies from API
+            fetch('/api/viewer/studies')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('studySelect');
+                    data.studies.forEach(study => {
+                        const option = document.createElement('option');
+                        option.value = study.id;
+                        option.textContent = `${study.patient_name} - ${study.study_date}`;
+                        select.appendChild(option);
                     });
+                })
+                .catch(error => {
+                    console.error('Failed to load studies:', error);
+                    showError('Failed to load studies. Please refresh the page.');
                 });
+        }
 
-                // Window/Level sliders
-                document.getElementById('windowCenterSlider').addEventListener('input', (e) => {
-                    document.getElementById('windowCenterValue').textContent = e.target.value;
-                    this.renderer.setWindowCenter(parseInt(e.target.value));
+        function setupEventListeners() {
+            // Study selection
+            document.getElementById('studySelect').addEventListener('change', function() {
+                document.getElementById('loadStudyBtn').disabled = !this.value;
+            });
+
+            // Load study button
+            document.getElementById('loadStudyBtn').addEventListener('click', loadSelectedStudy);
+
+            // Window/Level sliders
+            document.getElementById('windowLevel').addEventListener('input', function() {
+                document.getElementById('windowLevelValue').textContent = this.value;
+                updateWindowLevel();
+            });
+
+            document.getElementById('windowWidth').addEventListener('input', function() {
+                document.getElementById('windowWidthValue').textContent = this.value;
+                updateWindowWidth();
+            });
+
+            document.getElementById('opacity').addEventListener('input', function() {
+                document.getElementById('opacityValue').textContent = this.value + '%';
+                updateOpacity();
+            });
+
+            // Clipping planes
+            ['clipX', 'clipY', 'clipZ'].forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    document.getElementById(id + 'Value').textContent = this.value + '%';
+                    updateClipping();
                 });
-                
-                document.getElementById('windowWidthSlider').addEventListener('input', (e) => {
-                    document.getElementById('windowWidthValue').textContent = e.target.value;
-                    this.renderer.setWindowWidth(parseInt(e.target.value));
+            });
+
+            // Preset buttons
+            document.querySelectorAll('.btn-preset').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    applyPreset(this.dataset.preset);
                 });
+            });
 
-                // Opacity slider
-                document.getElementById('opacitySlider').addEventListener('input', (e) => {
-                    document.getElementById('opacityValue').textContent = e.target.value + '%';
-                    this.renderer.setOpacity(parseInt(e.target.value) / 100);
+            // Tool buttons
+            document.querySelectorAll('.btn-tool').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    activateTool(this.dataset.tool);
                 });
+            });
 
-                // Animation controls
-                document.getElementById('autoRotateBtn').addEventListener('click', () => {
-                    this.renderer.toggleAutoRotate();
-                    document.getElementById('autoRotateBtn').classList.toggle('btn-primary');
-                });
+            // Canvas controls
+            document.getElementById('resetViewBtn').addEventListener('click', resetView);
+            document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
 
-                document.getElementById('resetViewBtn').addEventListener('click', () => {
-                    this.renderer.resetView();
-                });
+            // Export buttons
+            document.getElementById('exportSTL').addEventListener('click', () => exportVolume('stl'));
+            document.getElementById('exportOBJ').addEventListener('click', () => exportVolume('obj'));
+            document.getElementById('exportDICOM').addEventListener('click', () => exportVolume('dicom'));
+            document.getElementById('exportReport').addEventListener('click', generateReport);
 
-                // Help modal
-                document.getElementById('helpBtn').addEventListener('click', () => this.showHelp());
-                document.getElementById('closeHelpBtn').addEventListener('click', () => this.hideHelp());
-                document.getElementById('helpBackdrop').addEventListener('click', () => this.hideHelp());
+            // Other controls
+            document.getElementById('clearMeasurements').addEventListener('click', clearAllMeasurements);
+            document.getElementById('resetClipping').addEventListener('click', resetClipping);
+            document.getElementById('autoRotate').addEventListener('change', toggleAutoRotate);
 
-                // Export buttons
-                document.getElementById('exportPNGBtn').addEventListener('click', () => this.takeScreenshot());
-                document.getElementById('exportSTLBtn').addEventListener('click', () => this.exportSTL());
+            // Navigation
+            document.getElementById('backBtn').addEventListener('click', () => window.location.href = '../dashboard.html');
+            document.getElementById('helpBtn').addEventListener('click', showHelp);
 
-                // Keyboard shortcuts
-                document.addEventListener('keydown', (e) => this.handleKeyboard(e));
-            }
+            // Modal close
+            document.querySelector('.close').addEventListener('click', () => {
+                document.getElementById('helpModal').style.display = 'none';
+            });
 
-            async loadStudy() {
-                const studyId = document.getElementById('studyIdInput').value.trim();
-                const seriesId = document.getElementById('seriesIdInput').value.trim() || null;
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
 
-                if (!studyId) {
-                    alert('Please enter a Study ID');
-                    return;
-                }
+        function loadSelectedStudy() {
+            const studyId = document.getElementById('studySelect').value;
+            if (!studyId) return;
 
-                try {
-                    this.showLoading(true, `Loading study ${studyId}...`);
-                    this.updateStatus('Loading study...');
+            showLoading(true);
+            updateStatus('Loading study...');
 
-                    // Load study via API
-                    const studyData = await this.api.loadStudy(studyId, {
-                        seriesId: seriesId,
-                        useCache: true
-                    });
-
-                    this.currentStudyId = studyId;
-                    this.currentMetadata = studyData;
-
-                    // Get metadata
-                    const metadata = await this.api.getMetadata(studyId);
-                    console.log('[Viewer] Study metadata:', metadata);
-
-                    // Update UI
-                    this.updateStudyInfo(studyData);
-                    
-                    this.showLoading(false);
-                    this.updateStatus(`Study loaded: ${studyId}`);
-
-                } catch (error) {
-                    console.error('[Viewer] Load failed:', error);
-                    this.showLoading(false);
-                    this.updateStatus('Error: ' + error.message, 'error');
-                    alert('Failed to load study: ' + error.message);
-                }
-            }
-
-            updateStudyInfo(studyData) {
-                const dims = studyData.volume_shape.join(' × ');
-                document.getElementById('dimensionText').textContent = `Dimensions: ${dims}`;
-                document.getElementById('volSizeValue').textContent = dims;
-                
-                const voxels = Math.round(studyData.volume_shape.reduce((a, b) => a * b, 1) / 1000000);
-                document.getElementById('voxelsValue').textContent = `${voxels} M`;
-            }
-
-            async clearCache() {
-                if (!confirm('Clear all cached studies?')) return;
-                
-                try {
-                    await this.api.clearStudyCache();
-                    this.updateStatus('Cache cleared');
-                } catch (error) {
-                    console.error('[Viewer] Cache clear failed:', error);
-                    this.updateStatus('Cache clear failed', 'error');
-                }
-            }
-
-            applyPreset(preset) {
-                const presets = {
-                    bone: { center: 300, width: 1500 },
-                    lung: { center: -400, width: 1500 },
-                    'soft-tissue': { center: 40, width: 400 },
-                    brain: { center: 40, width: 80 },
-                    liver: { center: 60, width: 150 }
-                };
-
-                if (presets[preset]) {
-                    const p = presets[preset];
-                    document.getElementById('windowCenterSlider').value = p.center;
-                    document.getElementById('windowWidthSlider').value = p.width;
-                    document.getElementById('windowCenterValue').textContent = p.center;
-                    document.getElementById('windowWidthValue').textContent = p.width;
-                    
-                    this.renderer.setWindowCenter(p.center);
-                    this.renderer.setWindowWidth(p.width);
-                }
-            }
-
-            handleKeyboard(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-                switch (e.key.toLowerCase()) {
-                    case 'r': this.renderer.resetView(); break;
-                    case 'f': this.toggleFullscreen(); break;
-                    case 'a': this.renderer.toggleAutoRotate(); break;
-                    case 'i': this.toggleInfo(); break;
-                    case 's': this.takeScreenshot(); break;
-                    case 'v': this.cycleRenderMode(); break;
-                }
-            }
-
-            showHelp() {
-                document.getElementById('helpBackdrop').classList.add('active');
-                document.getElementById('helpModal').classList.add('active');
-            }
-
-            hideHelp() {
-                document.getElementById('helpBackdrop').classList.remove('active');
-                document.getElementById('helpModal').classList.remove('active');
-            }
-
-            toggleFullscreen() {
-                const canvas = document.getElementById('viewerCanvas');
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
+            fetch('/api/viewer/load-study', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ study_id: studyId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateStudyInfo(data.metadata);
+                    initializeRenderer(data);
+                    updateStatus('Study loaded successfully');
                 } else {
-                    canvas.requestFullscreen().catch(err => console.error(err));
+                    showError(data.message || 'Failed to load study');
                 }
-            }
+            })
+            .catch(error => {
+                console.error('Error loading study:', error);
+                showError('Failed to load study. Please try again.');
+            })
+            .finally(() => {
+                showLoading(false);
+            });
+        }
 
-            toggleInfo() {
-                const panel = document.getElementById('infoPanel');
-                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-            }
+        function updateStudyInfo(metadata) {
+            document.getElementById('patientName').textContent = metadata.patient_name || 'Unknown';
+            document.getElementById('studyDate').textContent = metadata.study_date || 'Unknown';
+            document.getElementById('modality').textContent = metadata.modality || 'Unknown';
+            document.getElementById('dimensions').textContent = 
+                `${metadata.dimensions[0]} × ${metadata.dimensions[1]} × ${metadata.dimensions[2]}`;
+        }
 
-            cycleRenderMode() {
-                const modes = ['volume', 'mip', 'surface'];
-                const current = document.getElementById('renderMode').value;
-                const next = modes[(modes.indexOf(current) + 1) % modes.length];
-                document.getElementById('renderMode').value = next;
-                this.renderer.setRenderMode(next);
-            }
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
 
-            takeScreenshot() {
-                try {
-                    const canvas = document.getElementById('viewerCanvas');
-                    const link = document.createElement('a');
-                    link.href = canvas.toDataURL('image/png');
-                    link.download = `screenshot-${Date.now()}.png`;
-                    link.click();
-                    this.updateStatus('Screenshot saved');
-                } catch (error) {
-                    console.error('[Viewer] Screenshot failed:', error);
-                    this.updateStatus('Screenshot failed', 'error');
-                }
-            }
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorOverlay').style.display = 'flex';
+        }
 
-            async exportSTL() {
-                alert('STL export coming soon!');
-            }
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
 
-            async checkHealth() {
-                try {
-                    const health = await this.api.getHealthStatus();
-                    console.log('[Viewer] API health:', health);
-                } catch (error) {
-                    console.warn('[Viewer] API health check failed:', error);
-                }
-            }
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
 
-            showLoading(show, message = '') {
-                const overlay = document.getElementById('loadingOverlay');
-                if (show) {
-                    overlay.classList.add('active');
-                    if (message) {
-                        document.getElementById('loadingSubtext').textContent = message;
-                    }
-                } else {
-                    overlay.classList.remove('active');
-                }
-            }
-
-            updateStatus(text, type = 'normal') {
-                const statusText = document.getElementById('statusText');
-                statusText.textContent = text;
-                statusText.style.color = type === 'error' ? '#ef4444' : '#e0e0e0';
+        function handleKeyboard(e) {
+            switch(e.key) {
+                case 'r':
+                case 'R':
+                    resetView();
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 's':
+                case 'S':
+                    takeScreenshot();
+                    break;
+                case ' ':
+                    document.getElementById('autoRotate').checked = !document.getElementById('autoRotate').checked;
+                    toggleAutoRotate();
+                    break;
+                case '1':
+                    applyPreset('bone');
+                    break;
+                case '2':
+                    applyPreset('lung');
+                    break;
+                case '3':
+                    applyPreset('soft');
+                    break;
+                case '4':
+                    applyPreset('brain');
+                    break;
+                case '5':
+                    applyPreset('liver');
+                    break;
             }
         }
 
-        // Initialize application when DOM is ready
-        let controller;
-        document.addEventListener('DOMContentLoaded', () => {
-            controller = new ViewerController();
-        });
+        // Placeholder functions - will be implemented in 3d-renderer.js
+        function initializeRenderer(data) { console.log('Initialize renderer:', data); }
+        function updateWindowLevel() { console.log('Update window level'); }
+        function updateWindowWidth() { console.log('Update window width'); }
+        function updateOpacity() { console.log('Update opacity'); }
+        function updateClipping() { console.log('Update clipping'); }
+        function applyPreset(preset) { console.log('Apply preset:', preset); }
+        function activateTool(tool) { console.log('Activate tool:', tool); }
+        function resetView() { console.log('Reset view'); }
+        function takeScreenshot() { console.log('Take screenshot'); }
+        function toggleFullscreen() { console.log('Toggle fullscreen'); }
+        function exportVolume(format) { console.log('Export volume:', format); }
+        function generateReport() { console.log('Generate report'); }
+        function clearAllMeasurements() { console.log('Clear measurements'); }
+        function resetClipping() { console.log('Reset clipping'); }
+        function toggleAutoRotate() { console.log('Toggle auto-rotate'); }
     </script>
 </body>
 </html>

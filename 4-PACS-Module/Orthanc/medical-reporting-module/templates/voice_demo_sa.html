@@ -186,7 +186,7 @@
 
                 <!-- Microphone Button -->
                 <div class="text-center mb-8">
-                    <button id="microphone-btn" class="microphone-button">
+                    <button id="microphone-btn" class="microphone-button" type="button" aria-label="Start or stop voice dictation">
                         <i class="fas fa-microphone"></i>
                     </button>
                     <div class="mt-4">
@@ -212,6 +212,10 @@
 
                 <!-- Control Buttons -->
                 <div class="text-center mb-6">
+                    <button id="edit-btn" class="demo-btn demo-btn-primary">
+                        <i class="fas fa-edit"></i>
+                        Edit Transcription
+                    </button>
                     <button id="clear-btn" class="demo-btn demo-btn-secondary">
                         <i class="fas fa-trash"></i>
                         Clear Text
@@ -287,6 +291,7 @@
     <script src="/static/js/modules/ui-manager.js"></script>
     <script src="/static/js/modules/transcription-service.js"></script>
     <script src="/static/js/modules/shortcuts-manager.js"></script>
+    <script src="/static/js/modules/transcription-editor.js"></script>
     <script src="/static/js/voice-demo.js"></script>
 </body>
 </html>

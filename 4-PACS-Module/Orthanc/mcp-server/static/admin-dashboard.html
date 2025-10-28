@@ -52,38 +52,80 @@
         /* Module status panel */
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
             margin-bottom: 20px;
         }
 
         .module-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 12px;
-            padding: 18px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,250,250,0.95) 100%);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            border: 2px solid rgba(0,101,51,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+            border-color: rgba(0,101,51,0.16);
+        }
+
+        .module-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 12px;
         }
 
         .module-info {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .module-info > div:first-child {
+            font-weight: 700;
+            font-size: 15px;
+            color: #222;
+        }
+
+        .module-info > div:nth-child(2) {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .module-info > div:nth-child(3) {
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .module-dot {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #f0ad4e;
-            box-shadow: 0 0 8px rgba(0,0,0,0.08);
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            flex-shrink: 0;
         }
 
-        .module-online { background: #28a745; }
-        .module-offline { background: #dc3545; }
+        .module-online { 
+            background: #28a745;
+            box-shadow: 0 0 12px rgba(40,167,69,0.5);
+        }
+        .module-offline { 
+            background: #dc3545;
+            box-shadow: 0 0 12px rgba(220,53,69,0.3);
+        }
+
+        .module-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
         
         .tabs {
             display: flex;
@@ -432,58 +474,66 @@
             <p style="margin-top:0;color:#444;">Quick status of the four Ubuntu Patient Care modules and direct links.</p>
             <div class="modules-grid" id="modulesGrid">
                 <div class="module-card">
-                    <div class="module-info">
+                    <div class="module-header">
                         <div class="module-dot module-offline" id="dot-dictation"></div>
-                        <div>
-                            <div style="font-weight:700;">Dictation Service</div>
-                            <div style="font-size:13px;color:#666;">http://localhost:5443</div>
-                            <div id="status-dictation" style="font-size:13px;color:#666;">Checking...</div>
+                        <div class="module-info">
+                            <div>🎤 Dictation Service</div>
+                            <div>https://localhost:5443</div>
+                            <div id="status-dictation" style="color:#666;">Checking...</div>
                         </div>
                     </div>
-                    <div>
-                        <a href="http://localhost:5443" target="_blank" class="btn btn-primary btn-small">Open</a>
+                    <div class="module-controls">
+                        <button id="btn-start-dictation" onclick="startModule('dictation')" class="btn btn-success btn-small" style="display: none;">▶ Start</button>
+                        <button id="btn-stop-dictation" onclick="stopModule('dictation')" class="btn btn-danger btn-small" style="display: none;">⏹ Stop</button>
+                        <a href="https://localhost:5443" target="_blank" class="btn btn-primary btn-small">📂 Open</a>
                     </div>
                 </div>
 
                 <div class="module-card">
-                    <div class="module-info">
+                    <div class="module-header">
                         <div class="module-dot module-offline" id="dot-pacs"></div>
-                        <div>
-                            <div style="font-weight:700;">PACS</div>
-                            <div style="font-size:13px;color:#666;">http://localhost:5000</div>
-                            <div id="status-pacs" style="font-size:13px;color:#666;">Checking...</div>
+                        <div class="module-info">
+                            <div>🖼️ PACS System</div>
+                            <div>http://localhost:5000</div>
+                            <div id="status-pacs" style="color:#666;">Checking...</div>
                         </div>
                     </div>
-                    <div>
-                        <a href="/auth/sso/pacs" target="_blank" class="btn btn-primary btn-small">Open</a>
+                    <div class="module-controls">
+                        <button id="btn-start-pacs" onclick="startModule('pacs')" class="btn btn-success btn-small" style="display: none;">▶ Start</button>
+                        <button id="btn-stop-pacs" onclick="stopModule('pacs')" class="btn btn-danger btn-small" style="display: none;">⏹ Stop</button>
+                        <a href="http://localhost:5000" target="_blank" class="btn btn-primary btn-small">📂 Open</a>
                     </div>
                 </div>
 
                 <div class="module-card">
-                    <div class="module-info">
+                    <div class="module-header">
                         <div class="module-dot module-offline" id="dot-ris"></div>
-                        <div>
-                            <div style="font-weight:700;">RIS</div>
-                            <div style="font-size:13px;color:#666;">http://localhost:3000</div>
-                            <div id="status-ris" style="font-size:13px;color:#666;">Checking...</div>
+                        <div class="module-info">
+                            <div>🏥 RIS Backend</div>
+                            <div>http://localhost:3001</div>
+                            <div id="status-ris" style="color:#666;">Checking...</div>
                         </div>
                     </div>
-                    <div>
-                        <a href="http://localhost:3000" target="_blank" class="btn btn-primary btn-small">Open</a>
+                    <div class="module-controls">
+                        <button id="btn-start-ris" onclick="startModule('ris')" class="btn btn-success btn-small" style="display: none;">▶ Start</button>
+                        <button id="btn-stop-ris" onclick="stopModule('ris')" class="btn btn-danger btn-small" style="display: none;">⏹ Stop</button>
+                        <a href="http://localhost:3001/docs" target="_blank" class="btn btn-primary btn-small">📂 Open</a>
                     </div>
                 </div>
 
                 <div class="module-card">
-                    <div class="module-info">
+                    <div class="module-header">
                         <div class="module-dot module-offline" id="dot-billing"></div>
-                        <div>
-                            <div style="font-weight:700;">Medical Billing</div>
-                            <div style="font-size:13px;color:#666;">http://localhost:3000</div>
-                            <div id="status-billing" style="font-size:13px;color:#666;">Checking...</div>
+                        <div class="module-info">
+                            <div>💰 Billing/Frontend</div>
+                            <div>http://localhost:3000</div>
+                            <div id="status-billing" style="color:#666;">Checking...</div>
                         </div>
                     </div>
-                    <div>
-                        <a href="http://localhost:3000" target="_blank" class="btn btn-primary btn-small">Open</a>
+                    <div class="module-controls">
+                        <button id="btn-start-billing" onclick="startModule('billing')" class="btn btn-success btn-small" style="display: none;">▶ Start</button>
+                        <button id="btn-stop-billing" onclick="stopModule('billing')" class="btn btn-danger btn-small" style="display: none;">⏹ Stop</button>
+                        <a href="http://localhost:3000" target="_blank" class="btn btn-primary btn-small">📂 Open</a>
                     </div>
                 </div>
             </div>
@@ -1617,33 +1667,148 @@
         }
         
         const MODULES = [
-            { id: 'dictation', url: 'http://localhost:5443' },
-            { id: 'pacs', url: 'http://localhost:5000' },
-            { id: 'ris', url: 'http://localhost:3000' },
-            { id: 'billing', url: 'http://localhost:3000' }
+            { id: 'dictation', url: 'https://localhost:5443', apiUrl: 'https://localhost:5443/health' },
+            { id: 'pacs', url: 'http://localhost:5000', apiUrl: 'http://localhost:5000/health' },
+            { id: 'ris', url: 'http://localhost:3001', apiUrl: 'http://localhost:3001/health' },
+            { id: 'billing', url: 'http://localhost:3000', apiUrl: 'http://localhost:3000' }
         ];
 
         async function checkModule(module) {
             const dot = document.getElementById('dot-' + module.id);
             const statusEl = document.getElementById('status-' + module.id);
+            const startBtn = document.getElementById('btn-start-' + module.id);
+            const stopBtn = document.getElementById('btn-stop-' + module.id);
+            
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 2500);
-                const res = await fetch(module.url, { method: 'GET', mode: 'no-cors', signal: controller.signal });
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                
+                // Try API endpoint first (if available), then root URL
+                let response;
+                try {
+                    response = await fetch(module.apiUrl, { 
+                        method: 'GET', 
+                        mode: 'cors',
+                        signal: controller.signal,
+                        timeout: 3000
+                    });
+                } catch {
+                    // Fallback to root URL with no-cors mode
+                    response = await fetch(module.url, { 
+                        method: 'GET', 
+                        mode: 'no-cors', 
+                        signal: controller.signal 
+                    });
+                }
+                
                 clearTimeout(timeout);
-                // When mode:no-cors the response is opaque; assume online if no exception
+                
+                // Module is online
                 dot.classList.remove('module-offline');
                 dot.classList.add('module-online');
-                if (statusEl) statusEl.textContent = 'Online';
+                if (statusEl) statusEl.textContent = 'Online ✓';
+                
+                // Show Stop button, hide Start button for online modules
+                if (startBtn) startBtn.style.display = 'none';
+                if (stopBtn) stopBtn.style.display = 'block';
             } catch (err) {
+                // Module is offline - suppress error in console
                 dot.classList.remove('module-online');
                 dot.classList.add('module-offline');
                 if (statusEl) statusEl.textContent = 'Offline';
+                
+                // Show Start button, hide Stop button for offline modules
+                if (startBtn) startBtn.style.display = 'block';
+                if (stopBtn) stopBtn.style.display = 'none';
             }
         }
 
         function checkAllModules() {
             MODULES.forEach(m => checkModule(m));
+        }
+
+        // Module Control Functions
+        async function startModule(moduleId) {
+            const startBtn = document.getElementById('btn-start-' + moduleId);
+            const stopBtn = document.getElementById('btn-stop-' + moduleId);
+            const statusEl = document.getElementById('status-' + moduleId);
+            
+            try {
+                // Disable button during action
+                if (startBtn) {
+                    startBtn.disabled = true;
+                    const originalText = startBtn.textContent;
+                    startBtn.textContent = '⏳ Starting...';
+                }
+                
+                const response = await fetch(`${API_BASE}/modules/start/${moduleId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getCookie('access_token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✓ ${data.message}`, 'success');
+                    
+                    // For Node.js services, wait longer before checking
+                    const waitTime = (moduleId === 'ris' || moduleId === 'billing') ? 8000 : 3000;
+                    setTimeout(() => {
+                        checkModule(MODULES.find(m => m.id === moduleId));
+                    }, waitTime);
+                } else {
+                    showAlert(`✗ Failed: ${data.detail || 'Unknown error'}`, 'error');
+                    if (startBtn) startBtn.disabled = false;
+                }
+            } catch (error) {
+                showAlert(`✗ Error: ${error.message}`, 'error');
+                if (startBtn) startBtn.disabled = false;
+            }
+        }
+
+        async function stopModule(moduleId) {
+            const stopBtn = document.getElementById('btn-stop-' + moduleId);
+            
+            try {
+                // Confirm before stopping
+                if (!confirm(`Stop ${moduleId} module? This will close the service.`)) {
+                    return;
+                }
+                
+                // Disable button during action
+                if (stopBtn) {
+                    stopBtn.disabled = true;
+                    const originalText = stopBtn.textContent;
+                    stopBtn.textContent = '⏳ Stopping...';
+                }
+                
+                const response = await fetch(`${API_BASE}/modules/stop/${moduleId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getCookie('access_token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✓ ${data.message}`, 'success');
+                    
+                    setTimeout(() => {
+                        checkModule(MODULES.find(m => m.id === moduleId));
+                    }, 2000);
+                } else {
+                    showAlert(`✗ Failed: ${data.detail || 'Unknown error'}`, 'error');
+                    if (stopBtn) stopBtn.disabled = false;
+                }
+            } catch (error) {
+                showAlert(`✗ Error: ${error.message}`, 'error');
+                if (stopBtn) stopBtn.disabled = false;
+            }
         }
 
         // ===== ROLE MANAGEMENT FUNCTIONS =====

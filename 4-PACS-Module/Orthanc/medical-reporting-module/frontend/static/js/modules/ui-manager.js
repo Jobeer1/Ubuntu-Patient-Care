@@ -62,6 +62,19 @@ class UIManager {
         }
         
         // Control buttons
+        const editBtn = document.getElementById('edit-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                console.log('🔵 Edit button clicked');
+                if (this.onEditTranscription) {
+                    console.log('📝 Calling onEditTranscription callback...');
+                    this.onEditTranscription();
+                } else {
+                    console.warn('⚠️ onEditTranscription callback not set');
+                }
+            });
+        }
+        
         if (this.elements.clearBtn) {
             this.elements.clearBtn.addEventListener('click', () => {
                 if (this.onClearTranscription) {
@@ -230,12 +243,28 @@ class UIManager {
         
         // Auto-scroll to bottom
         this.elements.transcriptionArea.scrollTop = this.elements.transcriptionArea.scrollHeight;
+        
+        // Enable edit button when there's transcription
+        const editBtn = document.getElementById('edit-btn');
+        if (editBtn && text && text.trim()) {
+            editBtn.disabled = false;
+            editBtn.style.opacity = '1';
+            editBtn.style.cursor = 'pointer';
+        }
     }
     
     setTranscription(text) {
         if (this.elements.transcriptionArea) {
             this.elements.transcriptionArea.innerHTML = '';
             this.elements.transcriptionArea.textContent = text;
+        }
+        
+        // Enable/disable edit button based on whether there's text
+        const editBtn = document.getElementById('edit-btn');
+        if (editBtn) {
+            editBtn.disabled = !text || !text.trim();
+            editBtn.style.opacity = editBtn.disabled ? '0.5' : '1';
+            editBtn.style.cursor = editBtn.disabled ? 'not-allowed' : 'pointer';
         }
     }
     
@@ -253,6 +282,14 @@ class UIManager {
     clearTranscription() {
         if (this.elements.transcriptionArea) {
             this.elements.transcriptionArea.textContent = '';
+        }
+        
+        // Disable edit button when cleared
+        const editBtn = document.getElementById('edit-btn');
+        if (editBtn) {
+            editBtn.disabled = true;
+            editBtn.style.opacity = '0.5';
+            editBtn.style.cursor = 'not-allowed';
         }
     }
     
@@ -401,6 +438,7 @@ class UIManager {
         this.onSaveReport = callbacks.onSaveReport;
         this.onLoadTemplate = callbacks.onLoadTemplate;
         this.onModeChange = callbacks.onModeChange;
+        this.onEditTranscription = callbacks.onEditTranscription;
     }
 }
 

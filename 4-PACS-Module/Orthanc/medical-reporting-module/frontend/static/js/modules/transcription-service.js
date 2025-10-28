@@ -11,6 +11,7 @@ class TranscriptionService {
         this.offlineQueue = [];
         this.retryAttempts = 3;
         this.retryDelay = 1000; // 1 second
+        this.requestTimeout = 120000; // 2 minutes for transcription requests
         
         this.setupNetworkListeners();
     }
@@ -26,9 +27,32 @@ class TranscriptionService {
         });
     }
     
+    // Helper to add timeout to fetch calls
+    async fetchWithTimeout(url, options = {}) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => {
+            controller.abort();
+        }, options.timeout || this.requestTimeout);
+        
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+            return response;
+        } catch (error) {
+            clearTimeout(timeout);
+            if (error.name === 'AbortError') {
+                throw new Error(`Request timeout after ${options.timeout || this.requestTimeout}ms`);
+            }
+            throw error;
+        }
+    }
+    
     async startSession(options = {}) {
         try {
-            const response = await fetch(`${this.baseUrl}/session/start`, {
+            const response = await this.fetchWithTimeout(`${this.baseUrl}/session/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -37,7 +61,8 @@ class TranscriptionService {
                     user_id: options.userId || 'demo_user',
                     report_id: options.reportId,
                     template_id: options.templateId
-                })
+                }),
+                timeout: 30000 // 30 second timeout for session start
             });
             
             if (!response.ok) {
@@ -108,9 +133,10 @@ class TranscriptionService {
             formData.append('chunk_id', chunkId);
             formData.append('sequence_number', sequenceNumber.toString());
             
-            const response = await fetch(`${this.baseUrl}/transcribe-chunk`, {
+            const response = await this.fetchWithTimeout(`${this.baseUrl}/transcribe-chunk`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                timeout: 120000 // 2 minute timeout for chunk transcription
             });
             
             if (!response.ok) {
@@ -238,11 +264,16 @@ class TranscriptionService {
             }
 
             formData.append('audio', audioBlob, `final_recording.${extension}`);
+            // Pass session_id so backend can store audio for later playback
+            if (this.sessionId) {
+                formData.append('session_id', this.sessionId);
+            }
 
-            // Use the dedicated single-file endpoint
-            const response = await fetch(`${this.baseUrl}/transcribe`, {
+            // Use the dedicated single-file endpoint with timeout
+            const response = await this.fetchWithTimeout(`${this.baseUrl}/transcribe`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                timeout: 120000 // 2 minute timeout for transcription
             });
 
             if (!response.ok) {

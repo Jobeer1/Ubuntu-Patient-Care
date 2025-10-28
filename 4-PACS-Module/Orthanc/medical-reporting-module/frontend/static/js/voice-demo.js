@@ -5,6 +5,13 @@
 
 class SAVoiceDemo {
     constructor() {
+        // Guard against duplicate construction
+        if (window._saVoiceDemoInstance) {
+            console.warn('⚠️ Voice demo instance already exists, skipping re-initialization');
+            return;
+        }
+        window._saVoiceDemoInstance = this;
+        
         // Initialize modules
         this.audioProcessor = new AudioProcessor();
         this.uiManager = new UIManager();
@@ -16,6 +23,7 @@ class SAVoiceDemo {
         this.isRecording = false;
         this.transcriptionText = '';
         this.userId = 'demo_user';
+        this.initializationTimeout = null;
         
         this.initialize();
     }
@@ -24,6 +32,13 @@ class SAVoiceDemo {
         try {
             console.log('🇿🇦 Initializing SA Medical Voice Demo...');
             
+            // Set a timeout for initialization (30 seconds)
+            this.initializationTimeout = setTimeout(() => {
+                console.warn('⚠️ Voice demo initialization timeout (30 seconds)');
+                this.uiManager.showError('Initialization is taking longer than expected. Voice may have limited functionality.');
+                this.uiManager.setStatus('warning', 'Partial initialization');
+            }, 30000);
+            
             // Setup UI callbacks
             this.uiManager.setCallbacks({
                 onToggleRecording: () => this.toggleRecording(),
@@ -31,7 +46,8 @@ class SAVoiceDemo {
                 onCopyTranscription: () => this.copyTranscription(),
                 onSaveReport: () => this.saveReport(),
                 onLoadTemplate: (template) => this.loadTemplate(template),
-                onModeChange: (mode) => this.switchMode(mode)
+                onModeChange: (mode) => this.switchMode(mode),
+                onEditTranscription: () => this.editTranscription()
             });
             
             // Setup audio processor callbacks
@@ -96,11 +112,22 @@ class SAVoiceDemo {
             // Set initial status
             this.uiManager.setStatus('ready', 'Ready to record');
             
+            // Clear initialization timeout since we completed successfully
+            if (this.initializationTimeout) {
+                clearTimeout(this.initializationTimeout);
+                this.initializationTimeout = null;
+            }
+            
             console.log('✅ SA Medical Voice Demo initialized successfully');
             
         } catch (error) {
             console.error('Failed to initialize voice demo:', error);
             this.uiManager.showError('Failed to initialize voice demo. Please refresh the page.');
+            // Clear initialization timeout
+            if (this.initializationTimeout) {
+                clearTimeout(this.initializationTimeout);
+                this.initializationTimeout = null;
+            }
         }
     }
     
@@ -274,6 +301,17 @@ class SAVoiceDemo {
         this.uiManager.appendTranscription(enhancedText + ' ', true);
         this.transcriptionText += enhancedText + ' ';
         
+        // Enable edit button when there's transcription
+        const editBtn = document.getElementById('edit-btn');
+        if (editBtn) {
+            editBtn.disabled = false;
+            editBtn.style.opacity = '1';
+            editBtn.style.cursor = 'pointer';
+            console.log('✅ Edit button enabled');
+        } else {
+            console.warn('⚠️ Edit button element not found in DOM');
+        }
+        
         // Set status back to listening if still recording
         if (this.isRecording) {
             this.uiManager.setStatus('listening', 'Recording...');
@@ -394,6 +432,53 @@ Dr. [Doctor Name]`
         console.log(`🔄 Switched to ${mode} mode`);
     }
     
+    async editTranscription() {
+        try {
+            console.log('📝 Edit Transcription: Starting...');
+            
+            const text = this.uiManager.getTranscription();
+            if (!text.trim()) {
+                this.uiManager.showError('No transcription to edit');
+                return;
+            }
+            
+            console.log('📝 Edit Transcription: Text found, creating editor...');
+            
+            // Check if TranscriptionEditor exists
+            if (typeof TranscriptionEditor === 'undefined') {
+                console.error('❌ TranscriptionEditor class not found!');
+                this.uiManager.showError('Editor not available. Please refresh the page.');
+                return;
+            }
+            
+            // Get current session ID for audio playback
+            const sessionId = this.transcriptionService?.sessionId || null;
+            console.log('📝 Edit Transcription: Session ID:', sessionId);
+            
+            // Create and show editor with session ID for audio playback
+            const editor = new TranscriptionEditor(text, null, sessionId);
+            console.log('📝 Edit Transcription: Editor created, showing modal...');
+            
+            const result = await editor.show();
+            console.log('📝 Edit Transcription: Modal closed with result:', result);
+            
+            if (result.action === 'save') {
+                // Update UI with corrected text
+                this.uiManager.setTranscription(result.text);
+                this.transcriptionText = result.text;
+                console.log(`✅ Transcription updated and saved to training data (ID: ${result.sampleId})`);
+                console.log(`📊 Quality Score: ${result.qualityScore}, Errors: ${result.errorCount}`);
+            } else if (result.action === 'discard') {
+                console.log('🗑️ Transcription discarded (not saved to training)');
+            } else {
+                console.log('⚪ Edit cancelled');
+            }
+        } catch (error) {
+            console.error('❌ Error in editTranscription:', error);
+            this.uiManager.showError(`Failed to open editor: ${error.message}`);
+        }
+    }
+    
     startAudioVisualizer() {
         const updateVisualizer = () => {
             if (this.audioProcessor) {
@@ -407,6 +492,12 @@ Dr. [Doctor Name]`
     
     // Cleanup method
     destroy() {
+        // Clear initialization timeout
+        if (this.initializationTimeout) {
+            clearTimeout(this.initializationTimeout);
+            this.initializationTimeout = null;
+        }
+        
         if (this.audioProcessor) {
             this.audioProcessor.cleanup();
         }
@@ -415,6 +506,9 @@ Dr. [Doctor Name]`
             this.transcriptionService.endSession();
         }
         
+        // Clear instance reference
+        window._saVoiceDemoInstance = null;
+        
         console.log('🧹 Voice demo cleaned up');
     }
 }
@@ -422,8 +516,18 @@ Dr. [Doctor Name]`
 // Export for global access
 window.SAVoiceDemo = SAVoiceDemo;
 
+// Prevent duplicate initialization
+let saVoiceDemoInitialized = false;
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Guard against duplicate initialization
+    if (saVoiceDemoInitialized) {
+        console.warn('⚠️ Voice demo already initialized, skipping duplicate initialization');
+        return;
+    }
+    saVoiceDemoInitialized = true;
+    
     console.log('🇿🇦 Initializing SA Medical Voice Demo...');
     
     // Check for HTTPS
@@ -438,4 +542,4 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
         console.error('Failed to initialize voice demo:', error);
     }
-});
+}, { once: true });

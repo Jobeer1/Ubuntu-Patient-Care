@@ -174,6 +174,13 @@ def _register_blueprints(app):
         logger.info("Registered reports API")
     except ImportError:
         logger.warning("Reports API not available")
+    
+    try:
+        from api.training_api import training_bp
+        app.register_blueprint(training_bp, url_prefix='/api/training')
+        logger.info("Registered training data API")
+    except ImportError:
+        logger.warning("Training data API not available")
 
 
 def _initialize_services(app):
@@ -184,6 +191,8 @@ def _initialize_services(app):
         try:
             from models.database import Report, VoiceSession
             from models.training_data import TrainingSession, MedicalTerm, UserTrainingProgress
+            from models.training_samples import TrainingDataSample
+            from models.raw_transcriptions import RawTranscription
             from models.voice_shortcuts import VoiceShortcut, ShortcutUsage
             from core.user_manager import User, UserSession
             logger.info("Models imported successfully")
@@ -201,6 +210,27 @@ def _initialize_services(app):
             logger.info("Medical terms seeded")
         except Exception as e:
             logger.error(f"Database initialization failed: {e}")
+        
+        # Pre-load Whisper model for voice transcription to avoid long delays on first use
+        try:
+            logger.info("Pre-loading Whisper speech recognition model (this may take 1-2 minutes)...")
+            from api.voice_api import get_or_load_whisper_model, check_ffmpeg_availability
+            
+            # Check FFmpeg availability first
+            if check_ffmpeg_availability():
+                logger.info("✅ FFmpeg is available")
+            else:
+                logger.warning("⚠️ FFmpeg not available - audio conversion will be limited")
+            
+            # Pre-load Whisper
+            model = get_or_load_whisper_model()
+            if model:
+                logger.info("✅ Whisper model pre-loaded successfully - voice transcription ready")
+            else:
+                logger.warning("⚠️ Whisper model failed to load - voice transcription may be unavailable")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to pre-load Whisper model: {e}")
+            logger.warning("Voice transcription will attempt to load on first use (may be slow)")
         
         # Initialize basic services (simplified)
         logger.info("Basic services initialized")
