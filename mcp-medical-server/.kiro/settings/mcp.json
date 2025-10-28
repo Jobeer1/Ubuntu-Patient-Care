@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "ubuntu-patient-care": {
+      "command": "python",
+      "args": ["server.py"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "validate_medical_aid",
+        "validate_preauth_requirements",
+        "estimate_patient_cost",
+        "check_preauth_status",
+        "list_pending_preauths"
+      ]
+    }
+  }
+}

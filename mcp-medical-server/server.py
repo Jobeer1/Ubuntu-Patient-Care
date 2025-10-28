@@ -1,17 +1,67 @@
 #!/usr/bin/env python3
 """
 MCP Server for Medical Scheme Authorizations
+Integrated with FastAPI for OAuth/RBAC/SSO Authentication
 Solves: Pre-authorization requests, benefits calculations, offline validation
 """
 
 import asyncio
 import json
 import sqlite3
+import sys
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from config.settings import Settings
+from app.database import init_db, get_db
+from app.routes.auth import router as auth_router
+from app.services.rbac_service import RBACService
+
+# Initialize FastAPI app for OAuth/Auth endpoints
+fast_app = FastAPI(
+    title="Medical Schemes SSO/RBAC",
+    description="OAuth 2.0 and Role-Based Access Control",
+    version="1.0.0"
+)
+
+# Add CORS middleware
+fast_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=Settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include auth routes
+fast_app.include_router(auth_router, prefix="/auth", tags=["authentication"])
+
+# Include AI Brain routes
+try:
+    from app.routes.ai_brain import router as ai_brain_router
+    fast_app.include_router(ai_brain_router, prefix="/api/ai-brain", tags=["AI Brain"])
+    print("[FastAPI] AI Brain routes loaded")
+except ImportError as e:
+    print(f"[FastAPI] AI Brain routes not available: {e}")
+
+# Initialize database on startup
+@fast_app.on_event("startup")
+async def startup_event():
+    """Initialize database when FastAPI starts"""
+    try:
+        init_db()
+        print("[FastAPI] Database initialized successfully")
+        # Initialize default roles
+        db = next(get_db())
+        RBACService.initialize_default_roles(db)
+        db.close()
+        print("[FastAPI] Default roles initialized")
+    except Exception as e:
+        print(f"[FastAPI] Error initializing database: {e}")
 
 # Initialize MCP Server
 app = Server("ubuntu-patient-care-medical-auth")
@@ -160,7 +210,7 @@ init_database()
 @app.list_tools()
 async def list_tools() -> list[Tool]:
     """List available medical authorization tools"""
-    return [
+    tools = [
         Tool(
             name="validate_medical_aid",
             description="Validate medical aid member (works offline)",
@@ -237,8 +287,76 @@ async def list_tools() -> list[Tool]:
                     "status": {"type": "string", "enum": ["queued", "submitted", "approved", "rejected"], "default": "queued"}
                 }
             }
+        ),
+        # ML-Powered Document Processing Tools
+        Tool(
+            name="transcribe_medical_report",
+            description="Convert speech to text for medical reports (offline, supports South African languages)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "audio_file": {"type": "string", "description": "Path to audio file"},
+                    "language": {"type": "string", "description": "Language code (eng, zul, xho, afr, sot, etc.)", "default": "eng"},
+                    "extract_fields": {"type": "boolean", "description": "Extract structured fields (patient ID, procedure, urgency)", "default": True}
+                },
+                "required": ["audio_file"]
+            }
+        ),
+        Tool(
+            name="identify_patient_by_photo",
+            description="Identify patient from photo using face recognition (offline, works without internet)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "image_file": {"type": "string", "description": "Path to patient photo"},
+                    "tolerance": {"type": "number", "description": "Matching tolerance (0.0-1.0, lower=stricter)", "default": 0.6}
+                },
+                "required": ["image_file"]
+            }
+        ),
+        Tool(
+            name="extract_text_from_document",
+            description="Extract text from medical documents/forms using OCR (offline)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "image_file": {"type": "string", "description": "Path to document image"},
+                    "document_type": {"type": "string", "enum": ["preauth_form", "patient_info", "insurance_card", "id_document", "generic"], "default": "generic"},
+                    "language": {"type": "string", "description": "Language code for OCR", "default": "eng"}
+                },
+                "required": ["image_file"]
+            }
+        ),
+        Tool(
+            name="process_preauth_workflow",
+            description="End-to-end pre-auth automation: patient photo + voice dictation + ID card",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "patient_photo": {"type": "string", "description": "Path to patient photo (for identification)"},
+                    "audio_dictation": {"type": "string", "description": "Path to audio file with clinical dictation"},
+                    "id_card_image": {"type": "string", "description": "Path to ID card image"},
+                    "form_image": {"type": "string", "description": "Path to pre-auth form image (optional)"}
+                },
+                "required": ["patient_photo", "audio_dictation", "id_card_image"]
+            }
+        ),
+        Tool(
+            name="register_patient_face",
+            description="Register patient face for future identification (one-time setup)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "image_file": {"type": "string", "description": "Path to patient photo"},
+                    "patient_id": {"type": "string", "description": "Patient ID"},
+                    "patient_name": {"type": "string", "description": "Patient full name"}
+                },
+                "required": ["image_file", "patient_id", "patient_name"]
+            }
         )
     ]
+    
+    return tools
 
 @app.call_tool()
 async def call_tool(name: str, arguments: Any) -> list[TextContent]:
@@ -257,6 +375,17 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
             result = check_preauth_status(arguments)
         elif name == "list_pending_preauths":
             result = list_pending_preauths(arguments)
+        # ML-powered tools
+        elif name == "transcribe_medical_report":
+            result = transcribe_medical_report(arguments)
+        elif name == "identify_patient_by_photo":
+            result = identify_patient_by_photo(arguments)
+        elif name == "extract_text_from_document":
+            result = extract_text_from_document(arguments)
+        elif name == "process_preauth_workflow":
+            result = process_preauth_workflow(arguments)
+        elif name == "register_patient_face":
+            result = register_patient_face(arguments)
         else:
             result = {"error": f"Unknown tool: {name}"}
         
@@ -557,9 +686,186 @@ def list_pending_preauths(args: Dict) -> Dict:
         ]
     }
 
+# ML-Powered Tool Handlers
+
+def transcribe_medical_report(args: Dict) -> Dict:
+    """Transcribe speech to text for medical reports"""
+    try:
+        from app.ml.speech_recognition import SpeechRecognitionService
+        
+        service = SpeechRecognitionService()
+        result = service.transcribe_preauth_form(
+            args['audio_file'],
+            patient_id=args.get('patient_id', ''),
+            procedure_type=args.get('procedure_type', 'general')
+        )
+        
+        return {
+            "success": result.get("success", False),
+            "text": result.get("text"),
+            "extracted_fields": result.get("extracted_fields", {}),
+            "language": args.get('language', 'eng'),
+            "confidence": result.get("confidence", 0),
+            "error": result.get("error"),
+            "offline": True
+        }
+    
+    except ImportError:
+        return {
+            "error": "ML module not installed. Run: pip install -r requirements.txt"
+        }
+    except Exception as e:
+        return {
+            "error": f"Transcription failed: {str(e)}"
+        }
+
+def identify_patient_by_photo(args: Dict) -> Dict:
+    """Identify patient from photo using face recognition"""
+    try:
+        from app.ml.face_recognition_service import FaceRecognitionService
+        
+        service = FaceRecognitionService()
+        result = service.identify_patient(
+            args['image_file'],
+            tolerance=args.get('tolerance', 0.6)
+        )
+        
+        return {
+            "success": result.get("success", False),
+            "patient_id": result.get("patient_id"),
+            "patient_name": result.get("patient_name"),
+            "confidence": result.get("confidence", 0),
+            "error": result.get("error"),
+            "offline": True
+        }
+    
+    except ImportError:
+        return {
+            "error": "Face recognition not installed. Run: pip install -r requirements.txt"
+        }
+    except Exception as e:
+        return {
+            "error": f"Patient identification failed: {str(e)}"
+        }
+
+def extract_text_from_document(args: Dict) -> Dict:
+    """Extract text from medical documents using OCR"""
+    try:
+        from app.ml.ocr_service import OCRService
+        
+        service = OCRService()
+        
+        if args.get('document_type') == 'id_document':
+            result = service.extract_medical_id(
+                args['image_file'],
+                id_type='sa_id'
+            )
+            
+            return {
+                "success": result.get("success", False),
+                "extracted_data": result.get("extracted_data", {}),
+                "confidence": result.get("confidence", 0),
+                "error": result.get("error"),
+                "offline": True
+            }
+        
+        else:
+            result = service.extract_form_fields(
+                args['image_file'],
+                form_type=args.get('document_type', 'generic')
+            )
+            
+            return {
+                "success": result.get("success", False),
+                "extracted_fields": result.get("extracted_fields", {}),
+                "raw_text": result.get("raw_text"),
+                "confidence": result.get("confidence", 0),
+                "error": result.get("error"),
+                "offline": True
+            }
+    
+    except ImportError:
+        return {
+            "error": "OCR not installed. Run: pip install -r requirements.txt"
+        }
+    except Exception as e:
+        return {
+            "error": f"Document extraction failed: {str(e)}"
+        }
+
+def process_preauth_workflow(args: Dict) -> Dict:
+    """End-to-end pre-auth automation"""
+    try:
+        from app.ml.document_processing import DocumentProcessingPipeline
+        
+        pipeline = DocumentProcessingPipeline()
+        result = pipeline.process_preauth_workflow(
+            patient_photo_path=args.get('patient_photo'),
+            audio_dictation_path=args.get('audio_dictation'),
+            id_card_image_path=args.get('id_card_image'),
+            form_image_path=args.get('form_image')
+        )
+        
+        return result
+    
+    except ImportError:
+        return {
+            "error": "ML modules not installed. Run: pip install -r requirements.txt"
+        }
+    except Exception as e:
+        return {
+            "error": f"Workflow failed: {str(e)}"
+        }
+
+def register_patient_face(args: Dict) -> Dict:
+    """Register patient face for future identification"""
+    try:
+        from app.ml.face_recognition_service import FaceRecognitionService
+        
+        service = FaceRecognitionService()
+        result = service.register_patient_face(
+            args['image_file'],
+            patient_id=args['patient_id'],
+            patient_name=args['patient_name']
+        )
+        
+        return {
+            "success": result.get("success", False),
+            "patient_id": result.get("patient_id"),
+            "message": result.get("message"),
+            "error": result.get("error"),
+            "offline": True
+        }
+    
+    except ImportError:
+        return {
+            "error": "Face recognition not installed. Run: pip install -r requirements.txt"
+        }
+    except Exception as e:
+        return {
+            "error": f"Face registration failed: {str(e)}"
+        }
+
+
 async def main():
-    """Run the MCP server"""
+    """Run the MCP server with integrated FastAPI for OAuth"""
+    # Note: In production, FastAPI should be run via Uvicorn in a separate process
+    # MCP server runs on stdio, FastAPI runs on HTTP (typically port 8080)
+    # 
+    # For testing, you can run:
+    # FastAPI: uvicorn server:fast_app --port 8080 --reload
+    # MCP: python server.py
+    
     async with stdio_server() as (read_stream, write_stream):
+        # Initialize database on MCP startup
+        try:
+            init_db()
+            db = next(get_db())
+            RBACService.initialize_default_roles(db)
+            db.close()
+        except Exception as e:
+            print(f"[MCP] Database initialization error: {e}", file=sys.stderr)
+        
         await app.run(
             read_stream,
             write_stream,
@@ -567,4 +873,7 @@ async def main():
         )
 
 if __name__ == "__main__":
+    # Note: To run both MCP and FastAPI:
+    # 1. FastAPI (with OAuth/RBAC): uvicorn server:fast_app --port 8080
+    # 2. MCP (medical tools): python server.py (connects via stdio)
     asyncio.run(main())
