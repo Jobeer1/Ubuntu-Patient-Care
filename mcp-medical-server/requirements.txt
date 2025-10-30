@@ -22,3 +22,96 @@ openai>=1.0.0
 anthropic>=0.18.0
 langdetect>=1.0.9
 slowapi>=0.1.9
+
+# AWS Bedrock Integration for Claude 4 Sonnet
+boto3>=1.34.0
+botocore>=1.34.0
+aws-cli>=2.0.0
+
+# System monitoring and performance
+psutil>=5.9.0
+
+# Configuration management
+configparser>=6.0.0
+
+# Enhanced logging and debugging
+colorlog>=6.8.0
+
+# Data validation and serialization
+marshmallow>=3.20.0
+
+# Development and testing tools
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Static file serving for React UI
+aiofiles>=23.0.0
+
+# Web Scraping and Portal Automation
+selenium>=4.15.0
+undetected-chromedriver>=3.5.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+requests>=2.31.0
+aiohttp>=3.9.0
+fake-useragent>=1.4.0
+
+# Anti-detection and automation
+2captcha-python>=1.2.0
+python-anticaptcha>=0.7.1
+
+# Credential encryption and security
+cryptography>=41.0.0
+keyring>=24.3.0
+
+# Database for caching and session management
+sqlite3>=3.42.0
+
+# Image processing for CAPTCHA solving
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# HTTP session management
+requests-cache>=1.1.0
+requests-oauthlib>=1.3.0
+
+# Text processing and parsing
+python-dateutil>=2.8.0
+regex>=2023.10.0
+
+# Async utilities
+asyncio-throttle>=1.0.2
+aiofiles>=23.0.0
+
+# CORS support for React frontend
+fastapi-cors>=0.0.6
+
+# WebSocket support for real-time updates
+websockets>=11.0.0
+
+# Database migrations
+alembic>=1.12.0
+
+# HTTP client for testing
+httpx>=0.25.0
+
+# JSON Web Token utilities
+python-jose[cryptography]>=3.3.0
+
+# Security utilities
+passlib[bcrypt]>=1.7.4
+
+# Email notifications (optional)
+fastapi-mail>=1.4.0
+
+# Rate limiting
+slowapi>=0.1.9
+
+# Background task processing
+celery>=5.3.0
+redis>=5.0.0
+
+# Monitoring and metrics
+prometheus-client>=0.18.0

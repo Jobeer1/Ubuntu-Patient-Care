@@ -48,6 +48,30 @@ class Settings:
     # Server Configuration
     SERVER_HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
     SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8080"))
+    
+    # AWS Configuration for Claude 4 Sonnet
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
+    
+    # AWS Bedrock Configuration
+    BEDROCK_MODEL_ID: str = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+    BEDROCK_REGION: str = os.getenv("BEDROCK_REGION", "us-east-1")
+    BEDROCK_MAX_TOKENS: int = int(os.getenv("BEDROCK_MAX_TOKENS", "4096"))
+    BEDROCK_TEMPERATURE: float = float(os.getenv("BEDROCK_TEMPERATURE", "0.1"))
+    
+    # Claude AI Configuration
+    CLAUDE_ENABLED: bool = os.getenv("CLAUDE_ENABLED", "true").lower() == "true"
+    CLAUDE_CONFIG_PATH: str = os.getenv("CLAUDE_CONFIG_PATH", "config/aws_config.ini")
+    
+    # UI Configuration
+    UI_ENABLED: bool = os.getenv("UI_ENABLED", "true").lower() == "true"
+    UI_PORT: int = int(os.getenv("UI_PORT", "3000"))
+    UI_HOST: str = os.getenv("UI_HOST", "localhost")
+    
+    # Enhanced MCP Configuration
+    MCP_ENHANCED_TOOLS: bool = os.getenv("MCP_ENHANCED_TOOLS", "true").lower() == "true"
+    MCP_AI_INTEGRATION: bool = os.getenv("MCP_AI_INTEGRATION", "true").lower() == "true"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     
     # CORS Configuration

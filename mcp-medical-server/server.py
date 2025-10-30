@@ -48,6 +48,39 @@ try:
 except ImportError as e:
     print(f"[FastAPI] AI Brain routes not available: {e}")
 
+# Include Enhanced MCP API routes with Web Scraping
+try:
+    from app.routes.enhanced_mcp_api import router as enhanced_mcp_router
+    fast_app.include_router(enhanced_mcp_router, prefix="/api/mcp", tags=["Enhanced MCP Tools"])
+    print("[FastAPI] Enhanced MCP API with web scraping loaded")
+except ImportError as e:
+    print(f"[FastAPI] Enhanced MCP API not available: {e}")
+
+# Include original MCP API routes
+try:
+    from app.routes.mcp_api import router as mcp_router
+    fast_app.include_router(mcp_router, prefix="/api/mcp-legacy", tags=["MCP Legacy"])
+    print("[FastAPI] Legacy MCP API routes loaded")
+except ImportError as e:
+    print(f"[FastAPI] Legacy MCP API routes not available: {e}")
+
+# Include Claude AI Brain routes
+try:
+    from app.routes.claude_ai_brain import router as claude_ai_router
+    fast_app.include_router(claude_ai_router, prefix="/api/ai-brain", tags=["Claude AI Brain"])
+    print("[FastAPI] Claude AI Brain routes loaded")
+except ImportError as e:
+    print(f"[FastAPI] Claude AI Brain routes not available: {e}")
+
+# Include MCP API routes for UI testing
+try:
+    from app.routes.mcp_api import router as mcp_api_router
+    fast_app.include_router(mcp_api_router, prefix="/api/mcp", tags=["MCP Tools"])
+    fast_app.include_router(mcp_api_router, prefix="/api/system", tags=["System Status"])
+    print("[FastAPI] MCP API routes loaded")
+except ImportError as e:
+    print(f"[FastAPI] MCP API routes not available: {e}")
+
 # Initialize database on startup
 @fast_app.on_event("startup")
 async def startup_event():

@@ -211,7 +211,7 @@ def search_patients_in_database(search_params):
         query = f'''
         SELECT * FROM patients 
         WHERE ({where_clause})
-        ORDER BY last_indexed DESC 
+        ORDER BY last_study_date DESC, last_indexed DESC 
         LIMIT 100
         '''
         

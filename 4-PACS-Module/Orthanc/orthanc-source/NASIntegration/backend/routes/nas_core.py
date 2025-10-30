@@ -112,10 +112,14 @@ def _run_download_job(job_id):
 			job['progress'] = 0
 			return
 
+		# Give a small heartbeat after studies discovered so UI shows activity
+		job['progress'] = max(job.get('progress', 5), 10)
+		job['message'] = f"Discovered {len(studies)} study(ies); scanning files..."
+
 		# First pass: count total files to give progress estimate
 		total_files = 0
 		file_lists = []
-		for s in studies:
+		for idx, s in enumerate(studies, start=1):
 			# Respect cancellation
 			if job.get('state') == 'cancelled':
 				job['error'] = 'Cancelled by user'
@@ -123,9 +127,20 @@ def _run_download_job(job_id):
 				job['finished_at'] = datetime.now().isoformat()
 				job['state'] = 'cancelled'
 				return
-			files = service.find_dicom_files(s)
+			# Try to find files for this study; protect against long hangs
+			try:
+				files = service.find_dicom_files(s)
+			except Exception as e:
+				logger.warning(f"find_dicom_files failed for study {s.get('study_uid') or s.get('study_id')}: {e}")
+				files = []
 			file_lists.append((s, files))
 			total_files += len(files)
+			# Update progress so UI shows per-study scanning progress (10-40%)
+			try:
+				scan_progress = 10 + int((idx / max(1, len(studies))) * 30)
+				job['progress'] = max(job.get('progress', 5), scan_progress)
+			except Exception:
+				pass
 
 		# If no files found
 		if total_files == 0:
@@ -139,7 +154,13 @@ def _run_download_job(job_id):
 		zip_filename = f"DICOM_{job['patient_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
 		zip_path = os.path.join(tmp_dir, zip_filename)
 		added = 0
-		with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+		# Move progress into a visible range before long ZIP write to avoid UI appearing stuck
+		job['progress'] = max(job.get('progress', 5), 40)
+		job['message'] = f"Creating ZIP archive ({total_files} files)..."
+		
+		# Use ZIP_STORED (no compression) for LAN speed - DICOM files are already compressed
+		# This is 10-20x faster than ZIP_DEFLATED for large medical images over LAN
+		with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zf:
 			for s, files in file_lists:
 				if job.get('state') == 'cancelled':
 					job['error'] = 'Cancelled by user'
@@ -157,8 +178,15 @@ def _run_download_job(job_id):
 						arcname = os.path.join(study_folder, os.path.basename(fpath)).replace('\\','/')
 						zf.write(fpath, arcname)
 						added += 1
-						job['progress'] = min(95, int((added / total_files) * 100))
-					except Exception:
+						# Update progress more frequently (every file) for smoother UI updates
+						if total_files:
+							scaled = 40 + int((added / total_files) * 55)
+							job['progress'] = max(job.get('progress', 40), min(95, scaled))
+							# Update message every 50 files to show activity without spamming
+							if added % 50 == 0 or added == total_files:
+								job['message'] = f"Adding files: {added}/{total_files}"
+					except Exception as e:
+						logger.debug(f"Failed to add file to zip: {fpath}, error: {e}")
 						continue
 
 		# Finalize job
