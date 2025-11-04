@@ -5,6 +5,8 @@ A short video if you don't want to read through boring diagrams and text
 
 (https://emprad-my.sharepoint.com/:v:/g/personal/support_emprad_co_za/ETTpVt3bNadHnih6jWYC_E4B3andSBpn8BXq7Y2IS2bY_A?e=WeTDmh) 
 
+Feel free to try out our voice dictation module made possible via the MCP server. No patient information are linked to this module (https://mcpserver.virons.uk/) 
+
 > **🚀 NEW: No More API Headaches!** 
 > This enhanced server automatically scrapes all 71 SA medical scheme portals using intelligent web automation with Claude 4 Sonnet AI brain. Get patient information instantly without waiting for API access or manual portal checking.
 
