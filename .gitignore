@@ -12,6 +12,8 @@
 *.md
 !README.md
 !LICENSE
+# Exception: Allow FarmerConnect documentation in UCIC folder
+!"Ubuntu Code Integrity Crucible (UCIC)/farmerconnect/*.md"
 
 # Environment & secrets - handled in separate Complete-Package folder
 .env
