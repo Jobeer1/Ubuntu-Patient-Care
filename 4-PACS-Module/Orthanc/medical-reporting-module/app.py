@@ -117,9 +117,16 @@ def main():
     host = os.environ.get('HOST', '0.0.0.0')
     debug = app.config.get('DEBUG', env != 'production')
     
-    no_ssl_env = os.environ.get('NO_SSL', '')
+    # Default to HTTPS (SSL enabled) unless explicitly disabled
+    no_ssl_env = os.environ.get('NO_SSL', '0').strip()
     no_ssl = no_ssl_env.lower() in ('1', 'true', 'yes', 'on')
-    logger.info(f"NO_SSL environment variable: '{no_ssl_env}', interpreted as: {no_ssl}")
+    
+    # Override: Force HTTPS if port is 5443 (ignore NO_SSL for standard HTTPS port)
+    if port == 5443:
+        no_ssl = False
+        logger.info(f"Port 5443 detected - forcing HTTPS mode (ignoring NO_SSL={no_ssl_env})")
+    else:
+        logger.info(f"NO_SSL environment variable: '{no_ssl_env}', interpreted as: {no_ssl}")
     
     if no_ssl:
         logger.info(f"Starting Medical Reporting Module on http://{host}:{port} (SSL disabled, env={env})")

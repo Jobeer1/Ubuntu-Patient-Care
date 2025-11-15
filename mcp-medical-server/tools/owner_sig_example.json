@@ -1,0 +1,13 @@
+{
+  "owner_id": "owner@hospital.com",
+  "scope": "192.168.1.0/24",
+  "allowed_actions": [
+    "discover",
+    "collect_configs",
+    "create_ephemeral_accounts"
+  ],
+  "ttl_hours": 48,
+  "issued_at": "2025-11-07T12:00:00Z",
+  "signature": "base64_ed25519_signature_placeholder",
+  "authorization_note": "Emergency credential recovery - Ghost Recovery Strategy"
+}

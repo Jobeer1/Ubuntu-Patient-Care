@@ -1,0 +1,207 @@
+---
+# PostgreSQL Service (Headless for StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: mcp-credentials
+  labels:
+    app: postgres
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgresql
+
+---
+# PostgreSQL StatefulSet with persistent storage
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: mcp-credentials
+  labels:
+    app: postgres
+    component: database
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+      annotations:
+        description: "PostgreSQL database for credentials system"
+    spec:
+      # Security context
+      securityContext:
+        fsGroup: 999  # postgres user group
+      
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          
+          # Port exposure
+          ports:
+            - containerPort: 5432
+              name: postgresql
+              protocol: TCP
+          
+          # Environment variables from secrets and configmaps
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+            
+            - name: POSTGRES_INITDB_ARGS
+              value: "-c max_connections=200 -c shared_buffers=256MB -c effective_cache_size=1GB -c maintenance_work_mem=64MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200 -c work_mem=4MB -c min_wal_size=2GB -c max_wal_size=8GB"
+          
+          # Resource requests and limits
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+          
+          # Volume mounts
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          
+          # Liveness probe - checks if database is responding
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          # Readiness probe - checks if database is fully ready
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -h localhost
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 3
+          
+          # Security context for container
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          
+          # Startup probe - gives time for DB to initialize
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 30
+      
+      # Init container to prepare the volume
+      initContainers:
+        - name: init-chown-data
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - "mkdir -p /var/lib/postgresql/data && chown -R 999:999 /var/lib/postgresql"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      
+      # Volumes
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: postgres-init
+            defaultMode: 0755
+  
+  # Persistent Volume Claims
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app: postgres
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 20Gi
+
+---
+# Persistent Volume for PostgreSQL (fallback if StatefulSet PVC not working)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  labels:
+    app: postgres
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /data/postgres
+    type: DirectoryOrCreate
+
+---
+# PersistentVolumeClaim for PostgreSQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: mcp-credentials
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 20Gi

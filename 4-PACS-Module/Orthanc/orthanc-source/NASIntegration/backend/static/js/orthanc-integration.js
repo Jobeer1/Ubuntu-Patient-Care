@@ -853,33 +853,55 @@ async function updateNasDashboard() {
     if (!devicesElement || !detailsElement) return;
     
     try {
-        const data = await window.NASIntegration.core.makeAPIRequest('/api/nas/cached-devices');
+        // First try to get the active NAS configuration from the indexing API
+        const activeNasResponse = await window.NASIntegration.core.makeAPIRequest('/api/nas/indexing/config/active');
         
-        if (data.success) {
-            const totalDevices = data.total || 0;
-            const onlineDevices = (data.devices || []).filter(d => d.reachable).length;
-            const nasDevices = (data.devices || []).filter(d => 
-                d.type && (d.type.toLowerCase().includes('nas') || 
-                          d.type.toLowerCase().includes('storage') ||
-                          d.ping_status === 'Online')
-            ).length;
+        if (activeNasResponse.success && activeNasResponse.active_nas) {
+            const nasConfig = activeNasResponse.active_nas;
+            const nasPath = nasConfig.path || 'Unknown';
+            const nasName = nasConfig.name || 'Configured NAS';
+            const modalities = nasConfig.modalities ? nasConfig.modalities.join(', ') : 'All';
             
-            devicesElement.innerHTML = `<i class="fas fa-server status-info me-2"></i>${totalDevices} Found`;
+            devicesElement.innerHTML = `<i class="fas fa-server status-success me-2"></i>${nasName}`;
             detailsElement.innerHTML = `
                 <div class="small">
-                    Online: ${onlineDevices} | Potential NAS: ${nasDevices}<br>
-                    Last scan: ${data.last_discovery ? new Date(data.last_discovery).toLocaleTimeString() : 'Never'}
+                    Path: ${nasPath}<br>
+                    Modalities: ${modalities}<br>
+                    Status: Connected
                 </div>
             `;
-            devicesElement.className = totalDevices > 0 ? 'status-value status-online' : 'status-value status-warning';
+            devicesElement.className = 'status-value status-online';
         } else {
-            devicesElement.innerHTML = '<i class="fas fa-question-circle status-warning me-2"></i>Unknown';
-            detailsElement.innerHTML = '<div class="small">Unable to scan network</div>';
-            devicesElement.className = 'status-value status-warning';
+            // Fallback: try to get cached devices
+            const data = await window.NASIntegration.core.makeAPIRequest('/api/nas/cached-devices');
+            
+            if (data.success) {
+                const totalDevices = data.total || 0;
+                const onlineDevices = (data.devices || []).filter(d => d.reachable).length;
+                const nasDevices = (data.devices || []).filter(d => 
+                    d.type && (d.type.toLowerCase().includes('nas') || 
+                              d.type.toLowerCase().includes('storage') ||
+                              d.ping_status === 'Online')
+                ).length;
+                
+                devicesElement.innerHTML = `<i class="fas fa-server status-info me-2"></i>${totalDevices} Found`;
+                detailsElement.innerHTML = `
+                    <div class="small">
+                        Online: ${onlineDevices} | Potential NAS: ${nasDevices}<br>
+                        Last scan: ${data.last_discovery ? new Date(data.last_discovery).toLocaleTimeString() : 'Never'}
+                    </div>
+                `;
+                devicesElement.className = totalDevices > 0 ? 'status-value status-online' : 'status-value status-warning';
+            } else {
+                devicesElement.innerHTML = '<i class="fas fa-question-circle status-warning me-2"></i>Unknown';
+                detailsElement.innerHTML = '<div class="small">Unable to get NAS configuration</div>';
+                devicesElement.className = 'status-value status-warning';
+            }
         }
     } catch (error) {
+        console.error('❌ NAS Dashboard update error:', error);
         devicesElement.innerHTML = '<i class="fas fa-times-circle status-offline me-2"></i>Error';
-        detailsElement.innerHTML = '<div class="small">Network scan failed</div>';
+        detailsElement.innerHTML = '<div class="small">Failed to load NAS configuration</div>';
         devicesElement.className = 'status-value status-offline';
     }
 }
@@ -951,4 +973,23 @@ setInterval(refreshDashboard, 30000);
 document.addEventListener('DOMContentLoaded', function() {
     // Wait a bit for other components to load
     setTimeout(refreshDashboard, 1000);
+    
+    // Add click handler for NAS card to open configuration modal
+    const nasCard = document.querySelector('.status-card:nth-child(2)');
+    if (nasCard) {
+        nasCard.style.cursor = 'pointer';
+        nasCard.addEventListener('click', function() {
+            console.log('🖱️ NAS Card clicked - Opening configuration modal');
+            // Call the modal function from nas-config-modal.js if available
+            if (typeof window.showNASConfigurationModal === 'function') {
+                window.showNASConfigurationModal();
+            } else if (typeof window.initializeNASConfigurationUI === 'function') {
+                window.initializeNASConfigurationUI();
+            } else {
+                console.warn('⚠️ NAS configuration modal functions not available yet');
+                // Show alert as fallback
+                alert('NAS Configuration UI is loading. Please try again in a moment.');
+            }
+        });
+    }
 });

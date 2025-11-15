@@ -51,6 +51,8 @@ def create_app(config_name='default'):
     from routes.admin_routes import admin_bp
     from routes.device_routes import device_bp, init_device_routes
     from routes.nas_core import nas_core_bp  # Direct import from modular structure
+    from routes.indexing import indexing_bp  # NAS configuration and indexing endpoints
+    from routes.nas_discovery_api import nas_discovery_bp  # NAS discovery and connection management
     
     # PACS API for high-performance patient search
     try:
@@ -90,6 +92,8 @@ def create_app(config_name='default'):
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(device_bp, url_prefix='/api/devices')
     app.register_blueprint(nas_core_bp, url_prefix='/api/nas')  # Direct import from modular structure
+    app.register_blueprint(indexing_bp, url_prefix='/api/nas/indexing')  # NAS configuration endpoints
+    app.register_blueprint(nas_discovery_bp)  # NAS discovery endpoints (has own prefix in blueprint)
     
     # OneDrive Integration
     try:
@@ -113,6 +117,22 @@ def create_app(config_name='default'):
         app.register_blueprint(reporting_api_bp, url_prefix='/api/reporting')
     except Exception:
         logger.info('reporting_api_endpoints not available; continuing without it')
+    
+    # Advanced Intelligent Indexing and Search API
+    try:
+        from routes.advanced_indexing_api import initialize_advanced_indexing
+        from nas_config.nas_configuration import get_active_nas_path
+        db_path = os.path.join(os.path.dirname(__file__), 'orthanc-index', 'pacs_metadata.db')
+        nas_path = get_active_nas_path()
+        logger.info(f"📍 Using configured NAS path: {nas_path}")
+        success = initialize_advanced_indexing(app, db_path, nas_path)
+        if success:
+            logger.info("✅ Advanced Intelligent Indexing and Search System initialized")
+        else:
+            logger.warning("⚠️ Advanced Indexing System initialization failed")
+    except Exception as e:
+        logger.warning(f"⚠️ Advanced Indexing System not available: {e}")
+    
     app.register_blueprint(web_bp)  # No prefix for web routes
 
     # Backwards compatible redirects for legacy OneDrive URLs

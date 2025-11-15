@@ -40,6 +40,14 @@ fast_app.add_middleware(
 # Include auth routes
 fast_app.include_router(auth_router, prefix="/auth", tags=["authentication"])
 
+# Include CRITICAL credential routes
+try:
+    from app.routes.credentials import router as credentials_router
+    fast_app.include_router(credentials_router, prefix="/api/v1/credentials", tags=["Credentials"])
+    print("[FastAPI] ✅ CRITICAL: Credential routes loaded")
+except ImportError as e:
+    print(f"[FastAPI] ❌ CRITICAL ERROR: Credential routes failed: {e}")
+
 # Include AI Brain routes
 try:
     from app.routes.ai_brain import router as ai_brain_router

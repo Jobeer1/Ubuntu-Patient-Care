@@ -1,0 +1,39 @@
+{
+  "resourceType": "Patient",
+  "identifier": [
+    {
+      "system": "urn:openemr:pid",
+      "value": "12345"
+    }
+  ],
+  "name": [
+    {
+      "family": "Doe",
+      "given": ["John"],
+      "prefix": ["Mr."]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1980-01-15",
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "555-1234",
+      "use": "home"
+    },
+    {
+      "system": "email",
+      "value": "john.doe@example.com"
+    }
+  ],
+  "address": [
+    {
+      "use": "home",
+      "line": ["123 Main St"],
+      "city": "Springfield",
+      "state": "IL",
+      "postalCode": "62701",
+      "country": "USA"
+    }
+  ]
+}

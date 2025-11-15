@@ -1,0 +1,32 @@
+Orthanc/DICOM Field,DICOM Tag,Type,Example,FHIR Resource,FHIR Path,FHIR Type,Notes
+StudyInstanceUID,0020000D,UI,1.2.840.113619.2.55.3.123456789,ImagingStudy,identifier[system=urn:dicom:uid].value,string,Prepend with urn:oid:
+PatientID,00100020,LO,12345,ImagingStudy,subject.identifier.value,string,Links to Patient
+StudyDate,00080020,DA,20251106,ImagingStudy,started (date part),date,YYYYMMDD → YYYY-MM-DD
+StudyTime,00080030,TM,143000,ImagingStudy,started (time part),time,HHMMSS → HH:MM:SS
+StudyDescription,00081030,LO,Chest CT with contrast,ImagingStudy,description,string,Study description
+AccessionNumber,00080050,SH,ACC123456,ImagingStudy,identifier[system=urn:dicom:accession].value,string,Accession number
+ModalitiesInStudy,00080061,CS,CT\MR,ImagingStudy,modality[].code,code,Backslash-separated list
+NumberOfStudyRelatedSeries,00201206,IS,3,ImagingStudy,numberOfSeries,integer,Count of series
+NumberOfStudyRelatedInstances,00201208,IS,150,ImagingStudy,numberOfInstances,integer,Count of instances
+InstitutionName,00080080,LO,Springfield Hospital,ImagingStudy,location.display,string,Where study was performed
+ReferringPhysicianName,00080090,PN,Smith^John^^Dr.,ImagingStudy,referrer.display,string,Referring physician
+StudyID,00200010,SH,STUDY001,ImagingStudy,identifier[system=urn:dicom:study-id].value,string,Local study ID
+SeriesInstanceUID,0020000E,UI,1.2.840.113619.2.55.3.123456789.1,ImagingStudy,series[].uid,string,Series UID
+SeriesNumber,00200011,IS,1,ImagingStudy,series[].number,integer,Series number
+SeriesDescription,0008103E,LO,Axial,ImagingStudy,series[].description,string,Series description
+Modality,00080060,CS,CT,ImagingStudy,series[].modality.code,code,CT MR US XR etc
+BodyPartExamined,00180015,CS,CHEST,ImagingStudy,series[].bodySite.code,code,SNOMED CT body site
+NumberOfSeriesRelatedInstances,00201209,IS,50,ImagingStudy,series[].numberOfInstances,integer,Instances in series
+SeriesDate,00080021,DA,20251106,ImagingStudy,series[].started (date),date,YYYYMMDD → YYYY-MM-DD
+SeriesTime,00080031,TM,143000,ImagingStudy,series[].started (time),time,HHMMSS → HH:MM:SS
+PerformingPhysicianName,00081050,PN,Jones^Mary^^Dr.,ImagingStudy,series[].performer[].actor.display,string,Performing physician
+ProtocolName,00181030,LO,Chest CT Protocol,ImagingStudy,procedureCode[0].text,string,Imaging protocol
+SliceThickness,00180050,DS,5.0,ImagingStudy,series[].instance[].extension[slice-thickness].valueDecimal,decimal,Slice thickness in mm
+KVP,00180060,DS,120,ImagingStudy,series[].extension[kvp].valueDecimal,decimal,X-ray tube voltage
+Exposure,00181152,IS,200,ImagingStudy,series[].extension[exposure].valueInteger,integer,Exposure in mAs
+ContrastBolusAgent,00180010,LO,Iodine,ImagingStudy,series[].extension[contrast-agent].valueString,string,Contrast agent used
+PatientPosition,00185100,CS,HFS,ImagingStudy,series[].extension[patient-position].valueCode,code,Head First Supine etc
+ImageType,00080008,CS,ORIGINAL\PRIMARY\AXIAL,ImagingStudy,series[].instance[].extension[image-type].valueString,string,Image type classification
+SOPInstanceUID,00080018,UI,1.2.840.113619.2.55.3.123456789.1.1,ImagingStudy,series[].instance[].uid,string,Instance UID
+InstanceNumber,00200013,IS,1,ImagingStudy,series[].instance[].number,integer,Instance number
+SOPClassUID,00080016,UI,1.2.840.10008.5.1.4.1.1.2,ImagingStudy,series[].instance[].sopClass.code,string,SOP Class UID

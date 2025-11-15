@@ -1,0 +1,138 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-postgres
+    environment:
+      POSTGRES_DB: mcp_credentials
+      POSTGRES_USER: mcp_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mcp_password_change_me}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcp_user -d mcp_credentials"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_change_me}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MCP Server (FastAPI Application)
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp-server
+    container_name: mcp-server
+    environment:
+      DATABASE_URL: postgresql://mcp_user:${DB_PASSWORD:-mcp_password_change_me}@postgres:5432/mcp_credentials
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_change_me}@redis:6379/0
+      VAULT_TYPE: local
+      VAULT_PATH: /var/lib/mcp-server/vault.db
+      ENCRYPTION_KEY_PATH: /var/lib/mcp-server/vault.key
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    volumes:
+      - mcp_vault:/var/lib/mcp-server
+      - ./config:/etc/mcp-server/config:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Kiro Agent (Per-Subnet Agent)
+  kiro-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.kiro-agent
+    container_name: kiro-agent
+    environment:
+      AGENT_PORT: 8001
+      AGENT_HOST: 0.0.0.0
+      MCP_SERVER_URL: http://mcp-server:8000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    volumes:
+      - kiro_config:/etc/kiro-agent
+      - kiro_ledger:/var/lib/kiro-agent
+    ports:
+      - "8001:8001"
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mcp_vault:
+    driver: local
+  kiro_config:
+    driver: local
+  kiro_ledger:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge

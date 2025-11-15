@@ -1,0 +1,99 @@
+---
+# ConfigMap for MCP Server Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  namespace: mcp-credentials
+  labels:
+    app: mcp-server
+    component: config
+data:
+  # Database Configuration
+  DB_HOST: "postgres-0.postgres.mcp-credentials.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "credentials_db"
+  DB_DIALECT: "postgresql"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis.mcp-credentials.svc.cluster.local"
+  REDIS_PORT: "6379"
+  
+  # Service Configuration
+  SERVICE_PORT: "8000"
+  SERVICE_HOST: "0.0.0.0"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # Token Configuration (seconds)
+  TOKEN_TTL_SECONDS: "60"
+  REQUEST_SLA_SECONDS: "120"
+  NONCE_TTL_SECONDS: "120"
+  
+  # Vault Configuration
+  VAULT_TYPE: "local"
+  VAULT_ENDPOINT: "http://mcp-server:8000"
+  
+  # Audit Configuration
+  AUDIT_ENABLED: "true"
+  AUDIT_MERKLE_TREE_TYPE: "binary"
+  
+  # API Rate Limiting
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "60"
+  RATE_LIMIT_BURST: "10"
+  
+  # Logging
+  LOG_FORMAT: "json"
+  LOG_OUTPUT: "stdout"
+
+---
+# ConfigMap for Kiro Agent Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-config
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+    component: config
+data:
+  # Agent Configuration
+  AGENT_PORT: "8001"
+  AGENT_HOST: "0.0.0.0"
+  MCP_SERVER_URL: "http://mcp-server:8000"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # Adapter Configuration
+  ADAPTER_TIMEOUT_SECONDS: "30"
+  ADAPTER_MAX_RETRIES: "3"
+  ADAPTER_RETRY_DELAY_MS: "1000"
+  
+  # Redis for caching
+  REDIS_HOST: "redis.mcp-credentials.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+---
+# ConfigMap for PostgreSQL initialization
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: mcp-credentials
+data:
+  init-db.sql: |
+    -- Initialize credentials database
+    CREATE DATABASE credentials_db;
+    \c credentials_db;
+    
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    
+    -- Create schema
+    CREATE SCHEMA IF NOT EXISTS credentials;
+    SET search_path TO credentials, public;
+    
+    -- Tables will be created by application migrations
+    -- This file ensures database exists and schema is ready

@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UPC Exchange Envelope",
+  "description": "Secure message envelope for peer-to-peer FHIR resource exchange (P1-EXCH-001)",
+  "type": "object",
+  "required": [
+    "envelope_id",
+    "version",
+    "sender",
+    "recipient",
+    "timestamp",
+    "resource_type",
+    "resource_payload",
+    "hash",
+    "signature_meta"
+  ],
+  "properties": {
+    "envelope_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this envelope"
+    },
+    "version": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Envelope format version"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["facility_id", "system_id"],
+      "properties": {
+        "facility_id": {
+          "type": "string",
+          "description": "Sending facility identifier"
+        },
+        "system_id": {
+          "type": "string",
+          "description": "Sending system identifier (OpenEMR, Orthanc, etc.)"
+        },
+        "practitioner_id": {
+          "type": "string",
+          "description": "Practitioner initiating the transfer (optional)"
+        }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "required": ["facility_id"],
+      "properties": {
+        "facility_id": {
+          "type": "string",
+          "description": "Receiving facility identifier"
+        },
+        "system_id": {
+          "type": "string",
+          "description": "Target system identifier (optional)"
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when envelope was created"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when envelope expires (optional)"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "Patient",
+        "ImagingStudy",
+        "DiagnosticReport",
+        "ServiceRequest",
+        "Appointment",
+        "Bundle"
+      ],
+      "description": "FHIR resource type being transferred"
+    },
+    "resource_payload": {
+      "type": "object",
+      "description": "Minimized FHIR resource (compressed if large)"
+    },
+    "hash": {
+      "type": "object",
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["SHA-256", "SHA-512"],
+          "description": "Hash algorithm used"
+        },
+        "value": {
+          "type": "string",
+          "description": "Hex-encoded hash of resource_payload"
+        }
+      }
+    },
+    "signature_meta": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["none", "hmac", "rsa", "ecdsa"],
+          "description": "Signature method (none for dev only)"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Base64-encoded signature (if method != none)"
+        },
+        "public_key_id": {
+          "type": "string",
+          "description": "ID of public key used for verification"
+        },
+        "signed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When signature was created"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata (optional)",
+      "properties": {
+        "priority": {
+          "type": "string",
+          "enum": ["routine", "urgent", "stat"],
+          "default": "routine"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for transfer (referral, consultation, etc.)"
+        },
+        "related_envelope_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "ID of related envelope (for responses)"
+        },
+        "compression": {
+          "type": "string",
+          "enum": ["none", "gzip"],
+          "default": "none",
+          "description": "Compression applied to resource_payload"
+        }
+      }
+    },
+    "audit_trail": {
+      "type": "array",
+      "description": "Audit log of envelope handling",
+      "items": {
+        "type": "object",
+        "required": ["action", "timestamp", "actor"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["created", "sent", "received", "verified", "imported", "rejected"]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "type": "string",
+            "description": "System or user performing action"
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional details"
+          }
+        }
+      }
+    }
+  }
+}

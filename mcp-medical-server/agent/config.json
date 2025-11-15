@@ -1,0 +1,46 @@
+{
+  "agent_id": "agent-subnet-1",
+  "subnet_id": "clinic-subnet-1",
+  "listen_host": "0.0.0.0",
+  "listen_port": 8444,
+  "ledger_path": "data/agent_ledger.jsonl",
+  "vault": {
+    "storage_path": "data/agent_vault.db",
+    "key_material": "CHANGE-THIS-IN-PRODUCTION-USE-STRONG-KEY"
+  },
+  "adapters": {
+    "ssh": {
+      "enabled": true,
+      "default_port": 22,
+      "timeout_seconds": 30
+    },
+    "files": {
+      "enabled": true,
+      "allowed_paths": [
+        "/etc/myapp",
+        "/opt/configs"
+      ],
+      "max_file_size_mb": 10
+    },
+    "smb": {
+      "enabled": true,
+      "timeout_seconds": 30
+    },
+    "api": {
+      "enabled": true,
+      "timeout_seconds": 30,
+      "verify_ssl": true
+    }
+  },
+  "tls": {
+    "enabled": false,
+    "cert_path": "certs/agent.crt",
+    "key_path": "certs/agent.key",
+    "ca_cert_path": "certs/ca.crt"
+  },
+  "server_public_key": null,
+  "logging": {
+    "level": "INFO",
+    "file": "logs/agent.log"
+  }
+}

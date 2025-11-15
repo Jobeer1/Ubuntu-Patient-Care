@@ -1100,6 +1100,12 @@ def search_patient_comprehensive():
 		patient_name = (data.get('patient_name') or '').strip()
 		study_date = (data.get('study_date') or '').strip()
 		limit = int(data.get('limit') or 50)
+		
+		# Normalize DICOM name separators (^ to space) for consistent matching
+		if patient_name:
+			patient_name = patient_name.replace('^', ' ')
+		if patient_id:
+			patient_id = patient_id.replace('^', ' ')
 
 		# If the caller used the simplified API, map it accordingly
 		if query and not (patient_id or patient_name or study_date):
@@ -1146,18 +1152,6 @@ def search_patient_comprehensive():
 			
 			logger.info(f"🔍 Using refactored patient search service")
 			results = search_service_func(normalized_payload)
-
-			# Enforce exact-match filtering when searching by patient_id to prevent mismatches
-			if patient_id:
-				exact = [p for p in results.get('patients', []) if p.get('patient_id') == patient_id]
-				# If we found exact matches, prefer them; otherwise, try contains match as fallback
-				if exact:
-					results['patients'] = exact[:limit]
-				else:
-					contains = [p for p in results.get('patients', []) if patient_id in (p.get('patient_id') or '')]
-					results['patients'] = contains[:limit]
-
-				results['total_found'] = len(results['patients'])
 			
 			return jsonify(results)
 			

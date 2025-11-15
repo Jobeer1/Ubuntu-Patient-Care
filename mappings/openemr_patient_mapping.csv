@@ -1,0 +1,31 @@
+OpenEMR Field,Type,Example,FHIR Resource,FHIR Path,FHIR Type,Notes
+pid,VARCHAR(255),12345,Patient,identifier[system=urn:openemr:pid].value,string,Primary patient identifier
+fname,VARCHAR(255),John,Patient,name[0].given[0],string,First/given name
+lname,VARCHAR(255),Doe,Patient,name[0].family,string,Family/last name
+mname,VARCHAR(255),Michael,Patient,name[0].given[1],string,Middle name (optional)
+title,VARCHAR(255),Mr.,Patient,name[0].prefix[0],string,Name prefix
+sex,VARCHAR(255),M,Patient,gender,code,M→male F→female U→unknown O→other
+DOB,DATE,1980-01-15,Patient,birthDate,date,ISO 8601 format
+street,VARCHAR(255),123 Main St,Patient,address[0].line[0],string,Street address
+city,VARCHAR(255),Springfield,Patient,address[0].city,string,City
+state,VARCHAR(255),IL,Patient,address[0].state,string,State/province
+postal_code,VARCHAR(255),62701,Patient,address[0].postalCode,string,Postal/ZIP code
+country_code,VARCHAR(255),USA,Patient,address[0].country,string,Country code
+phone_home,VARCHAR(255),555-1234,Patient,telecom[system=phone use=home].value,string,Home phone
+phone_cell,VARCHAR(255),555-5678,Patient,telecom[system=phone use=mobile].value,string,Mobile phone
+phone_work,VARCHAR(255),555-9012,Patient,telecom[system=phone use=work].value,string,Work phone
+email,VARCHAR(255),john@example.com,Patient,telecom[system=email].value,string,Email address
+ss,VARCHAR(255),123-45-6789,Patient,identifier[system=http://hl7.org/fhir/sid/us-ssn].value,string,Social Security Number (US)
+drivers_license,VARCHAR(255),D1234567,Patient,identifier[system=urn:oid:2.16.840.1.113883.4.3.XX].value,string,Driver's license (XX=state)
+status,VARCHAR(255),active,Patient,active,boolean,active→true inactive→false
+language,VARCHAR(255),en,Patient,communication[0].language.coding[0].code,code,ISO 639-1 language code
+race,VARCHAR(255),2106-3,Patient,extension[url=http://hl7.org/fhir/us/core/StructureDefinition/us-core-race].valueCoding.code,code,CDC Race codes
+ethnicity,VARCHAR(255),2135-2,Patient,extension[url=http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity].valueCoding.code,code,CDC Ethnicity codes
+marital_status,VARCHAR(255),M,Patient,maritalStatus.coding[0].code,code,M→married S→single D→divorced W→widowed
+deceased_date,DATETIME,2020-01-01,Patient,deceasedDateTime,dateTime,Date of death (if applicable)
+deceased_reason,TEXT,Heart failure,Patient,extension[url=deceased-reason].valueString,string,Cause of death
+contact_relationship,VARCHAR(255),spouse,Patient,contact[0].relationship[0].coding[0].code,code,Emergency contact relationship
+contact_name,VARCHAR(255),Jane Doe,Patient,contact[0].name.text,string,Emergency contact name
+contact_phone,VARCHAR(255),555-1111,Patient,contact[0].telecom[system=phone].value,string,Emergency contact phone
+providerID,INT,1,Patient,generalPractitioner[0].identifier.value,string,Primary care provider ID
+pharmacy_id,INT,100,Patient,extension[url=preferred-pharmacy].valueReference.identifier.value,string,Preferred pharmacy

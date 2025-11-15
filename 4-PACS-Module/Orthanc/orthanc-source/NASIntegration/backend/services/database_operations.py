@@ -178,6 +178,11 @@ def search_patients_in_database(search_params):
         modality = search_params.get('modality', '').strip()
         query = search_params.get('query', '').strip()
         
+        # Normalize study_date: remove dashes and spaces for consistent searching
+        # Database stores dates as YYYYMMDD (20251030), but queries may come as YYYY-MM-DD
+        if study_date:
+            study_date = study_date.replace('-', '').replace(' ', '').strip()
+        
         # Build the query dynamically
         conditions = []
         params = []
@@ -185,13 +190,13 @@ def search_patients_in_database(search_params):
         # If a general `query` is provided, search both id and name with a single OR condition
         if query:
             qp = f'%{query}%'
-            conditions.append("(patient_id LIKE ? OR patient_name LIKE ?)")
+            conditions.append("(patient_id LIKE ? OR REPLACE(patient_name, '^', ' ') LIKE ?)")
             params.extend([qp, qp])
         else:
             # If both fields provided and identical, treat as a single general query (OR)
             if patient_id and patient_name and patient_id == patient_name:
                 qp = f'%{patient_id}%'
-                conditions.append("(patient_id LIKE ? OR patient_name LIKE ?)")
+                conditions.append("(patient_id LIKE ? OR REPLACE(patient_name, '^', ' ') LIKE ?)")
                 params.extend([qp, qp])
             else:
                 if patient_id:
@@ -199,19 +204,32 @@ def search_patients_in_database(search_params):
                     params.append(f'%{patient_id}%')
 
                 if patient_name:
-                    conditions.append("(patient_name LIKE ?)")
+                    conditions.append("(REPLACE(patient_name, '^', ' ') LIKE ?)")
                     params.append(f'%{patient_name}%')
         
         if study_date:
-            conditions.append("(first_study_date LIKE ? OR last_study_date LIKE ?)")
-            params.extend([f'%{study_date}%', f'%{study_date}%'])
+            conditions.append("(study_date LIKE ?)")
+            params.extend([f'%{study_date}%'])
         
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         
+        # Normalize patient_name in DB for consistent matching (replace ^ with space in the query)
         query = f'''
-        SELECT * FROM patients 
+        SELECT 
+            patient_id,
+            REPLACE(patient_name, '^', ' ') as patient_name, 
+            patient_birth_date,
+            patient_sex,
+            study_date,
+            study_description,
+            modality,
+            folder_path,
+            dicom_file_count,
+            folder_size_mb,
+            last_indexed
+        FROM patient_studies 
         WHERE ({where_clause})
-        ORDER BY last_study_date DESC, last_indexed DESC 
+        ORDER BY study_date DESC, last_indexed DESC 
         LIMIT 100
         '''
         
@@ -228,22 +246,21 @@ def search_patients_in_database(search_params):
             patient = {
                 'patient_id': row['patient_id'],
                 'patient_name': row['patient_name'],
-                'patient_birth_date': row['birth_date'] or '',
-                'patient_sex': row['sex'] or '',
-                'age': row['age'] or '',
+                'patient_birth_date': row['patient_birth_date'] or '',
+                'patient_sex': row['patient_sex'] or '',
                 'folder_path': row['folder_path'],
-                'total_studies': row['total_studies'],
-                'total_series': row['total_series'],
-                'total_instances': row['total_instances'],
-                'first_study_date': row['first_study_date'] or '',
-                'last_study_date': row['last_study_date'] or '',
-                'studies': [],  # Will be populated if needed
+                'study_date': row['study_date'] or '',
+                'study_description': row['study_description'] or '',
+                'modality': row['modality'] or '',
+                'dicom_file_count': row['dicom_file_count'] or 0,
+                'folder_size_mb': row['folder_size_mb'] or 0,
+                'last_indexed': row['last_indexed'] or '',
                 # Compatibility fields used by UI
                 'name': row['patient_name'],
                 # Provide study_date in compact YYYYMMDD for the UI formatter
-                'study_date': (row['first_study_date'] or row['last_study_date'] or '').replace('-', ''),
+                'study_date_formatted': (row['study_date'] or '').replace('-', ''),
                 'source': 'nas_index',
-                'file_count': row['total_instances']
+                'file_count': row['dicom_file_count']
             }
             patients.append(patient)
         

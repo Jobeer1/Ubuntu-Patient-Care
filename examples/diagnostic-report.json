@@ -1,0 +1,41 @@
+{
+  "resourceType": "DiagnosticReport",
+  "status": "final",
+  "code": {
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "24627-2",
+        "display": "Chest CT"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/1"
+  },
+  "effectiveDateTime": "2025-11-06T10:00:00Z",
+  "issued": "2025-11-06T12:00:00Z",
+  "performer": [
+    {
+      "reference": "Practitioner/1",
+      "display": "Dr. Jane Smith"
+    }
+  ],
+  "conclusion": "No acute findings. Normal chest CT. Lungs are clear bilaterally. No pleural effusion. Heart size is normal. No mediastinal lymphadenopathy.",
+  "conclusionCode": [
+    {
+      "coding": [
+        {
+          "system": "http://snomed.info/sct",
+          "code": "17621005",
+          "display": "Normal"
+        }
+      ]
+    }
+  ],
+  "imagingStudy": [
+    {
+      "reference": "ImagingStudy/1"
+    }
+  ]
+}

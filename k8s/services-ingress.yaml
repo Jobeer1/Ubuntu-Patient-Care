@@ -1,0 +1,247 @@
+---
+# Ingress for API access with TLS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-credentials-ingress
+  namespace: mcp-credentials
+  labels:
+    app: mcp-credentials
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/auth-type: "basic"
+    nginx.ingress.kubernetes.io/auth-secret: "basic-auth"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - credentials.example.com
+        - api.credentials.example.com
+      secretName: tls-credentials
+  rules:
+    # MCP Server API endpoints
+    - host: api.credentials.example.com
+      http:
+        paths:
+          - path: /v1/credentials
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server
+                port:
+                  number: 8000
+          - path: /v1/health
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server
+                port:
+                  number: 8000
+          - path: /openapi.json
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server
+                port:
+                  number: 8000
+    
+    # Kiro Agent orchestration endpoints
+    - host: credentials.example.com
+      http:
+        paths:
+          - path: /v1/orchestration
+            pathType: Prefix
+            backend:
+              service:
+                name: kiro-agent
+                port:
+                  number: 8001
+          - path: /v1/adapters
+            pathType: Prefix
+            backend:
+              service:
+                name: kiro-agent
+                port:
+                  number: 8001
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: kiro-agent
+                port:
+                  number: 8001
+
+---
+# Service for MCP Server Metrics (for Prometheus)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server-metrics
+  namespace: mcp-credentials
+  labels:
+    app: mcp-server
+    component: metrics
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - port: 8001
+      targetPort: 8001
+      protocol: TCP
+      name: metrics
+  type: ClusterIP
+
+---
+# Service for Kiro Agent Metrics (for Prometheus)
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiro-agent-metrics
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+    component: metrics
+spec:
+  selector:
+    app: kiro-agent
+  ports:
+    - port: 8002
+      targetPort: 8002
+      protocol: TCP
+      name: metrics
+  type: ClusterIP
+
+---
+# Service for direct access (internal cluster only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-credentials-internal
+  namespace: mcp-credentials
+  labels:
+    app: mcp-credentials
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: api
+  type: ClusterIP
+
+---
+# LoadBalancer Service for external access (for cloud deployments)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-credentials-lb
+  namespace: mcp-credentials
+  labels:
+    app: mcp-credentials
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"  # GCP
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # AWS
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - port: 443
+      targetPort: 8000
+      protocol: TCP
+      name: https
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  type: LoadBalancer
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# ExternalName Service for external adapters (placeholder)
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-mri-system
+  namespace: mcp-credentials
+  labels:
+    adapter: mri
+spec:
+  type: ExternalName
+  externalName: mri-system.medical-network  # Update to actual hostname
+
+---
+# ExternalName Service for external Lab system
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-lab-system
+  namespace: mcp-credentials
+  labels:
+    adapter: lab
+spec:
+  type: ExternalName
+  externalName: lis-system.medical-network  # Update to actual hostname
+
+---
+# ExternalName Service for external CT system
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-ct-system
+  namespace: mcp-credentials
+  labels:
+    adapter: ct
+spec:
+  type: ExternalName
+  externalName: ct-system.medical-network  # Update to actual hostname
+
+---
+# ServiceMonitor for Prometheus (requires prometheus-operator)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mcp-credentials
+  namespace: mcp-credentials
+  labels:
+    app: mcp-credentials
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+
+---
+# ServiceMonitor for Kiro Agent
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kiro-agent
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+spec:
+  selector:
+    matchLabels:
+      app: kiro-agent
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

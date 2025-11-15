@@ -1,0 +1,55 @@
+# Multi-stage build for MCP Server
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Build wheels
+RUN pip install --user --no-cache-dir --wheel --no-deps --require-hashes -r requirements.txt || \
+    pip install --user --no-cache-dir -r requirements.txt
+
+# Runtime stage
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 mcp
+
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /home/mcp/.local
+
+# Copy application code
+COPY --chown=mcp:mcp . .
+
+# Set environment
+ENV PATH=/home/mcp/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Create necessary directories
+RUN mkdir -p /var/lib/mcp-server /etc/mcp-server && \
+    chown -R mcp:mcp /var/lib/mcp-server /etc/mcp-server /app
+
+USER mcp
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/live || exit 1
+
+# Run application
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

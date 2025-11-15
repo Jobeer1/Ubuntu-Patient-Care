@@ -1,0 +1,342 @@
+---
+# ServiceAccount for MCP Server
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-server
+  namespace: mcp-credentials
+  labels:
+    app: mcp-server
+
+---
+# ServiceAccount for Kiro Agent
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kiro-agent
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+
+---
+# ClusterRole for MCP Server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-server-role
+  labels:
+    app: mcp-server
+rules:
+  # Read ConfigMaps and Secrets
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  
+  # Read Pods for discovery
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  
+  # Read Services for networking
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  
+  # Read Pod logs
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  
+  # Read Events for monitoring
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+
+---
+# ClusterRole for Kiro Agent
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kiro-agent-role
+  labels:
+    app: kiro-agent
+rules:
+  # Full Deployment management
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  
+  # Pod management for adapter deployment
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  
+  # Service management
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  
+  # ConfigMaps and Secrets
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  
+  # Persistent Volumes and Claims
+  - apiGroups: [""]
+    resources: ["persistentvolumes", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+  
+  # Resource quotas
+  - apiGroups: [""]
+    resources: ["resourcequotas"]
+    verbs: ["get", "list"]
+  
+  # Node information
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  
+  # Events
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "create"]
+
+---
+# ClusterRoleBinding for MCP Server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-server-binding
+  labels:
+    app: mcp-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-server-role
+subjects:
+  - kind: ServiceAccount
+    name: mcp-server
+    namespace: mcp-credentials
+
+---
+# ClusterRoleBinding for Kiro Agent
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kiro-agent-binding
+  labels:
+    app: kiro-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kiro-agent-role
+subjects:
+  - kind: ServiceAccount
+    name: kiro-agent
+    namespace: mcp-credentials
+
+---
+# Role for namespace-scoped operations (MCP Server)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mcp-server-ns-role
+  namespace: mcp-credentials
+  labels:
+    app: mcp-server
+rules:
+  # ConfigMap management for state
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+    resourceNames: ["mcp-server-state"]
+  
+  # Secrets access
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+
+---
+# RoleBinding for MCP Server namespace operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mcp-server-ns-binding
+  namespace: mcp-credentials
+  labels:
+    app: mcp-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mcp-server-ns-role
+subjects:
+  - kind: ServiceAccount
+    name: mcp-server
+    namespace: mcp-credentials
+
+---
+# Role for Kiro Agent namespace operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kiro-agent-ns-role
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+rules:
+  # Full management of adapters (if deployed as separate resources)
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  
+  # ConfigMaps for adapter configuration
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  
+  # Secrets for credentials
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  
+  # Pods for lifecycle management
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  
+  # Pod logs for debugging
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+
+---
+# RoleBinding for Kiro Agent namespace operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kiro-agent-ns-binding
+  namespace: mcp-credentials
+  labels:
+    app: kiro-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kiro-agent-ns-role
+subjects:
+  - kind: ServiceAccount
+    name: kiro-agent
+    namespace: mcp-credentials
+
+---
+# NetworkPolicy: Allow MCP Server to receive external traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mcp-server-external
+  namespace: mcp-credentials
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kiro-agent
+        - podSelector:
+            matchLabels:
+              app: nginx-ingress
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8001
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:  # Allow DNS
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+---
+# NetworkPolicy: Allow Kiro Agent connectivity
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kiro-agent-external
+  namespace: mcp-credentials
+spec:
+  podSelector:
+    matchLabels:
+      app: kiro-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: nginx-ingress
+      ports:
+        - protocol: TCP
+          port: 8001
+        - protocol: TCP
+          port: 8002
+  egress:
+    - to:  # Allow access to MCP Server
+        - podSelector:
+            matchLabels:
+              app: mcp-server
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:  # Allow access to Redis
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:  # Allow external adapter access
+        namespaceSelector: {}
+    - to:  # Allow DNS
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+---
+# NetworkPolicy: Deny all by default (implicit deny)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: mcp-credentials
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

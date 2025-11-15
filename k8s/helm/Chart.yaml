@@ -1,0 +1,30 @@
+apiVersion: v2
+name: mcp-credentials
+description: Emergency Credential Retrieval System Helm Chart
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+home: https://github.com/your-org/mcp-credentials
+sources:
+  - https://github.com/your-org/mcp-credentials
+maintainers:
+  - name: Your Organization
+    email: team@yourorg.com
+
+keywords:
+  - credentials
+  - emergency
+  - healthcare
+  - kubernetes
+
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  
+  - name: redis
+    version: "17.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

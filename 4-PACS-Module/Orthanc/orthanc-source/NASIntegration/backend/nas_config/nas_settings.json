@@ -1,0 +1,20 @@
+{
+  "configs": {
+    "ct_archiving": {
+      "path": "\\\\155.235.81.155\\Image Archiving",
+      "description": "CT scans only (Legacy)",
+      "modalities": ["CT"],
+      "enabled": false
+    },
+    "all_modalities": {
+      "path": "\\\\155.235.81.49\\DICOM_Storage",
+      "description": "All modalities - CT, MR, US, XC, OT, PR, KO, SR, SEG (Primary)",
+      "modalities": ["CT", "MR", "US", "XC", "OT", "PR", "KO", "SR", "SEG"],
+      "enabled": true
+    }
+  },
+  "active_alias": "all_modalities",
+  "description": "NAS Configuration for PACS Indexing and Search",
+  "version": "1.0",
+  "last_updated": "2025-11-03"
+}

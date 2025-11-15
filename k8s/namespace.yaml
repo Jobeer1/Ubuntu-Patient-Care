@@ -1,0 +1,13 @@
+---
+# Emergency Credential Retrieval System - Kubernetes Deployment
+# Namespace definition for credential management system
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcp-credentials
+  labels:
+    app: emergency-credentials
+    environment: production
+  annotations:
+    description: "Emergency Credential Retrieval System namespace"

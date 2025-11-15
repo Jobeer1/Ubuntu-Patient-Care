@@ -78,7 +78,9 @@ def search_patient_comprehensive(search_params):
             results['patients'] = normalized
             results['total_found'] = len(normalized)
             results['source'] = 'nas_index'
-            results['message'] = f'Found {len(normalized)} patient(s) in NAS index'
+            # Check if any record has multiple studies to indicate aggregation was needed
+            has_studies_array = any(p.get('studies') for p in normalized)
+            results['message'] = f'Found {len(normalized)} patient(s) in NAS index' + (' (with studies)' if has_studies_array else '')
             logger.info(f"✅ NAS index search successful: {len(normalized)} patients")
             return results
         
@@ -183,7 +185,8 @@ def search_folders_directly(search_params):
     Searches newest folders first for better performance on recent patients
     """
     try:
-        nas_path = "\\\\155.235.81.155\\Image Archiving"
+        from config.nas_configuration import get_active_nas_path
+        nas_path = get_active_nas_path()
         fallback_path = "Z:\\"
         
         # Try UNC path first, then drive letter

@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ubuntu Patient Care (UPC) Message Envelope",
+  "description": "Secure peer-to-peer exchange envelope for FHIR resources with cryptographic proof",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "envelope_version",
+    "message_id",
+    "timestamp",
+    "sender",
+    "recipient",
+    "payload",
+    "content_hash",
+    "signature"
+  ],
+  "properties": {
+    "envelope_version": {
+      "type": "string",
+      "description": "Envelope format version",
+      "enum": ["1.0"],
+      "example": "1.0"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Globally unique message identifier (UUID v4)",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "example": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 UTC timestamp when message was created",
+      "format": "date-time",
+      "example": "2025-11-06T11:45:00Z"
+    },
+    "sender": {
+      "type": "object",
+      "description": "Sending facility or practitioner",
+      "required": ["facility_id", "practitioner_id"],
+      "properties": {
+        "facility_id": {
+          "type": "string",
+          "description": "Sending facility identifier (urn:upc:facility:xxx)",
+          "pattern": "^urn:upc:facility:[a-zA-Z0-9-]+$",
+          "example": "urn:upc:facility:hospital-central"
+        },
+        "practitioner_id": {
+          "type": "string",
+          "description": "Sending practitioner identifier (urn:upc:practitioner:xxx)",
+          "pattern": "^urn:upc:practitioner:[a-zA-Z0-9-]+$",
+          "example": "urn:upc:practitioner:dr-smith-001"
+        },
+        "facility_name": {
+          "type": "string",
+          "description": "Human-readable facility name",
+          "example": "Central Hospital"
+        }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "description": "Receiving facility or system",
+      "required": ["facility_id"],
+      "properties": {
+        "facility_id": {
+          "type": "string",
+          "description": "Receiving facility identifier (urn:upc:facility:xxx)",
+          "pattern": "^urn:upc:facility:[a-zA-Z0-9-]+$",
+          "example": "urn:upc:facility:clinic-north"
+        },
+        "facility_name": {
+          "type": "string",
+          "description": "Human-readable facility name",
+          "example": "North Clinic"
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "The main message content (FHIR resource or bundle)",
+      "properties": {
+        "resource_type": {
+          "type": "string",
+          "description": "Type of FHIR resource or 'Bundle'",
+          "enum": ["Patient", "ImagingStudy", "DiagnosticReport", "ServiceRequest", "Bundle"],
+          "example": "Patient"
+        },
+        "resource_id": {
+          "type": "string",
+          "description": "FHIR resource ID or UUID",
+          "example": "pat-123456"
+        },
+        "content": {
+          "type": "object",
+          "description": "The actual FHIR resource (can be nested bundle)",
+          "example": {
+            "resourceType": "Patient",
+            "id": "pat-123456",
+            "identifier": [
+              {
+                "system": "urn:openemr:pid",
+                "value": "123456"
+              }
+            ],
+            "name": [
+              {
+                "given": ["John"],
+                "family": "Doe"
+              }
+            ],
+            "birthDate": "1980-01-15",
+            "gender": "male"
+          }
+        }
+      },
+      "required": ["resource_type", "resource_id", "content"]
+    },
+    "content_hash": {
+      "type": "object",
+      "description": "Cryptographic hash of the payload for integrity verification",
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Hash algorithm used",
+          "enum": ["SHA256", "SHA512"],
+          "example": "SHA256"
+        },
+        "value": {
+          "type": "string",
+          "description": "Hex-encoded hash value",
+          "pattern": "^[a-f0-9]{64}$",
+          "example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "description": "Digital signature of message (practitioner + Merkle proof)",
+      "required": ["algorithm", "value", "practitioner_id"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Signature algorithm",
+          "enum": ["HMAC-SHA256", "RSA-SHA256", "MERKLE-PROOF"],
+          "example": "MERKLE-PROOF"
+        },
+        "value": {
+          "type": "string",
+          "description": "Signature or proof value (hex)",
+          "example": "tx-00000042:root-hash:proof-chain"
+        },
+        "practitioner_id": {
+          "type": "string",
+          "description": "Practitioner who signed",
+          "example": "urn:upc:practitioner:dr-smith-001"
+        },
+        "timestamp_signed": {
+          "type": "string",
+          "description": "When signature was created",
+          "format": "date-time",
+          "example": "2025-11-06T11:45:00Z"
+        }
+      }
+    },
+    "audit_proof": {
+      "type": "object",
+      "description": "Optional: Merkle tree proof of inclusion in audit ledger",
+      "properties": {
+        "transaction_id": {
+          "type": "string",
+          "description": "Merkle ledger transaction ID",
+          "pattern": "^tx-[0-9]{8}$",
+          "example": "tx-00000042"
+        },
+        "root_hash": {
+          "type": "string",
+          "description": "Merkle tree root hash at time of inclusion",
+          "pattern": "^[a-f0-9]{64}$",
+          "example": "01aea66258cf84fd0e6bc2e67f1fb3e0dd39d6a82beed35cdeeb39d77dcf4f48"
+        },
+        "proof_chain": {
+          "type": "array",
+          "description": "Proof-of-inclusion chain (sibling hashes)",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "example": [
+            "a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "f2e0d44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional: Additional metadata",
+      "properties": {
+        "priority": {
+          "type": "string",
+          "description": "Message priority level",
+          "enum": ["routine", "urgent", "stat"],
+          "example": "routine"
+        },
+        "expiration": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when message expires",
+          "format": "date-time",
+          "example": "2025-11-07T11:45:00Z"
+        },
+        "correlation_id": {
+          "type": "string",
+          "description": "Reference to related message (for replies/acknowledgments)",
+          "example": "550e8400-e29b-41d4-a716-446655440000"
+        },
+        "encryption": {
+          "type": "string",
+          "description": "Encryption method applied (if any)",
+          "example": "none"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Custom tags for routing/filtering",
+          "items": {
+            "type": "string"
+          },
+          "example": ["patient-referral", "urgent"]
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "envelope_version": "1.0",
+      "message_id": "550e8400-e29b-41d4-a716-446655440000",
+      "timestamp": "2025-11-06T11:45:00Z",
+      "sender": {
+        "facility_id": "urn:upc:facility:hospital-central",
+        "practitioner_id": "urn:upc:practitioner:dr-smith-001",
+        "facility_name": "Central Hospital"
+      },
+      "recipient": {
+        "facility_id": "urn:upc:facility:clinic-north",
+        "facility_name": "North Clinic"
+      },
+      "payload": {
+        "resource_type": "Patient",
+        "resource_id": "pat-123456",
+        "content": {
+          "resourceType": "Patient",
+          "id": "pat-123456",
+          "identifier": [
+            {
+              "system": "urn:openemr:pid",
+              "value": "123456"
+            }
+          ],
+          "name": [
+            {
+              "given": ["John"],
+              "family": "Doe"
+            }
+          ],
+          "birthDate": "1980-01-15",
+          "gender": "male"
+        }
+      },
+      "content_hash": {
+        "algorithm": "SHA256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "signature": {
+        "algorithm": "MERKLE-PROOF",
+        "value": "tx-00000042:root-hash:proof-chain",
+        "practitioner_id": "urn:upc:practitioner:dr-smith-001",
+        "timestamp_signed": "2025-11-06T11:45:00Z"
+      },
+      "audit_proof": {
+        "transaction_id": "tx-00000042",
+        "root_hash": "01aea66258cf84fd0e6bc2e67f1fb3e0dd39d6a82beed35cdeeb39d77dcf4f48",
+        "proof_chain": [
+          "a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "f2e0d44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ]
+      },
+      "metadata": {
+        "priority": "routine",
+        "expiration": "2025-11-07T11:45:00Z",
+        "correlation_id": null,
+        "encryption": "none",
+        "tags": ["patient-referral"]
+      }
+    }
+  ]
+}

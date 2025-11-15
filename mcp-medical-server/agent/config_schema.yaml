@@ -1,0 +1,142 @@
+# Per-Subnet Agent Configuration Schema
+# Version: 1.0.0
+
+agent:
+  # Unique identifier for this agent instance
+  id: "agent-subnet-1"
+  
+  # Human-readable name
+  name: "Subnet 1 Agent"
+  
+  # Network subnet this agent serves
+  subnet: "192.168.1.0/24"
+
+server:
+  # Server bind address (0.0.0.0 for all interfaces, 127.0.0.1 for localhost only)
+  host: "0.0.0.0"
+  
+  # Server port
+  port: 8443
+  
+  # TLS configuration
+  tls:
+    enabled: true
+    cert_path: "/etc/mcp-agent/agent.crt"
+    key_path: "/etc/mcp-agent/agent.key"
+    ca_path: "/etc/mcp-agent/ca.crt"
+    # Require client certificates (mutual TLS)
+    require_client_cert: true
+
+vault:
+  # Vault type: "local" (SQLite + Fernet) or "hashicorp" (Vault Enterprise)
+  type: "local"
+  
+  # Path to vault database (for local vault)
+  path: "/var/lib/mcp-agent/vault.db"
+  
+  # Path to encryption key file
+  encryption_key_path: "/etc/mcp-agent/vault.key"
+  
+  # Vault unseal configuration (for Shamir secret sharing)
+  unseal:
+    enabled: false
+    shares_required: 3
+    shares_total: 5
+
+ledger:
+  # Path to Merkle ledger file (JSON Lines format)
+  path: "/var/lib/mcp-agent/ledger.jsonl"
+  
+  # Ledger replication to central server
+  replication:
+    enabled: true
+    central_url: "https://mcp-server.local:8080/api/ledger/replicate"
+    interval_seconds: 300  # Replicate every 5 minutes
+    retry_attempts: 3
+    retry_delay_seconds: 60
+
+adapters:
+  # List of enabled adapters
+  enabled:
+    - ssh
+    - smb
+    - files
+    - api
+  
+  # Adapter-specific configuration
+  config:
+    ssh:
+      timeout_seconds: 30
+      max_retries: 3
+      key_based_auth_preferred: true
+    
+    smb:
+      timeout_seconds: 30
+      protocol_version: "SMB3"
+    
+    files:
+      # Allowed file paths (glob patterns)
+      allowed_paths:
+        - "/mnt/nas/*"
+        - "/opt/app/config/*"
+        - "/etc/app/*.conf"
+      # Denied paths (takes precedence)
+      denied_paths:
+        - "/etc/shadow"
+        - "/etc/passwd"
+        - "*/private/*"
+      max_file_size_mb: 10
+    
+    api:
+      timeout_seconds: 30
+      verify_ssl: true
+      max_retries: 3
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log file path
+  path: "/var/log/mcp-agent/agent.log"
+  
+  # Log rotation
+  max_size_mb: 100
+  backup_count: 5
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Never log secrets (enforced in code)
+  redact_secrets: true
+
+security:
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+  
+  # Token cache TTL (how long to cache validated tokens)
+  token_cache_ttl_seconds: 300
+  
+  # Public key for token signature verification
+  public_key_path: "/etc/mcp-agent/server_public.pem"
+  
+  # Allowed requester IDs (empty = allow all authenticated)
+  allowed_requesters: []
+
+monitoring:
+  # Prometheus metrics endpoint
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  
+  # Health check configuration
+  health_check:
+    enabled: true
+    interval_seconds: 60
+
+# Environment-specific overrides
+# These can be set via environment variables:
+# MCP_AGENT_ID, MCP_SERVER_PORT, etc.

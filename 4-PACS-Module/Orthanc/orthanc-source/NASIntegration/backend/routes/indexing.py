@@ -8,6 +8,12 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 import socket
 
+# Import NAS configuration - try relative import first, then absolute
+try:
+    from nas_config.nas_configuration import get_nas_config, get_active_nas_path
+except ImportError:
+    from backend.nas_config.nas_configuration import get_nas_config, get_active_nas_path
+
 logger = logging.getLogger(__name__)
 
 indexing_bp = Blueprint('nas_indexing', __name__)
@@ -104,8 +110,12 @@ def start_indexing():
                 from nas_patient_indexer import NASPatientIndexer
                 import sqlite3
                 # Use the share path provided by the frontend request (share_path)
-                # Fallback to a sensible default if none provided
-                nas_path = share_path or r'\\155.235.81.155\Image Archiving'
+                # Fallback to configured NAS path if none provided
+                if not share_path:
+                    nas_path = get_active_nas_path()
+                    logger.info(f"📍 Using configured NAS path: {nas_path}")
+                else:
+                    nas_path = share_path
                 nas_path = str(nas_path).strip()
 
                 # Determine which DB to use based on USE_ORTHANC_INTERNAL_INDEX flag
@@ -633,3 +643,150 @@ def get_indexing_status_safe():
             'state': 'error',
             'source': 'error'
         }
+
+
+# ============================================================================
+# NAS Configuration Management Endpoints
+# ============================================================================
+
+@indexing_bp.route('/config/active', methods=['GET'])
+def get_active_nas_config():
+    """Get the currently active NAS configuration"""
+    try:
+        config = get_nas_config()
+        active_config = config.get_active_nas_config()
+        active_path = config.get_active_nas_path()
+        
+        return jsonify({
+            'success': True,
+            'path': active_path,
+            'description': active_config.get('description', ''),
+            'modalities': active_config.get('modalities', []),
+            'enabled': active_config.get('enabled', False),
+            'source': config.config.get('source', 'unknown')
+        })
+    except Exception as e:
+        logger.error(f"Error getting active NAS config: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@indexing_bp.route('/config/all', methods=['GET'])
+def get_all_nas_configs():
+    """Get all available NAS configurations"""
+    try:
+        config = get_nas_config()
+        all_configs = config.get_nas_configs()
+        active_alias = config.config.get('active_alias', 'unknown')
+        
+        result = {}
+        for alias, cfg in all_configs.items():
+            result[alias] = {
+                'path': cfg.get('path', ''),
+                'description': cfg.get('description', ''),
+                'modalities': cfg.get('modalities', []),
+                'enabled': cfg.get('enabled', False),
+                'is_active': alias == active_alias
+            }
+        
+        return jsonify({
+            'success': True,
+            'configs': result,
+            'active_alias': active_alias
+        })
+    except Exception as e:
+        logger.error(f"Error getting all NAS configs: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@indexing_bp.route('/config/switch', methods=['POST'])
+def switch_nas_config():
+    """Switch to a different NAS configuration"""
+    try:
+        data = request.get_json() or {}
+        alias = data.get('alias')
+        
+        if not alias:
+            return jsonify({
+                'success': False,
+                'error': 'Missing "alias" parameter'
+            }), 400
+        
+        config = get_nas_config()
+        if config.set_active_nas(alias):
+            # Get the updated path after switching
+            new_path = get_active_nas_path()
+            new_config = config.get_active_nas_config()
+            
+            logger.info(f"✅ Switched NAS configuration to: {alias} ({new_path})")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Switched to {alias}',
+                'new_path': new_path,
+                'new_config': new_config
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to switch to {alias}'
+            }), 500
+    
+    except Exception as e:
+        logger.error(f"Error switching NAS config: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@indexing_bp.route('/config/check-accessibility', methods=['GET'])
+def check_nas_accessibility():
+    """Check if the active NAS is accessible"""
+    try:
+        config = get_nas_config()
+        nas_path = config.get_active_nas_path()
+        
+        if os.path.exists(nas_path):
+            try:
+                # Try to list first few items
+                items = []
+                for item in os.listdir(nas_path)[:5]:
+                    items.append(item)
+                
+                total_items = len(os.listdir(nas_path))
+                
+                return jsonify({
+                    'success': True,
+                    'accessible': True,
+                    'path': nas_path,
+                    'total_items': total_items,
+                    'sample_items': items
+                })
+            except Exception as e:
+                logger.warning(f"Could not list NAS contents: {e}")
+                return jsonify({
+                    'success': True,
+                    'accessible': True,
+                    'path': nas_path,
+                    'warning': str(e)
+                })
+        else:
+            return jsonify({
+                'success': True,
+                'accessible': False,
+                'path': nas_path,
+                'error': 'NAS path does not exist or is not accessible'
+            })
+    
+    except Exception as e:
+        logger.error(f"Error checking NAS accessibility: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

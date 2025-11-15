@@ -1,0 +1,6 @@
+- investigate Cloudflare 404 despite healthy origin
+- confirm tunnel ingress config and connection
+- test Cloudflare request via curl to hostname
+- inspect Cloudflare logs for 404
+- ensure tunnel referencing correct hostname
+- verify default route not requiring auth

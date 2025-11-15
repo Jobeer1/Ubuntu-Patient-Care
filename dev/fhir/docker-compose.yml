@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  fhir-server:
+    image: hapiproject/hapi:latest
+    container_name: upc-fhir-server
+    ports:
+      - "8080:8080"
+    environment:
+      # HAPI FHIR configuration
+      - SPRING_CONFIG_LOCATION=file:///app/config/application.yaml
+      - hapi.fhir.fhir_version=R4
+      - hapi.fhir.server_address=http://localhost:8080/fhir
+      - hapi.fhir.allow_external_references=true
+      - hapi.fhir.allow_multiple_delete=true
+      - hapi.fhir.allow_placeholder_references=true
+      - hapi.fhir.auto_create_placeholder_reference_targets=true
+      - hapi.fhir.default_encoding=JSON
+      - hapi.fhir.default_pretty_print=true
+      # Enable CORS for dev
+      - hapi.fhir.cors.allowed_origin=*
+      # Disable auth for dev sandbox (DO NOT USE IN PRODUCTION)
+      - hapi.fhir.security.enabled=false
+    volumes:
+      - fhir-data:/data/hapi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/fhir/metadata"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - upc-network
+
+volumes:
+  fhir-data:
+    driver: local
+
+networks:
+  upc-network:
+    driver: bridge

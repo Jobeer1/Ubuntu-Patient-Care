@@ -1,0 +1,66 @@
+{
+  "envelope_id": "550e8400-e29b-41d4-a716-446655440000",
+  "version": "1.0",
+  "sender": {
+    "facility_id": "FAC-001-Springfield-Hospital",
+    "system_id": "openemr-prod-01",
+    "practitioner_id": "DR-12345"
+  },
+  "recipient": {
+    "facility_id": "FAC-002-Regional-Medical-Center",
+    "system_id": "openemr-prod-02"
+  },
+  "timestamp": "2025-11-06T14:30:00Z",
+  "expires_at": "2025-11-07T14:30:00Z",
+  "resource_type": "DiagnosticReport",
+  "resource_payload": {
+    "resourceType": "DiagnosticReport",
+    "id": "report-123",
+    "status": "final",
+    "code": {
+      "coding": [{
+        "system": "http://loinc.org",
+        "code": "24627-2",
+        "display": "Chest CT"
+      }]
+    },
+    "subject": {
+      "reference": "Patient/12345"
+    },
+    "effectiveDateTime": "2025-11-06T10:00:00Z",
+    "issued": "2025-11-06T12:00:00Z",
+    "conclusion": "No acute findings. Normal chest CT.",
+    "imagingStudy": [{
+      "reference": "ImagingStudy/study-456"
+    }]
+  },
+  "hash": {
+    "algorithm": "SHA-256",
+    "value": "a3d5e8f9c2b1a4d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0"
+  },
+  "signature_meta": {
+    "method": "rsa",
+    "signature": "MEUCIQDxl+...base64...==",
+    "public_key_id": "key-001",
+    "signed_at": "2025-11-06T14:30:00Z"
+  },
+  "metadata": {
+    "priority": "routine",
+    "reason": "referral",
+    "compression": "none"
+  },
+  "audit_trail": [
+    {
+      "action": "created",
+      "timestamp": "2025-11-06T14:30:00Z",
+      "actor": "openemr-prod-01",
+      "details": "Envelope created for referral"
+    },
+    {
+      "action": "sent",
+      "timestamp": "2025-11-06T14:30:05Z",
+      "actor": "exchange-gateway",
+      "details": "Sent via cloudflared tunnel"
+    }
+  ]
+}

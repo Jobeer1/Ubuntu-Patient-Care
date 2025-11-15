@@ -1,0 +1,159 @@
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: mcp-credentials
+  labels:
+    app: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  type: ClusterIP
+
+---
+# Redis Deployment for caching and session storage
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: mcp-credentials
+  labels:
+    app: redis
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: cache
+      annotations:
+        description: "Redis cache for nonce storage and session management"
+    spec:
+      # Security context
+      securityContext:
+        fsGroup: 999
+      
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          
+          # Container command
+          command:
+            - redis-server
+            - "--requirepass"
+            - "$(REDIS_PASSWORD)"
+            - "--maxmemory"
+            - "512mb"
+            - "--maxmemory-policy"
+            - "allkeys-lru"
+            - "--appendonly"
+            - "yes"
+            - "--appendfsync"
+            - "everysec"
+            - "--port"
+            - "6379"
+          
+          # Port exposure
+          ports:
+            - containerPort: 6379
+              name: redis
+              protocol: TCP
+          
+          # Environment variables
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: REDIS_PASSWORD
+          
+          # Resource requests and limits
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          
+          # Volume mounts for persistence
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          
+          # Liveness probe
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          
+          # Readiness probe
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 3
+          
+          # Security context for container
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      
+      # Volumes for persistence
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: 1Gi
+
+---
+# HorizontalPodAutoscaler for Redis (future multi-replica support)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: redis-hpa
+  namespace: mcp-credentials
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: redis
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80

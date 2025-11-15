@@ -1,0 +1,239 @@
+version: '3.9'
+
+# Emergency Credential Retrieval System - Docker Orchestration
+# This compose file orchestrates all Phase 1 components + infrastructure
+# for development and testing environments
+
+services:
+  # PostgreSQL Database - Stores all credential requests, tokens, approvals, audit trail
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-credentials_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_secure_password}
+      TZ: UTC
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Redis Cache - For token caching, replay prevention, session storage
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_password}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # MCP Medical Server - Core credential management service
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp-server
+      args:
+        PYTHON_VERSION: 3.10
+    container_name: mcp-medical-server
+    environment:
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-credentials_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_secure_password}
+      DB_DIALECT: postgresql
+      
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secure_password}
+      
+      # Service Configuration
+      SERVICE_PORT: 8000
+      SERVICE_HOST: 0.0.0.0
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      
+      # Security
+      ENABLE_MTLS: ${ENABLE_MTLS:-false}
+      CERT_PATH: /etc/mcp/certs/server.crt
+      KEY_PATH: /etc/mcp/certs/server.key
+      
+      # Token Configuration
+      TOKEN_TTL_SECONDS: ${TOKEN_TTL_SECONDS:-60}
+      REQUEST_SLA_SECONDS: ${REQUEST_SLA_SECONDS:-120}
+      
+      # Vault Configuration
+      VAULT_TYPE: ${VAULT_TYPE:-local}
+      VAULT_ENDPOINT: ${VAULT_ENDPOINT:-http://vault:8200}
+      VAULT_TOKEN: ${VAULT_TOKEN:-dev-token}
+      
+      # Audit Configuration
+      AUDIT_ENABLED: "true"
+      AUDIT_MERKLE_TREE_TYPE: "binary"
+      
+    ports:
+      - "${MCP_PORT:-8000}:8000"
+    volumes:
+      - ./mcp-medical-server:/app/mcp-medical-server
+      - ./tests:/app/tests
+      - ./demo:/app/demo
+      - mcp_logs:/var/log/mcp
+      - mcp_vault:/app/vault  # Local vault storage
+      - ${CERT_PATH:-./.certs}:/etc/mcp/certs:ro  # TLS certs (optional)
+    networks:
+      - mcp-network
+      - subnet-1  # Multi-subnet support
+      - subnet-2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    # Run migrations + start server
+    command: >
+      sh -c "
+        python -m alembic upgrade head 2>/dev/null || echo 'Alembic not configured, skipping migrations';
+        python -m mcp-medical-server.server
+      "
+
+  # Kiro AI Agent - Adapter orchestrator (stub for now)
+  kiro-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: kiro-agent
+    environment:
+      AGENT_PORT: 8001
+      AGENT_HOST: 0.0.0.0
+      MCP_SERVER_URL: http://mcp-server:8000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secure_password}
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "${AGENT_PORT:-8001}:8001"
+    volumes:
+      - ./agent:/app/agent
+      - agent_logs:/var/log/agent
+    networks:
+      - mcp-network
+      - subnet-1  # Agent can access subnet 1 adapters
+      - subnet-2  # Agent can access subnet 2 adapters
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Optional: Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mcp-prometheus
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - mcp-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      - mcp-server
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mcp-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mcp_logs:
+    driver: local
+  mcp_vault:
+    driver: local
+  agent_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  # Main network for core services
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  
+  # Multi-subnet networks for adapter isolation testing
+  subnet-1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+  
+  subnet-2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16

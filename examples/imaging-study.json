@@ -1,0 +1,60 @@
+{
+  "resourceType": "ImagingStudy",
+  "status": "available",
+  "identifier": [
+    {
+      "system": "urn:dicom:uid",
+      "value": "urn:oid:1.2.840.113619.2.55.3.123456789"
+    }
+  ],
+  "subject": {
+    "reference": "Patient/1"
+  },
+  "started": "2025-11-06T10:00:00Z",
+  "modality": [
+    {
+      "system": "http://dicom.nema.org/resources/ontology/DCM",
+      "code": "CT"
+    }
+  ],
+  "description": "Chest CT with contrast",
+  "numberOfSeries": 3,
+  "numberOfInstances": 150,
+  "series": [
+    {
+      "uid": "1.2.840.113619.2.55.3.123456789.1",
+      "number": 1,
+      "modality": {
+        "system": "http://dicom.nema.org/resources/ontology/DCM",
+        "code": "CT"
+      },
+      "description": "Axial",
+      "numberOfInstances": 50,
+      "bodySite": {
+        "system": "http://snomed.info/sct",
+        "code": "51185008",
+        "display": "Thorax"
+      }
+    },
+    {
+      "uid": "1.2.840.113619.2.55.3.123456789.2",
+      "number": 2,
+      "modality": {
+        "system": "http://dicom.nema.org/resources/ontology/DCM",
+        "code": "CT"
+      },
+      "description": "Coronal",
+      "numberOfInstances": 50
+    },
+    {
+      "uid": "1.2.840.113619.2.55.3.123456789.3",
+      "number": 3,
+      "modality": {
+        "system": "http://dicom.nema.org/resources/ontology/DCM",
+        "code": "CT"
+      },
+      "description": "Sagittal",
+      "numberOfInstances": 50
+    }
+  ]
+}

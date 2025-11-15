@@ -7,7 +7,7 @@ Main application routes and pages - Refactored for maintainability
 import os
 import logging
 from flask import Blueprint, render_template, jsonify, request, current_app, send_from_directory
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,13 @@ def health_check():
     start_time = current_app.config.get('START_TIME')
     uptime_seconds = None
     if start_time and isinstance(start_time, datetime):
-        uptime_seconds = int((datetime.utcnow() - start_time).total_seconds())
+        try:
+            # Handle both timezone-aware and naive datetimes
+            now = datetime.now(timezone.utc)
+            uptime_seconds = int((now - start_time).total_seconds())
+        except TypeError:
+            # Fallback if comparison still fails
+            uptime_seconds = None
 
     payload = {
         'status': 'healthy',

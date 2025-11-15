@@ -47,6 +47,14 @@ qrcode==7.4.2
 # DICOM Networking (for device connectivity testing)
 pynetdicom==2.0.2
 
+# Advanced Search & Fuzzy Matching
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.21.1
+
+# Database & Async
+aiosqlite==0.17.0
+asyncio-contextmanager==1.0.0
+
 # Development & Testing
 pytest==7.4.2
 pytest-flask==1.2.0

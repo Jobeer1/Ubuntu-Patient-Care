@@ -94,6 +94,9 @@
                     <button class="btn btn-sm btn-outline-info" onclick="enhancedDiscover(true, true)" title="Discover NAS Devices">
                         <i class="fas fa-search me-1"></i>Discover Devices
                     </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="NASDiscoveryUI.show()" title="Advanced NAS Discovery">
+                        <i class="fas fa-network-wired me-1"></i>Auto-Discover NAS
+                    </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="openPatientSearch()" title="Smart Patient Search">
                         <i class="fas fa-user-injured me-1"></i>Patient Search
                     </button>
@@ -347,5 +350,11 @@
     <script src="{{ url_for('static', filename='js/network-discovery.js') }}"></script>
     <script src="{{ url_for('static', filename='js/device-management.js') }}"></script>
     <script src="{{ url_for('static', filename='js/global-aliases.js') }}"></script>
+    <!-- NAS Configuration Modal -->
+    <script src="{{ url_for('static', filename='js/nas-config-modal.js') }}"></script>
+    <!-- NAS Discovery and Auto-Connection Module -->
+    <script src="{{ url_for('static', filename='js/nas-discovery-ui.js') }}"></script>
+    <!-- Debug test script to verify NAS config loading -->
+    <script src="{{ url_for('static', filename='js/test-nas-loading.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+---
+# ResourceQuota to limit namespace resource usage
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: mcp-credentials-quota
+  namespace: mcp-credentials
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: "20Gi"
+    limits.cpu: "20"
+    limits.memory: "40Gi"
+    pods: "50"
+    services: "10"
+    persistentvolumeclaims: "5"
+  scopes:
+    - NotTerminating
+
+---
+# LimitRange to set default resource limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mcp-credentials-limits
+  namespace: mcp-credentials
+spec:
+  limits:
+    # Container limits
+    - max:
+        cpu: "2"
+        memory: "4Gi"
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "250m"
+        memory: "256Mi"
+      type: Container
+    
+    # Pod limits
+    - max:
+        cpu: "4"
+        memory: "8Gi"
+      min:
+        cpu: "200m"
+        memory: "256Mi"
+      type: Pod
+
+---
+# VerticalPodAutoscaler for resource recommendation (if VPA installed)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: mcp-server-vpa
+  namespace: mcp-credentials
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mcp-server
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 4
+          memory: 4Gi
+
+---
+# VerticalPodAutoscaler for Kiro Agent
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: kiro-agent-vpa
+  namespace: mcp-credentials
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kiro-agent
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 2
+          memory: 4Gi
+
+---
+# BackupPolicy using Velero (if Velero installed)
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: mcp-credentials-backup
+  namespace: velero
+spec:
+  includedNamespaces:
+    - mcp-credentials
+  includedClusterResources:
+    - secrets
+    - configmaps
+    - persistentvolumes
+    - persistentvolumeclaims
+  excludedResources:
+    - pods
+    - events
+  storageLocation: aws-s3  # Update to your storage location
+  ttl: 720h  # 30 days
+
+---
+# Prometheus ServiceMonitor for system monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-credentials-alerts
+  namespace: mcp-credentials
+spec:
+  groups:
+    - name: mcp-credentials.rules
+      interval: 30s
+      rules:
+        # Alert when MCP Server has high CPU
+        - alert: MCPServerHighCPU
+          expr: |
+            (sum(rate(container_cpu_usage_seconds_total{pod=~"mcp-server-.*"}[5m])) / sum(container_spec_cpu_quota{pod=~"mcp-server-.*"}) / 1e6) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "MCP Server CPU usage is high"
+            description: "CPU usage is above 80% for 5 minutes"
+        
+        # Alert when MCP Server has high memory
+        - alert: MCPServerHighMemory
+          expr: |
+            (sum(container_memory_usage_bytes{pod=~"mcp-server-.*"}) / sum(container_spec_memory_limit_bytes{pod=~"mcp-server-.*"})) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "MCP Server memory usage is high"
+            description: "Memory usage is above 85% for 5 minutes"
+        
+        # Alert when pod is not ready
+        - alert: MCPServerNotReady
+          expr: |
+            kube_pod_status_ready{pod=~"mcp-server-.*", condition="false"} == 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MCP Server pod is not ready"
+            description: "Pod {{ $labels.pod }} has not been ready for 5 minutes"
+        
+        # Alert when Kiro Agent has issues
+        - alert: KiroAgentCrashLoop
+          expr: |
+            rate(kube_pod_container_status_restarts_total{pod=~"kiro-agent-.*"}[15m]) > 0.1
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kiro Agent is in crash loop"
+            description: "Pod {{ $labels.pod }} is restarting frequently"
+
+---
+# ConfigMap for Grafana dashboards
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-credentials-dashboard
+  namespace: mcp-credentials
+  labels:
+    grafana_dashboard: "1"
+data:
+  mcp-credentials-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "MCP Credentials System",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job='mcp-server'}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job='mcp-server',status=~'5..'}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Response Time P95",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job='mcp-server'}[5m]))"
+              }
+            ]
+          },
+          {
+            "title": "Active Credentials",
+            "targets": [
+              {
+                "expr": "credentials_active_count"
+              }
+            ]
+          }
+        ]
+      }
+    }

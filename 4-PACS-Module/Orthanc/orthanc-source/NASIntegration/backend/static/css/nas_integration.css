@@ -68,6 +68,16 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.12);
 }
 
+/* Make NAS Devices card clickable */
+.status-card:nth-child(2) {
+    cursor: pointer;
+}
+
+.status-card:nth-child(2):hover {
+    border-color: #0066cc;
+    background-color: #f0f7ff;
+}
+
 .status-header {
     display: flex;
     align-items: center;
