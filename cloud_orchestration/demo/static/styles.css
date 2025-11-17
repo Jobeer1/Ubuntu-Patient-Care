@@ -5,24 +5,26 @@
 }
 
 :root {
-    --primary: #4285f4;
-    --secondary: #34a853;
-    --warning: #fbbc04;
-    --danger: #ea4335;
-    --dark: #202124;
-    --gray: #5f6368;
-    --light-gray: #f1f3f4;
-    --border: #dadce0;
-    --success: #1e8e3e;
+    --primary: #16a34a;
+    --secondary: #f59e0b;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --dark: #111827;
+    --gray: #6b7280;
+    --light-gray: #f9fafb;
+    --border: #e5e7eb;
+    --success: #16a34a;
+    --gold: #f59e0b;
+    --green: #16a34a;
     
-    --google-blue: #4285f4;
-    --anthropic-orange: #ff6b35;
-    --qdrant-purple: #7c3aed;
+    --google-blue: #2563eb;
+    --opus-purple: #8b5cf6;
+    --qdrant-teal: #14b8a6;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #f9fafb;
     min-height: 100vh;
     padding: 20px;
     color: var(--dark);
@@ -85,14 +87,14 @@ body {
     color: var(--google-blue);
 }
 
-.badge-anthropic {
-    background: #fff4ed;
-    color: var(--anthropic-orange);
+.badge-opus {
+    background: #f5f3ff;
+    color: var(--opus-purple);
 }
 
 .badge-qdrant {
-    background: #f3e8ff;
-    color: var(--qdrant-purple);
+    background: #f0fdfa;
+    color: var(--qdrant-teal);
 }
 
 .badge-success {
@@ -134,9 +136,9 @@ body {
 }
 
 .stage-active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
 }
 
 .stage-active .stage-status,
@@ -216,25 +218,25 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary);
+    background: var(--green);
     color: white;
 }
 
 .btn-primary:hover {
-    background: #3367d6;
+    background: #15803d;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+    box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
 }
 
 .btn-secondary {
-    background: var(--secondary);
+    background: var(--gold);
     color: white;
 }
 
 .btn-secondary:hover {
-    background: #2d8e3e;
+    background: #d97706;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
 }
 
 .btn-small {

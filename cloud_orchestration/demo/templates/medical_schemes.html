@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Scheme Automation - Ubuntu Patient Care</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='medical_schemes.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <div>
+                    <h1>Ubuntu Patient Care</h1>
+                    <p class="subtitle">AI-Powered Medical Scheme Automation</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="user-info">👤 {{ user.name if user else 'Demo User' }}</span>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Login with SSO</a>
+            </div>
+        </header>
+
+        <!-- Partner Badges -->
+        <section class="partner-section">
+            <div class="partner-label">Powered by:</div>
+            <div class="partner-badges">
+                <div class="partner-badge partner-google">
+                    <span class="partner-icon">🔵</span>
+                    <div>
+                        <div class="partner-name">Google Cloud</div>
+                        <div class="partner-tech">Vertex AI • Gemini 2.0</div>
+                    </div>
+                </div>
+                <div class="partner-badge partner-opus">
+                    <span class="partner-icon">🟣</span>
+                    <div>
+                        <div class="partner-name">Opus</div>
+                        <div class="partner-tech">Workflow Automation</div>
+                    </div>
+                </div>
+                <div class="partner-badge partner-qdrant">
+                    <span class="partner-icon">🔷</span>
+                    <div>
+                        <div class="partner-name">Qdrant</div>
+                        <div class="partner-tech">Vector Search</div>
+                    </div>
+                </div>
+                <div class="partner-badge partner-azure">
+                    <span class="partner-icon">🔵</span>
+                    <div>
+                        <div class="partner-name">Azure AI</div>
+                        <div class="partner-tech">Document Intelligence</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-content">
+                    <h3>Medical Schemes</h3>
+                    <p class="stat-value">71</p>
+                    <p class="stat-label">Portals Automated</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-content">
+                    <h3>Time Saved</h3>
+                    <p class="stat-value">20hrs</p>
+                    <p class="stat-label">Per Week/Practice</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3>Success Rate</h3>
+                    <p class="stat-value">99%</p>
+                    <p class="stat-label">Automated Tasks</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🤖</div>
+                <div class="stat-content">
+                    <h3>AI Powered</h3>
+                    <p class="stat-value">Gemini</p>
+                    <p class="stat-label">2.0 Flash</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+            <button class="action-btn action-register" onclick="showRegisterModal()">
+                <span class="action-icon">📝</span>
+                <div class="action-content">
+                    <div class="action-title">Register Practice</div>
+                    <div class="action-desc">Auto-register with 71 medical schemes</div>
+                </div>
+            </button>
+            <button class="action-btn action-gemini" onclick="showGeminiChat()">
+                <span class="action-icon">🤖</span>
+                <div class="action-content">
+                    <div class="action-title">Ask Gemini</div>
+                    <div class="action-desc">Get AI advice on medical schemes</div>
+                </div>
+            </button>
+            <button class="action-btn action-vertex" onclick="showVertexTraining()">
+                <span class="action-icon">⚡</span>
+                <div class="action-content">
+                    <div class="action-title">Fine-tune STT</div>
+                    <div class="action-desc">Train speech model with Vertex AI</div>
+                </div>
+            </button>
+        </section>
+
+        <!-- Main Actions -->
+        <div class="actions-grid">
+            <!-- Benefit Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔍 Check Patient Benefits</h3>
+                </div>
+                <div class="card-body">
+                    <form id="benefitForm" class="form">
+                        <div class="form-group">
+                            <label>Medical Scheme</label>
+                            <select id="benefitScheme" class="form-input">
+                                <option value="discovery">Discovery Health</option>
+                                <option value="bonitas">Bonitas Medical Fund</option>
+                                <option value="momentum">Momentum Health</option>
+                                <option value="medshield">Medshield</option>
+                                <option value="gems">GEMS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Patient ID</label>
+                            <input type="text" id="patientId" class="form-input" placeholder="8501015800089">
+                        </div>
+                        <div class="form-group">
+                            <label>Member Number</label>
+                            <input type="text" id="memberNumber" class="form-input" placeholder="DH123456789">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Check Benefits
+                        </button>
+                    </form>
+                    <div id="benefitResult" class="result-box" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Authorization Request -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 Request Authorization</h3>
+                </div>
+                <div class="card-body">
+                    <form id="authForm" class="form">
+                        <div class="form-group">
+                            <label>Medical Scheme</label>
+                            <select id="authScheme" class="form-input">
+                                <option value="discovery">Discovery Health</option>
+                                <option value="bonitas">Bonitas Medical Fund</option>
+                                <option value="momentum">Momentum Health</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Patient Name</label>
+                            <input type="text" id="authPatientName" class="form-input" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Procedure</label>
+                            <input type="text" id="authProcedure" class="form-input" placeholder="MRI Lumbar Spine">
+                        </div>
+                        <div class="form-group">
+                            <label>Reason</label>
+                            <textarea id="authReason" class="form-input" rows="3" placeholder="Chronic lower back pain"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Request Authorization
+                        </button>
+                    </form>
+                    <div id="authResult" class="result-box" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <section class="card">
+            <div class="card-header">
+                <h3>💻 Automation Console</h3>
+                <button class="btn btn-small" onclick="clearConsole()">Clear</button>
+            </div>
+            <div class="card-body">
+                <div class="console" id="console">
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Medical Scheme Automation System initialized</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Gemini 2.0 Flash: Ready</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Selenium WebDriver: Ready</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="registerModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Register Practice with Medical Schemes</h3>
+                <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Auto-register your practice with all 71 SA medical scheme portals.</p>
+                <div class="form-group">
+                    <label>Practice Name</label>
+                    <input type="text" class="form-input" placeholder="Ubuntu Medical Practice">
+                </div>
+                <div class="form-group">
+                    <label>Practice Number</label>
+                    <input type="text" class="form-input" placeholder="MP123456">
+                </div>
+                <div class="form-group">
+                    <label>Doctor Name</label>
+                    <input type="text" class="form-input" placeholder="Dr. John Doe">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="startRegistration()">
+                    Start Auto-Registration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="geminiModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 Chat with Gemini - Medical Scheme Advisor</h3>
+                <button class="modal-close" onclick="closeModal('geminiModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="geminiChat" class="chat-box">
+                    <div class="chat-message bot">
+                        <strong>Gemini:</strong> Hi! I'm your AI medical scheme advisor. Ask me anything about South African medical schemes, benefits, or procedures.
+                    </div>
+                </div>
+                <div class="chat-input-group">
+                    <input type="text" id="geminiInput" class="form-input" placeholder="Ask about medical schemes...">
+                    <button class="btn btn-primary" onclick="askGemini()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="vertexModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚡ Fine-tune Speech-to-Text with Vertex AI</h3>
+                <button class="modal-close" onclick="closeModal('vertexModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Train a custom speech recognition model for South African medical terminology.</p>
+                <div class="training-info">
+                    <div class="info-item">
+                        <strong>Base Model:</strong> Whisper Medium
+                    </div>
+                    <div class="info-item">
+                        <strong>Training Data:</strong> 1,247 corrected transcriptions
+                    </div>
+                    <div class="info-item">
+                        <strong>GPU:</strong> NVIDIA Tesla T4
+                    </div>
+                    <div class="info-item">
+                        <strong>Est. Time:</strong> 2-4 hours
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="startVertexTraining()">
+                    Start Training Job
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='medical_schemes.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Ubuntu Patient Care - Configuration Template
+# Copy this file to config.ini and fill in your API keys
+
+[Azure]
+speech_key = YOUR_AZURE_SPEECH_KEY
+speech_region = southafricanorth
+vision_key = YOUR_AZURE_VISION_KEY
+vision_endpoint = https://YOUR-ENDPOINT.cognitiveservices.azure.com/
+
+[Google]
+gemini_key = YOUR_GEMINI_API_KEY
+
+[DocumentIntelligence]
+doc_key = YOUR_DOCUMENT_INTELLIGENCE_KEY
+doc_region = southafricanorth
+doc_endpoint = https://YOUR-ENDPOINT.cognitiveservices.azure.com/
+
+[OAuth]
+# Get these from Google Cloud Console and Azure AD
+google_client_id = YOUR_GOOGLE_CLIENT_ID
+google_client_secret = YOUR_GOOGLE_CLIENT_SECRET
+microsoft_client_id = YOUR_MICROSOFT_CLIENT_ID
+microsoft_client_secret = YOUR_MICROSOFT_CLIENT_SECRET
+secret_key = CHANGE_THIS_TO_RANDOM_STRING
+
+[App]
+host = 0.0.0.0
+port = 8080
+debug = True

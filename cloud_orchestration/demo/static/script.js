@@ -192,15 +192,21 @@ function generateAudit(jobId) {
     const timestamp = new Date().toLocaleTimeString();
     
     logToConsole('═══════════════════════════════════════════════════════════', 'info');
-    logToConsole('OPUS AUDIT ARTIFACT GENERATION', 'info');
+    logToConsole('OPUS WORKFLOW EXECUTION', 'info');
     logToConsole('═══════════════════════════════════════════════════════════', 'info');
+    logToConsole(`Workflow ID: STT-OPTIMIZER-PIPELINE-V1`);
+    logToConsole(`Job ID: ${jobId}`);
     logToConsole(`Artifact ID: ${artifactId}`);
-    logToConsole('Workflow: STT-OPTIMIZER-PIPELINE-V1');
-    logToConsole(`AI Job: ${jobId}`);
-    logToConsole('Validation Score: 0.963');
-    logToConsole('Review Action: NO_HUMAN_REVIEW_NEEDED', 'success');
-    logToConsole('Reason: Model exceeds 95% accuracy threshold', 'success');
-    logToConsole('POPIA Compliant: ✓', 'success');
+    logToConsole('');
+    logToConsole('Stage 1: Data Import & Processing ✓', 'success');
+    logToConsole('Stage 2: AI Decisioning & Routing ✓', 'success');
+    logToConsole('Stage 3: Agentic Review (Policy Check) ✓', 'success');
+    logToConsole('');
+    logToConsole('Validation Score: 0.963 (96.3%)');
+    logToConsole('Review Decision: AUTO_APPROVED', 'success');
+    logToConsole('Reason: Score exceeds 95% threshold', 'success');
+    logToConsole('POPIA Compliance: ✓ PASSED', 'success');
+    logToConsole('Human Review: NOT_REQUIRED', 'success');
     logToConsole('═══════════════════════════════════════════════════════════', 'info');
     
     // Update audit list
