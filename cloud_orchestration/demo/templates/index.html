@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Patient Care - AI Training Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <div>
+                    <h1>Ubuntu Patient Care</h1>
+                    <p class="subtitle">AI-Powered Rural Healthcare</p>
+                </div>
+            </div>
+            <div class="partner-badges">
+                <span class="badge badge-google">Google Vertex AI</span>
+                <span class="badge badge-anthropic">Anthropic Opus</span>
+                <span class="badge badge-qdrant">Qdrant Vector DB</span>
+            </div>
+        </header>
+
+        <!-- Pipeline Status -->
+        <section class="pipeline-overview">
+            <h2>Training Pipeline Status</h2>
+            <div class="pipeline-stages">
+                <div class="stage stage-active" id="stage-1">
+                    <div class="stage-icon">📥</div>
+                    <div class="stage-content">
+                        <h3>Data Sync</h3>
+                        <p class="stage-status">Active</p>
+                        <p class="stage-detail">Monitoring Google Drive</p>
+                    </div>
+                </div>
+                <div class="stage-arrow">→</div>
+                <div class="stage" id="stage-2">
+                    <div class="stage-icon">🧠</div>
+                    <div class="stage-content">
+                        <h3>Vertex AI Training</h3>
+                        <p class="stage-status">Ready</p>
+                        <p class="stage-detail">GPU Acceleration</p>
+                    </div>
+                </div>
+                <div class="stage-arrow">→</div>
+                <div class="stage" id="stage-3">
+                    <div class="stage-icon">📋</div>
+                    <div class="stage-content">
+                        <h3>Opus Audit</h3>
+                        <p class="stage-status">Pending</p>
+                        <p class="stage-detail">Compliance Check</p>
+                    </div>
+                </div>
+                <div class="stage-arrow">→</div>
+                <div class="stage" id="stage-4">
+                    <div class="stage-icon">🚀</div>
+                    <div class="stage-content">
+                        <h3>Deployment</h3>
+                        <p class="stage-status">Pending</p>
+                        <p class="stage-detail">Model Distribution</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Left Column: Clinic Data -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📍 Clinic Data Collection</h3>
+                    <button class="btn btn-primary" onclick="simulateUpload()">Simulate Upload</button>
+                </div>
+                <div class="card-body">
+                    <div class="stat-row">
+                        <div class="stat">
+                            <span class="stat-label">Active Clinics</span>
+                            <span class="stat-value" id="clinic-count">3</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Records Today</span>
+                            <span class="stat-value" id="records-today">0</span>
+                        </div>
+                    </div>
+                    <div class="file-list" id="file-list">
+                        <p class="empty-state">Waiting for new training data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Training Jobs -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚡ Vertex AI Training Jobs</h3>
+                    <button class="btn btn-secondary" onclick="startTraining()">Start Training</button>
+                </div>
+                <div class="card-body">
+                    <div class="training-config">
+                        <div class="config-item">
+                            <span class="config-label">Accelerator:</span>
+                            <span class="config-value">NVIDIA Tesla T4</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Machine Type:</span>
+                            <span class="config-value">n1-highmem-8</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Est. Time:</span>
+                            <span class="config-value">2-4 hours</span>
+                        </div>
+                    </div>
+                    <div class="job-list" id="job-list">
+                        <p class="empty-state">No active training jobs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <section class="card">
+            <div class="card-header">
+                <h3>🔍 Opus Audit Trail</h3>
+                <span class="badge badge-success">POPIA Compliant</span>
+            </div>
+            <div class="card-body">
+                <div class="audit-list" id="audit-list">
+                    <p class="empty-state">No audit records yet</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics Dashboard -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-content">
+                    <h4>Model Accuracy</h4>
+                    <p class="metric-value" id="accuracy">--</p>
+                    <p class="metric-change">Baseline: 88.7%</p>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-content">
+                    <h4>Training Speed</h4>
+                    <p class="metric-value" id="speed">--</p>
+                    <p class="metric-change">vs 12+ hrs CPU</p>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-content">
+                    <h4>Auto-Approved</h4>
+                    <p class="metric-value" id="approved">--</p>
+                    <p class="metric-change">>95% threshold</p>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🌍</div>
+                <div class="metric-content">
+                    <h4>Clinics Served</h4>
+                    <p class="metric-value" id="clinics">3</p>
+                    <p class="metric-change">Limpopo Region</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Console Output -->
+        <section class="card console-card">
+            <div class="card-header">
+                <h3>💻 Pipeline Console</h3>
+                <button class="btn btn-small" onclick="clearConsole()">Clear</button>
+            </div>
+            <div class="card-body">
+                <div class="console" id="console">
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Ubuntu Patient Care Pipeline v1.0.0 initialized</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Monitoring Google Drive folder...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

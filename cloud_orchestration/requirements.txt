@@ -1,0 +1,13 @@
+# Flask Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Google Cloud Dependencies
+google-cloud-aiplatform==1.38.0
+google-cloud-storage==2.10.0
+google-api-python-client==2.108.0
+google-auth-oauthlib==1.1.0
+google-auth==2.25.0
+
+# Additional Dependencies
+requests==2.31.0
