@@ -8,7 +8,7 @@ vision_key = YOUR_AZURE_VISION_KEY
 vision_endpoint = https://YOUR-ENDPOINT.cognitiveservices.azure.com/
 
 [Google]
-gemini_key = YOUR_GEMINI_API_KEY
+gemini_key = AIzaSyD55Og4NGiwZN-Q7OUaVBIE6JK8jfPKOCg
 
 [DocumentIntelligence]
 doc_key = YOUR_DOCUMENT_INTELLIGENCE_KEY

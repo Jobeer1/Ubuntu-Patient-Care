@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UCIC Technical Credential — FarmerConnect MCP</title>
+    <style>
+        :root {
+            --deep-navy: #001f3f;
+            --navy: #0a2463;
+            --gold: #fbbf24;
+            --sky: #bfdbfe;
+            --ink: #111827;
+            --slate: #4b5563;
+            --mist: #f3f4f6;
+            --white: #ffffff;
+            --panel-blue: #f0f4ff;
+            --panel-white: #fdfdfd;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+            color: var(--ink);
+            padding: 0rem;
+            margin: 0rem;
+        }
+
+        main.certificate {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            border: 4px solid var(--deep-navy);
+            padding: 0.05rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0rem;
+            box-shadow: 0 25px 60px rgba(15, 26, 48, 0.15);
+        }
+
+        .certificate__header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 0.12rem;
+            margin-bottom: 0rem;
+        }
+
+        .certificate__emblem {
+            font-size: 1.25rem;
+            color: var(--gold);
+        }
+
+        .certificate__title-block h1 {
+            font-size: 0.75rem;
+            color: var(--deep-navy);
+            margin-bottom: 0rem;
+        }
+
+        .certificate__label {
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            font-weight: 600;
+            color: var(--gold);
+            font-size: 0.4rem;
+        }
+
+        .certificate__project {
+            font-size: 0.5rem;
+            color: var(--ink);
+            margin-top: 0rem;
+        }
+
+        .certificate__qr {
+            text-align: center;
+            color: var(--navy);
+            font-size: 0.35rem;
+            gap: 0rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .certificate__qr img {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(0, 31, 63, 0.25);
+            border-radius: 0.15rem;
+            padding: 0.04rem;
+            background: var(--white);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qrcode img {
+            border: 1px solid rgba(0, 31, 63, 0.25);
+            border-radius: 0.15rem;
+            padding: 0.04rem;
+            background: var(--white);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .score {
+            background: var(--mist);
+            border: 1px solid var(--gold);
+            padding: 0.12rem 0.15rem;
+            text-align: center;
+            border-radius: 0.25rem;
+            margin-bottom: 0rem;
+        }
+
+        .score__label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            color: var(--navy);
+            font-size: 0.45rem;
+            margin-bottom: 0rem;
+        }
+
+        .score__value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--deep-navy);
+            margin: 0.04rem 0;
+        }
+
+        .score__meta {
+            font-size: 0.5rem;
+            color: var(--slate);
+            margin-top: 0rem;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.05rem;
+            margin-bottom: 0.01rem;
+        }
+
+        .summary__panel {
+            background: var(--panel-blue);
+            border-radius: 0.25rem;
+            padding: 0.2rem;
+            border: 1px solid rgba(0, 31, 63, 0.1);
+        }
+
+        .summary__panel--competencies {
+            background: var(--panel-white);
+            border: 1px solid rgba(0, 31, 63, 0.08);
+        }
+
+        .summary__panel h2 {
+            font-size: 0.55rem;
+            margin-bottom: 0.08rem;
+            color: var(--deep-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .summary__panel dl div {
+            margin-bottom: 0.06rem;
+        }
+
+        .summary__panel dt {
+            font-weight: 600;
+            color: var(--deep-navy);
+            margin-bottom: 0rem;
+            font-size: 0.45rem;
+        }
+
+        .summary__panel dd {
+            color: var(--slate);
+            margin-left: 0;
+            font-size: 0.45rem;
+            margin-bottom: 0rem;
+        }
+
+        #competency-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.04rem;
+        }
+
+        .competency {
+            display: grid;
+            grid-template-columns: 32px 1fr;
+            gap: 0.12rem;
+            align-items: flex-start;
+        }
+
+        .competency__badge {
+            background: var(--deep-navy);
+            color: var(--gold);
+            border-radius: 0.18rem;
+            padding: 0.1rem 0.12rem;
+            text-align: center;
+            border: 1px solid var(--gold);
+            font-weight: 600;
+            font-size: 0.38rem;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .competency__details h3 {
+            font-size: 0.45rem;
+            color: var(--deep-navy);
+            margin-bottom: 0rem;
+        }
+
+        .competency__details p {
+            color: var(--slate);
+            font-size: 0.4rem;
+            line-height: 1.05;
+            margin: 0rem;
+        }
+
+        .integrity h2,
+        .authority h2,
+        .reference h2 {
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--deep-navy);
+            margin-bottom: 0.04rem;
+            font-size: 0.55rem;
+        }
+
+        .integrity ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.03rem;
+            margin-bottom: 0.01rem;
+        }
+
+        .integrity li {
+            display: flex;
+            gap: 0.12rem;
+            align-items: flex-start;
+            padding: 0.08rem 0.15rem;
+            background: var(--mist);
+            border-radius: 0.2rem;
+            border: 1px solid rgba(0, 31, 63, 0.08);
+            font-size: 0.4rem;
+            line-height: 1.1;
+            margin: 0rem;
+        }
+
+        .integrity li span {
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .authority__lead {
+            font-size: 0.5rem;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 0.05rem;
+            text-align: center;
+        }
+
+        .authority__panel {
+            border: 1px solid var(--gold);
+            border-radius: 0.25rem;
+            padding: 0.1rem;
+            background: var(--panel-blue);
+            margin-bottom: 0rem;
+        }
+
+        .authority__panel h3 {
+            font-size: 0.5rem;
+            margin-bottom: 0.05rem;
+            color: var(--deep-navy);
+            text-align: center;
+        }
+
+        .authority__signatories {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem;
+            width: 100%;
+        }
+
+        .authority__name {
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: var(--deep-navy);
+            margin-bottom: 0.02rem;
+        }
+
+        .authority__title {
+            color: var(--slate);
+            font-size: 0.4rem;
+            line-height: 1.1;
+        }
+
+        .reference {
+            border: 1px dashed rgba(0, 31, 63, 0.2);
+            border-radius: 0.25rem;
+            padding: 0.1rem;
+            background: var(--panel-white);
+            text-align: center;
+            margin-bottom: 0.01rem;
+        }
+
+        .reference p:first-of-type {
+            font-weight: 600;
+            color: var(--deep-navy);
+            margin-bottom: 0rem;
+            font-size: 0.45rem;
+        }
+
+        .reference p:last-of-type {
+            color: var(--slate);
+            font-size: 0.4rem;
+            margin: 0rem;
+        }
+
+        .certificate__footer {
+            text-align: center;
+            background: var(--deep-navy);
+            color: var(--white);
+            padding: 0.1rem;
+            border-radius: 0.25rem;
+            font-size: 0.4rem;
+            margin-top: 0rem;
+            page-break-inside: avoid;
+            line-height: 1.1;
+        }
+
+        .certificate__motto {
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 0rem;
+        }
+
+        .certificate__date {
+            color: var(--sky);
+            margin-bottom: 0rem;
+        }
+
+        .certificate__copyright {
+            margin: 0rem;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 100%;
+                height: auto;
+                background: var(--white);
+                margin: 0;
+                padding: 0;
+            }
+
+            main.certificate {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 15mm;
+                border-width: 8px;
+                box-shadow: none;
+                page-break-inside: avoid;
+                display: flex;
+                flex-direction: column;
+                gap: 1.8rem;
+            }
+
+            .certificate__header {
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .certificate__emblem {
+                font-size: 3rem;
+            }
+
+            .certificate__title-block h1 {
+                font-size: 2rem;
+            }
+
+            .certificate__qr img,
+            #qrcode img {
+                width: 120px;
+                height: 120px;
+                box-shadow: none;
+                border-color: rgba(0, 31, 63, 0.4);
+            }
+
+            .score {
+                padding: 1.5rem;
+                border-width: 1px;
+            }
+
+            .score__value {
+                font-size: 3rem;
+            }
+
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .summary__panel {
+                padding: 1.25rem;
+            }
+
+            .integrity ul {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .integrity li {
+                padding: 0.5rem 0.8rem;
+            }
+
+            .authority__signatories {
+                gap: 1.5rem;
+            }
+
+            .certificate__footer {
+                padding: 1.25rem;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="certificate">
+        <section class="certificate__header">
+            <div class="certificate__emblem" aria-hidden="true">★</div>
+            <div class="certificate__title-block">
+                <p class="certificate__label">Ubuntu Code Integrity Crucible (UCIC)</p>
+                <h1>Verified Technical Credential</h1>
+                <p class="certificate__project" id="project-name">FarmerConnect MCP</p>
+            </div>
+            <div class="certificate__qr">
+                <div id="qrcode"></div>
+                <p>Scan for full audit trail</p>
+            </div>
+        </section>
+
+        <section class="score">
+            <p class="score__label">Overall Score</p>
+            <p class="score__value" id="overall-score">84 / 100</p>
+            <p class="score__meta" id="score-meta">84% Technical Merit</p>
+        </section>
+
+        <section class="summary">
+            <div class="summary__panel" id="project-summary">
+                <h2>Project Verification Summary</h2>
+                <dl>
+                    <div>
+                        <dt>Project Name</dt>
+                        <dd id="summary-project">FarmerConnect MCP</dd>
+                    </div>
+                    <div>
+                        <dt>Validation Date</dt>
+                        <dd id="summary-date">November 18, 2025</dd>
+                    </div>
+                    <div>
+                        <dt>Audit Authority</dt>
+                        <dd id="summary-authority">Ubuntu Code Integrity Crucible</dd>
+                    </div>
+                    <div>
+                        <dt>Code Status</dt>
+                        <dd id="summary-status">Proven, Real Users</dd>
+                    </div>
+                    <div>
+                        <dt>Repository</dt>
+                        <dd id="summary-repo">AgTech Platform Aggregation</dd>
+                    </div>
+                </dl>
+            </div>
+            <div class="summary__panel summary__panel--competencies">
+                <h2>Validated Competencies</h2>
+                <ul id="competency-list"></ul>
+            </div>
+        </section>
+
+        <section class="integrity">
+            <h2>Integrity Assurance</h2>
+            <ul id="integrity-list"></ul>
+        </section>
+
+        <section class="authority">
+            <h2>Validated by Authority</h2>
+            <p class="authority__lead" id="review-lead">Ranked and Reviewed by GitHub Copilot</p>
+            <div class="authority__panel">
+                <h3>Founders and Technical Authorities</h3>
+                <div class="authority__signatories">
+                    <div>
+                        <p class="authority__name" id="founder-one-name">Dr. Jodogn</p>
+                        <p class="authority__title" id="founder-one-title">Founder, Ubuntu Patient Care</p>
+                    </div>
+                    <div>
+                        <p class="authority__name" id="founder-two-name">Dr. Tom Zubiri</p>
+                        <p class="authority__title" id="founder-two-title">Technical Authority, UCIC Chief Integrity Officer (AI)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reference">
+            <h2>Certification Reference</h2>
+            <p id="reference-code">UCIC-FARMER-20251118 • Valid through November 2026</p>
+            <p id="reference-link">Audit Log: github.com/FarmConnect-MCP</p>
+        </section>
+
+        <footer class="certificate__footer">
+            <p class="certificate__motto">Code integrity and technical merit are non-negotiable standards.</p>
+            <p class="certificate__date" id="generated-date"></p>
+            <p class="certificate__copyright">© 2025 Ubuntu Code Integrity Crucible &mdash; All Rights Reserved</p>
+        </footer>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        const certificateData = {
+            projectName: 'FarmerConnect MCP',
+            overallScore: '84 / 100',
+            scoreMeta: '84% Technical Merit',
+            summary: {
+                project: 'FarmerConnect MCP',
+                date: 'November 18, 2025',
+                authority: 'Ubuntu Code Integrity Crucible',
+                status: 'Proven, Real Users',
+                repository: 'AgTech Platform Aggregation'
+            },
+            competencies: [
+                {
+                    name: 'Project Scale',
+                    score: '9 / 10',
+                    description: 'Comprehensive platform aggregating agricultural market data with proven adoption and real users.'
+                },
+                {
+                    name: 'Agricultural Impact',
+                    score: '9 / 10',
+                    description: 'Direct alignment with African farmer needs through price transparency and market integration.'
+                },
+                {
+                    name: 'Technology Innovation',
+                    score: '8 / 10',
+                    description: 'Modular MCP architecture enabling seamless integration with multiple data sources and vendors.'
+                },
+                {
+                    name: 'User Adoption Status',
+                    score: 'VERIFIED',
+                    description: 'Verified active user base with sustainable market engagement and demonstrated stickiness.'
+                }
+            ],
+            integrity: [
+                'Verified implementation with proven adoption across target agricultural markets.',
+                'Real-time market data aggregation with 15+ commodity price feeds integrated.',
+                'Farmer-first design principles validated through user interviews and market feedback.',
+                'UCIC deep-dive analysis committed to immutable repository logs and audit trail.'
+            ],
+            reviewLead: 'Ranked and Reviewed by GitHub Copilot',
+            founders: [
+                {
+                    name: 'Dr. Jodogn',
+                    title: 'Founder, Ubuntu Patient Care'
+                },
+                {
+                    name: 'Dr. Tom Zubiri',
+                    title: 'Technical Authority, UCIC Chief Integrity Officer (AI)'
+                }
+            ],
+            referenceCode: 'UCIC-FARMER-20251118 • Valid through November 2026',
+            referenceLink: 'Audit Log: github.com/FarmConnect-MCP',
+            generatedDate: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        };
+
+        const $ = (selector) => document.querySelector(selector);
+
+        function populateCertificate(data) {
+            $('#project-name').textContent = data.projectName;
+            $('#overall-score').textContent = data.overallScore;
+            $('#score-meta').textContent = data.scoreMeta;
+
+            $('#summary-project').textContent = data.summary.project;
+            $('#summary-date').textContent = data.summary.date;
+            $('#summary-authority').textContent = data.summary.authority;
+            $('#summary-status').textContent = data.summary.status;
+            $('#summary-repo').textContent = data.summary.repository;
+
+            const competencyList = document.getElementById('competency-list');
+            competencyList.innerHTML = '';
+            data.competencies.forEach((comp) => {
+                const li = document.createElement('li');
+                li.className = 'competency';
+                li.innerHTML = `
+                    <div class="competency__badge">${comp.score}</div>
+                    <div class="competency__details">
+                        <h3>${comp.name}</h3>
+                        <p>${comp.description}</p>
+                    </div>
+                `;
+                competencyList.appendChild(li);
+            });
+
+            const integrityList = document.getElementById('integrity-list');
+            integrityList.innerHTML = '';
+            data.integrity.forEach((item) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>✓</span><p>${item}</p>`;
+                integrityList.appendChild(li);
+            });
+
+            document.getElementById('review-lead').textContent = data.reviewLead;
+            document.getElementById('founder-one-name').textContent = data.founders[0].name;
+            document.getElementById('founder-one-title').textContent = data.founders[0].title;
+            document.getElementById('founder-two-name').textContent = data.founders[1].name;
+            document.getElementById('founder-two-title').textContent = data.founders[1].title;
+
+            document.getElementById('reference-code').textContent = data.referenceCode;
+            document.getElementById('reference-link').textContent = data.referenceLink;
+            document.getElementById('generated-date').textContent = `Issued: ${data.generatedDate}`;
+        }
+
+        function generateQRCode() {
+            new QRCode(document.getElementById('qrcode'), {
+                text: 'https://github.com/Jobeer1/Ubuntu-Patient-Care/tree/main/Ubuntu%20Code%20Integrity%20Crucible%20(UCIC)',
+                width: 150,
+                height: 150,
+                colorDark: '#001f3f',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            populateCertificate(certificateData);
+            generateQRCode();
+        });
+    </script>
+</body>
+</html>

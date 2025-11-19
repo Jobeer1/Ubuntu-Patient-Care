@@ -23,7 +23,7 @@ config.read('config.ini')
 
 # Configure Gemini
 genai.configure(api_key=config.get('Google', 'gemini_key'))
-gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 
 class MedicalSchemePortalAutomation:

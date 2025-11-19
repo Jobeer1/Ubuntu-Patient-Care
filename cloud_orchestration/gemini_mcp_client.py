@@ -29,7 +29,7 @@ class GeminiMCPClient:
     
     def __init__(self):
         """Initialize Gemini with MCP tools"""
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
         self.mcp_url = MCP_SERVER_URL
         self.tools = self._register_tools()
         print(f"✓ Gemini MCP Client initialized with {len(self.tools)} tools")

@@ -169,7 +169,7 @@ mindmap
 ### What Each Partner Brings to Your Practice
 
 **🔵 Google Cloud** - *The Intelligence*
-- Gemini 2.0 Flash understands your requests like a human assistant
+- Gemini 2.5 Flash Lite understands your requests like a human assistant
 - Vertex AI learns from every interaction to get better
 - "It's like having a super-smart intern who never sleeps"
 

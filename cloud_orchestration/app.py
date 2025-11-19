@@ -36,7 +36,7 @@ app.config['DEBUG'] = config.getboolean('App', 'debug', fallback=True)
 gemini_key = config.get('Google', 'gemini_key', fallback=None)
 if gemini_key:
     genai.configure(api_key=gemini_key)
-    gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 else:
     gemini_model = None
 
