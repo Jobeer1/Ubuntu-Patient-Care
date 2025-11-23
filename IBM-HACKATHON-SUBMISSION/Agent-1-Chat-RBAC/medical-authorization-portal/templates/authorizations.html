@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block title %}Pre-Authorizations - Medical Authorization Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .filter-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .filter-input, .filter-select {
+        background: #111;
+        border: 1px solid #333;
+        color: white;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.3s;
+    }
+    
+    .filter-input:focus, .filter-select:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 10px rgba(74,144,226,0.3);
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    
+    .filter-btn {
+        background: linear-gradient(135deg, #4a90e2, #3a80d2);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s;
+    }
+    
+    .filter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74,144,226,0.4);
+    }
+    
+    .clear-btn {
+        background: #555;
+    }
+    
+    .clear-btn:hover {
+        box-shadow: 0 4px 12px rgba(85,85,85,0.4);
+    }
+    
+    .table-container {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .table-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 15px 20px;
+        display: grid;
+        grid-template-columns: 150px 150px 120px 120px 100px 100px 80px;
+        gap: 15px;
+        font-weight: 600;
+        font-size: 13px;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table-row {
+        display: grid;
+        grid-template-columns: 150px 150px 120px 120px 100px 100px 80px;
+        gap: 15px;
+        padding: 15px 20px;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        transition: background 0.2s;
+    }
+    
+    .table-row:hover {
+        background: rgba(74,144,226,0.05);
+    }
+    
+    .table-row:last-child {
+        border-bottom: none;
+    }
+    
+    .cell-content {
+        font-size: 13px;
+        color: #e0e8ff;
+    }
+    
+    .cell-label {
+        font-size: 11px;
+        color: #9ca3af;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    
+    .badge-approved {
+        background: rgba(40,167,69,0.2);
+        color: #20c997;
+    }
+    
+    .badge-pending {
+        background: rgba(255,193,7,0.2);
+        color: #ffc107;
+    }
+    
+    .badge-rejected {
+        background: rgba(220,53,69,0.2);
+        color: #ff6b6b;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .action-btn-small {
+        background: #4a90e2;
+        border: none;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        transition: all 0.2s;
+    }
+    
+    .action-btn-small:hover {
+        background: #3a80d2;
+        transform: translateY(-1px);
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px;
+        background: #1a1a1a;
+        border-top: 1px solid #333;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .page-btn {
+        background: #333;
+        border: 1px solid #444;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 12px;
+    }
+    
+    .page-btn:hover {
+        background: #4a90e2;
+        border-color: #4a90e2;
+    }
+    
+    .page-btn.active {
+        background: #4a90e2;
+        border-color: #4a90e2;
+    }
+    
+    .loading-row {
+        background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    @media (max-width: 1200px) {
+        .table-header,
+        .table-row {
+            grid-template-columns: 120px 120px 100px 100px 60px 60px 60px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filter-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">📋 Pre-Authorizations</h1>
+    <p class="page-subtitle">Manage and track patient medical pre-authorizations</p>
+</div>
+
+<!-- Filters -->
+<div class="filter-section">
+    <div class="filter-group">
+        <label class="filter-label">Status</label>
+        <select class="filter-select" id="filter-status">
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+        </select>
+    </div>
+    
+    <div class="filter-group">
+        <label class="filter-label">Date Range</label>
+        <input type="date" class="filter-input" id="filter-date">
+    </div>
+    
+    <div class="filter-group">
+        <label class="filter-label">Procedure</label>
+        <input type="text" class="filter-input" placeholder="Search procedures..." id="filter-procedure">
+    </div>
+    
+    <div class="filter-group">
+        <label class="filter-label">Patient</label>
+        <input type="text" class="filter-input" placeholder="Patient ID or name..." id="filter-patient">
+    </div>
+    
+    <div class="filter-buttons">
+        <button class="filter-btn" onclick="applyFilters()">
+            🔍 Search
+        </button>
+        <button class="filter-btn clear-btn" onclick="clearFilters()">
+            🔄 Clear
+        </button>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <div class="table-header">
+        <div>Preauth ID</div>
+        <div>Patient</div>
+        <div>Procedure</div>
+        <div>Created</div>
+        <div>AI Conf.</div>
+        <div>Status</div>
+        <div>Actions</div>
+    </div>
+    
+    <div id="table-body">
+        <!-- Loading rows -->
+        <div class="table-row loading-row"></div>
+        <div class="table-row loading-row"></div>
+        <div class="table-row loading-row"></div>
+    </div>
+    
+    <div class="pagination" id="pagination"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allData = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    
+    async function loadAuthorizations() {
+        try {
+            // Simulate loading data (replace with actual API)
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            allData = [
+                {
+                    id: 'PA-20240115-001',
+                    patient: 'John Doe',
+                    procedure: 'Joint Replacement',
+                    created: '2024-01-15',
+                    confidence: '92%',
+                    status: 'approved'
+                },
+                {
+                    id: 'PA-20240114-002',
+                    patient: 'Jane Smith',
+                    procedure: 'MRI Scan',
+                    created: '2024-01-14',
+                    confidence: '87%',
+                    status: 'pending'
+                },
+                {
+                    id: 'PA-20240113-003',
+                    patient: 'Bob Wilson',
+                    procedure: 'Cardiac Surgery',
+                    created: '2024-01-13',
+                    confidence: '95%',
+                    status: 'approved'
+                },
+                {
+                    id: 'PA-20240112-004',
+                    patient: 'Alice Johnson',
+                    procedure: 'Physical Therapy',
+                    created: '2024-01-12',
+                    confidence: '78%',
+                    status: 'rejected'
+                },
+                {
+                    id: 'PA-20240111-005',
+                    patient: 'Charlie Brown',
+                    procedure: 'Blood Test',
+                    created: '2024-01-11',
+                    confidence: '99%',
+                    status: 'approved'
+                },
+                {
+                    id: 'PA-20240110-006',
+                    patient: 'Diana Prince',
+                    procedure: 'X-Ray',
+                    created: '2024-01-10',
+                    confidence: '85%',
+                    status: 'pending'
+                },
+                {
+                    id: 'PA-20240109-007',
+                    patient: 'Edward Norton',
+                    procedure: 'CT Scan',
+                    created: '2024-01-09',
+                    confidence: '88%',
+                    status: 'approved'
+                },
+                {
+                    id: 'PA-20240108-008',
+                    patient: 'Fiona Apple',
+                    procedure: 'Colonoscopy',
+                    created: '2024-01-08',
+                    confidence: '91%',
+                    status: 'pending'
+                }
+            ];
+            
+            displayTable();
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }
+    
+    function displayTable() {
+        const tbody = document.getElementById('table-body');
+        
+        if (allData.length === 0) {
+            tbody.innerHTML = '<div class="empty-message">No pre-authorizations found</div>';
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+        
+        // Pagination
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = allData.slice(start, end);
+        
+        // Render rows
+        tbody.innerHTML = pageData.map(item => {
+            const statusClass = `badge-${item.status}`;
+            const statusLabel = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+            
+            return `
+                <div class="table-row">
+                    <div class="cell-content">${item.id}</div>
+                    <div class="cell-content">${item.patient}</div>
+                    <div class="cell-content">${item.procedure}</div>
+                    <div class="cell-content">${item.created}</div>
+                    <div class="cell-content" style="color: #4a90e2; font-weight: 600;">${item.confidence}</div>
+                    <div><span class="badge ${statusClass}">${statusLabel}</span></div>
+                    <div class="action-buttons">
+                        <button class="action-btn-small" onclick="viewDetails('${item.id}')">View</button>
+                        <button class="action-btn-small" onclick="editAuth('${item.id}')">Edit</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Pagination buttons
+        const totalPages = Math.ceil(allData.length / itemsPerPage);
+        let paginationHTML = '';
+        
+        for (let i = 1; i <= totalPages; i++) {
+            const activeClass = i === currentPage ? 'active' : '';
+            paginationHTML += `
+                <button class="page-btn ${activeClass}" onclick="goToPage(${i})">${i}</button>
+            `;
+        }
+        
+        document.getElementById('pagination').innerHTML = paginationHTML;
+    }
+    
+    function goToPage(page) {
+        currentPage = page;
+        displayTable();
+        document.getElementById('table-body').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function applyFilters() {
+        // Filter logic
+        alert('Filters applied (feature coming soon)');
+        displayTable();
+    }
+    
+    function clearFilters() {
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-date').value = '';
+        document.getElementById('filter-procedure').value = '';
+        document.getElementById('filter-patient').value = '';
+        currentPage = 1;
+        displayTable();
+    }
+    
+    function viewDetails(id) {
+        alert(`Viewing details for ${id}`);
+    }
+    
+    function editAuth(id) {
+        alert(`Editing ${id}`);
+    }
+    
+    // Load data on page load
+    loadAuthorizations();
+</script>
+{% endblock %}

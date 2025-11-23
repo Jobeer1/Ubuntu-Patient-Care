@@ -1,0 +1,45 @@
+# Practice Onboarding Agent - Python Dependencies
+
+# MCP (Model Context Protocol) - For tool integration
+mcp>=0.1.0
+
+# Core dependencies
+asyncio
+json
+logging
+socket
+threading
+subprocess
+ipaddress
+re
+typing
+
+# Optional: Granite-3.1 Integration (if available)
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+
+# Optional: Hardware acceleration
+# cuda-toolkit  # For NVIDIA GPU support
+# rocm-core     # For AMD GPU support
+
+# Optional: Advanced networking
+# scapy>=2.5.0
+# paramiko>=3.0.0
+
+# Optional: Database connectivity
+# pymysql>=1.0.0
+# psycopg2-binary>=2.9.0
+# pyodbc>=4.0.0
+# pymongo>=4.0.0
+
+# Optional: Documentation
+# python-docx>=0.8.11
+# reportlab>=3.6.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+pylint>=2.17.0
+mypy>=1.0.0

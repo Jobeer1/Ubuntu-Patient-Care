@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Medical Authorization Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff, #f8fafc);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .stat-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+    
+    .stat-trend {
+        font-size: 13px;
+        color: #16a34a;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .section {
+        margin-bottom: 32px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-title-icon {
+        font-size: 20px;
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+    }
+    
+    .action-btn {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        border: none;
+        color: white;
+        padding: 16px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(30, 60, 114, 0.2);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
+    }
+    
+    .action-btn:active {
+        transform: translateY(-1px);
+    }
+    
+    .action-btn-secondary {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    }
+    
+    .action-btn-secondary:hover {
+        box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
+    }
+    
+    .action-btn-tertiary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+    
+    .action-btn-tertiary:hover {
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+    
+    .recent-list {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        transition: background 0.2s ease;
+    }
+    
+    .list-item:last-child {
+        border-bottom: none;
+    }
+    
+    .list-item:hover {
+        background: #f8fafc;
+    }
+    
+    .list-item-content {
+        flex: 1;
+    }
+    
+    .list-item-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    
+    .list-item-subtitle {
+        font-size: 12px;
+        color: #64748b;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .badge-approved {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .badge-pending {
+        background: #fef3c7;
+        color: #b45309;
+    }
+    
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .loading-skeleton {
+        background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 6px;
+        height: 16px;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    .welcome-box {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 32px;
+    }
+    
+    .welcome-box h3 {
+        margin-top: 0;
+        color: #1e40af;
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .welcome-box p {
+        color: #1e293b;
+        line-height: 1.6;
+        margin: 0 0 16px 0;
+        font-size: 14px;
+    }
+    
+    .welcome-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+    }
+    
+    .welcome-item {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 3px solid #3b82f6;
+    }
+    
+    .welcome-item strong {
+        color: #3b82f6;
+        display: block;
+        margin-bottom: 6px;
+    }
+    
+    .welcome-item p {
+        margin: 0;
+        font-size: 12px;
+        color: #64748b;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .welcome-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .list-item {
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">📊 Dashboard</h1>
+    <p class="page-subtitle">Overview of your medical authorizations and patient data</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-label">Total Authorizations</div>
+        <div class="stat-value" id="total-auths">0</div>
+        <div class="stat-trend">✅ All up to date</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Approved</div>
+        <div class="stat-value" id="approved-count">0</div>
+        <div class="stat-trend">📈 94% success rate</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-label">Pending Review</div>
+        <div class="stat-value" id="pending-count">0</div>
+        <div class="stat-trend">⚙️ Processing...</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-label">Chat Messages</div>
+        <div class="stat-value" id="chat-count">0</div>
+        <div class="stat-trend">🤖 AI ready</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section">
+    <div class="section-title">
+        <span class="section-title-icon">⚡</span>
+        Quick Actions
+    </div>
+    <div class="quick-actions">
+        <a href="/patients" class="action-btn">
+            👥 Search Patient
+        </a>
+        <a href="/authorizations" class="action-btn action-btn-secondary">
+            📋 View Authorizations
+        </a>
+        <a href="/chat" class="action-btn action-btn-tertiary">
+            🤖 Chat with Copilot
+        </a>
+        <button class="action-btn" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);" onclick="alert('Creating new authorization...')">
+            ✨ New Authorization
+        </button>
+    </div>
+</div>
+
+<!-- Recent Authorizations -->
+<div class="section">
+    <div class="section-title">
+        <span class="section-title-icon">📋</span>
+        Recent Pre-Authorizations
+    </div>
+    <div class="recent-list" id="recent-auths">
+        <div class="list-item">
+            <div class="list-item-content">
+                <div class="loading-skeleton" style="width: 200px;"></div>
+                <div class="loading-skeleton" style="width: 150px; margin-top: 8px;"></div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="list-item-content">
+                <div class="loading-skeleton" style="width: 200px;"></div>
+                <div class="loading-skeleton" style="width: 150px; margin-top: 8px;"></div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="list-item-content">
+                <div class="loading-skeleton" style="width: 200px;"></div>
+                <div class="loading-skeleton" style="width: 150px; margin-top: 8px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Welcome Message -->
+<div class="welcome-box">
+    <h3>🚀 Welcome to Medical Authorization Portal</h3>
+    <p>
+        This portal provides comprehensive tools for managing patient medical authorizations, 
+        benefits verification, and cost estimation. Use the sidebar to navigate between different 
+        modules. Our AI-powered Copilot assistant is available 24/7 to help you optimize authorization requests.
+    </p>
+    <div class="welcome-grid">
+        <div class="welcome-item">
+            <strong>📚 Documentation</strong>
+            <p>Visit the help section for detailed guides and best practices</p>
+        </div>
+        <div class="welcome-item">
+            <strong>🎯 Quick Tips</strong>
+            <p>Use search to find patient records quickly and efficiently</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load dashboard data
+    async function loadDashboardData() {
+        try {
+            // Simulate loading data (replace with actual API calls)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Update stats
+            document.getElementById('total-auths').textContent = '24';
+            document.getElementById('approved-count').textContent = '20';
+            document.getElementById('pending-count').textContent = '3';
+            document.getElementById('chat-count').textContent = '156';
+            
+            // Load recent authorizations
+            const recentHTML = `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">🏥 PT-2024-001 - Joint Replacement</div>
+                        <div class="list-item-subtitle">Patient: John Doe | Created: 2024-01-15</div>
+                    </div>
+                    <span class="badge badge-approved">Approved</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">🔬 PT-2024-002 - MRI Scan</div>
+                        <div class="list-item-subtitle">Patient: Jane Smith | Created: 2024-01-14</div>
+                    </div>
+                    <span class="badge badge-pending">Pending</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">💊 PT-2024-003 - Surgery</div>
+                        <div class="list-item-subtitle">Patient: Bob Wilson | Created: 2024-01-13</div>
+                    </div>
+                    <span class="badge badge-approved">Approved</span>
+                </div>
+            `;
+            
+            document.getElementById('recent-auths').innerHTML = recentHTML;
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
+    
+    // Load data on page load
+    loadDashboardData();
+</script>
+{% endblock %}
