@@ -1,0 +1,45 @@
+# QUBIC - Quantified Ubuntu Contribution Integrity Crucible
+# Python Dependencies
+
+# Core dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Code analysis
+pylint>=3.0.0
+flake8>=6.1.0
+radon>=6.0.1
+bandit>=1.7.5
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Documentation analysis
+markdown>=3.5.0
+
+# QR Code generation
+qrcode[pil]>=7.4.2
+Pillow>=10.1.0
+
+# Git operations
+GitPython>=3.1.40
+
+# LLM API clients (choose one or more)
+openai>=1.3.0
+google-generativeai>=0.3.0
+
+# Data handling
+pandas>=2.1.0
+numpy>=1.26.0
+
+# Web scraping (for GitHub analysis)
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Optional: PDF generation
+reportlab>=4.0.0
+weasyprint>=60.0
+
+# Optional: Database for leaderboard
+sqlalchemy>=2.0.0
