@@ -1,0 +1,33 @@
+{
+  "name": "medical-billing-frontend",
+  "version": "1.0.0",
+  "description": "Gift of the Givers Medical Billing Frontend - Offline-first PWA",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "dev": "python -m http.server 8000 --bind 127.0.0.1",
+    "test": "echo \"No tests configured\"",
+    "build": "echo \"Frontend is static, no build required\"",
+    "serve": "npx http-server -p 8080"
+  },
+  "keywords": [
+    "medical",
+    "billing",
+    "insurance",
+    "humanitarian",
+    "offline-first",
+    "pwa"
+  ],
+  "author": "Gift of the Givers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gotg/medical-billing"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

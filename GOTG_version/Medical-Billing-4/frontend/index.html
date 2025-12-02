@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GOTG Medical Billing - Humanitarian Healthcare Revenue Management">
+    <meta name="theme-color" content="#1e40af">
+    <title>Medical Billing - Gift of the Givers</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e40af' width='180' height='180'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>MB</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav .menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        nav .menu button {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        nav .menu button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        nav .menu button.active {
+            background: rgba(255,255,255,0.2);
+            border-bottom: 2px solid white;
+        }
+
+        nav .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .status-indicator.offline {
+            background: #f59e0b;
+        }
+
+        /* Main Content */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #1e40af;
+            margin-bottom: 20px;
+            font-size: 22px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+        }
+
+        .card h3 {
+            color: #2563eb;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #1e40af;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #e2e8f0;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background: #cbd5e1;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #f0f4f8;
+            color: #1e40af;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.error {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .badge.pending {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-box .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #7f1d1d;
+        }
+
+        .alert.info {
+            background: #e0e7ff;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+
+        .alert.warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        /* Section Tabs */
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab-button {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Offline Indicator */
+        .offline-banner {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #92400e;
+            font-size: 14px;
+        }
+
+        .offline-banner .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            nav .menu {
+                flex-wrap: wrap;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            td, th {
+                padding: 8px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e1;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            💙 GOTG Medical Billing
+        </div>
+        <ul class="menu">
+            <button class="nav-btn active" data-tab="insurance">Insurance Verification</button>
+            <button class="nav-btn" data-tab="claims">Claims Management</button>
+            <button class="nav-btn" data-tab="revenue">Revenue Tracking</button>
+            <button class="nav-btn" data-tab="offline">Offline Queue</button>
+        </ul>
+        <div class="status">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">Online</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Offline Banner -->
+        <div class="offline-banner" id="offlineBanner" style="display: none;">
+            <div class="pulse"></div>
+            <span>You are currently offline. Changes will be synced when connectivity is restored.</span>
+        </div>
+
+        <!-- Insurance Verification Tab -->
+        <div class="tab-content active" id="insurance-tab">
+            <div class="card">
+                <h2>Insurance Verification</h2>
+                
+                <h3>Verify Patient Insurance</h3>
+                <form id="verifyInsuranceForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Patient Name *</label>
+                            <input type="text" id="patientName" placeholder="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth *</label>
+                            <input type="date" id="patientDob" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Member ID *</label>
+                            <input type="text" id="memberId" placeholder="ABC123456" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Insurance Company</label>
+                            <select id="insuranceCompany">
+                                <option value="">Auto-detect</option>
+                                <option value="BCBS">Blue Cross Blue Shield</option>
+                                <option value="UHC">United Health Care</option>
+                                <option value="AETNA">Aetna</option>
+                                <option value="CIGNA">Cigna</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" style="margin-top: 15px;">
+                        <span class="spinner hidden" id="verifySpinner"></span>
+                        Verify Insurance
+                    </button>
+                </form>
+
+                <div id="verificationResult" class="hidden" style="margin-top: 20px;"></div>
+
+                <h3 style="margin-top: 30px;">Supported Insurance Companies</h3>
+                <table id="insuranceTable">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Country</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="insuranceBody">
+                        <tr><td colspan="3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Claims Management Tab -->
+        <div class="tab-content" id="claims-tab">
+            <div class="card">
+                <h2>Claims Management</h2>
+
+                <h3>Create New Claim</h3>
+                <form id="createClaimForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Patient ID *</label>
+                            <input type="number" id="claimPatientId" placeholder="123" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Service Date *</label>
+                            <input type="date" id="serviceDate" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Service Description *</label>
+                            <textarea id="serviceDescription" placeholder="E.g., Emergency Room Visit, Surgical Procedure" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Charge *</label>
+                            <input type="number" id="totalCharge" step="0.01" placeholder="5000.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Diagnosis Codes (comma-separated)</label>
+                            <input type="text" id="diagnosisCodes" placeholder="ICD-10-1, ICD-10-2">
+                        </div>
+                    </div>
+                    <button type="submit" style="margin-top: 15px;">
+                        <span class="spinner hidden" id="createClaimSpinner"></span>
+                        Create Claim
+                    </button>
+                </form>
+
+                <h3 style="margin-top: 30px;">Recent Claims</h3>
+                <table id="claimsTable">
+                    <thead>
+                        <tr>
+                            <th>Claim ID</th>
+                            <th>Patient ID</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claimsBody">
+                        <tr><td colspan="6">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Revenue Tracking Tab -->
+        <div class="tab-content" id="revenue-tab">
+            <div class="card">
+                <h2>Revenue Tracking & Sustainability</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="value" id="totalRevenue">$0.00</div>
+                        <div class="label">GOTG Total Revenue</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="monthlyRevenue">$0.00</div>
+                        <div class="label">This Month</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="claimCount">0</div>
+                        <div class="label">Claims Processed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="sustainability">--</div>
+                        <div class="label">Sustainability Status</div>
+                    </div>
+                </div>
+
+                <h3>Monthly Revenue Summary</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Select Month</label>
+                        <input type="month" id="revenueMonth">
+                    </div>
+                    <button id="viewRevenueBtn" style="align-self: flex-end; margin-bottom: 0;">View Revenue</button>
+                </div>
+
+                <div id="revenueDetails" class="hidden" style="margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 6px;">
+                </div>
+
+                <h3 style="margin-top: 30px;">Revenue Allocation</h3>
+                <table id="revenueTable">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Percentage</th>
+                            <th>Current Month</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GOTG Operational</td>
+                            <td>25%</td>
+                            <td id="opCost">$0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Staff Incentive</td>
+                            <td>10%</td>
+                            <td id="staffInc">$0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Reinvestment</td>
+                            <td>5%</td>
+                            <td id="reinvest">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Offline Queue Tab -->
+        <div class="tab-content" id="offline-tab">
+            <div class="card">
+                <h2>Offline Sync Queue</h2>
+
+                <div class="alert info">
+                    📡 This shows claims created while offline. They will be submitted automatically when connectivity is restored.
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button id="syncOfflineBtn">Sync Now</button>
+                    <button class="secondary" id="clearQueueBtn">Clear Processed Items</button>
+                </div>
+
+                <table id="offlineQueueTable">
+                    <thead>
+                        <tr>
+                            <th>Claim ID</th>
+                            <th>Patient</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="offlineQueueBody">
+                        <tr><td colspan="5" style="text-align: center; color: #999;">No pending items</td></tr>
+                    </tbody>
+                </table>
+
+                <div id="syncLog" style="margin-top: 20px; background: #f0f4f8; padding: 15px; border-radius: 6px; display: none;">
+                    <h3>Sync Log</h3>
+                    <pre id="syncLogContent" style="overflow-x: auto; max-height: 300px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then(reg => {
+                console.log('Service Worker registered');
+            }).catch(err => {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+
+        // Check online/offline status
+        function updateOnlineStatus() {
+            const isOnline = navigator.onLine;
+            document.getElementById('statusIndicator').className = 'status-indicator' + (isOnline ? '' : ' offline');
+            document.getElementById('statusText').textContent = isOnline ? 'Online' : 'Offline';
+            document.getElementById('offlineBanner').style.display = isOnline ? 'none' : 'flex';
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        // Tab Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // API Base URL
+        const API_BASE = 'http://localhost:5004/api';
+
+        // Load insurance companies
+        async function loadInsuranceCompanies() {
+            try {
+                const response = await fetch(`${API_BASE}/insurance/companies`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('insuranceBody');
+                tbody.innerHTML = data.companies.map(c => `
+                    <tr>
+                        <td>${c.company_name}</td>
+                        <td>${c.country}</td>
+                        <td><span class="badge success">Active</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load insurance companies:', err);
+            }
+        }
+
+        // Insurance Verification
+        document.getElementById('verifyInsuranceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const spinner = document.getElementById('verifySpinner');
+            spinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}/insurance/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_name: document.getElementById('patientName').value,
+                        patient_dob: document.getElementById('patientDob').value,
+                        member_id: document.getElementById('memberId').value,
+                        insurance_company: document.getElementById('insuranceCompany').value
+                    })
+                });
+                
+                const result = await response.json();
+                const resultDiv = document.getElementById('verificationResult');
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert success">
+                            ✓ Insurance verification successful!
+                        </div>
+                        <pre>${JSON.stringify(result.verification_result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert error">
+                            ✗ Verification failed: ${result.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+                resultDiv.classList.remove('hidden');
+            } catch (err) {
+                alert('Error verifying insurance: ' + err.message);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // Load initial data
+        loadInsuranceCompanies();
+    </script>
+</body>
+</html>

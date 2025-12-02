@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GOTG PACS Lightweight DICOM Viewer">
+    <title>GOTG PACS Viewer</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00a8e8;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #00a8e8;
+        }
+
+        .status {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #2d2d2d;
+            border-right: 1px solid #444;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .study-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .study-item {
+            background: #3d3d3d;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .study-item:hover {
+            background: #4d4d4d;
+            transform: translateX(5px);
+        }
+
+        .study-item.active {
+            background: #00a8e8;
+        }
+
+        .study-info {
+            font-size: 0.9rem;
+        }
+
+        .study-info strong {
+            color: #00a8e8;
+        }
+
+        .viewer-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+
+        .toolbar {
+            background: #2d2d2d;
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #444;
+        }
+
+        .tool-btn {
+            background: #3d3d3d;
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: #00a8e8;
+        }
+
+        .tool-btn.active {
+            background: #00a8e8;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #dicomCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: pixelated;
+        }
+
+        .image-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #00a8e8;
+        }
+
+        .spinner {
+            border: 4px solid #3d3d3d;
+            border-top: 4px solid #00a8e8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-studies {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #444;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 GOTG PACS Viewer</h1>
+        <div class="status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Online</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3 style="margin-bottom: 1rem;">Studies</h3>
+            <div class="study-list" id="studyList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading studies...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer-area">
+            <div class="toolbar">
+                <button class="tool-btn" id="zoomInBtn" title="Zoom In">🔍+</button>
+                <button class="tool-btn" id="zoomOutBtn" title="Zoom Out">🔍-</button>
+                <button class="tool-btn" id="resetBtn" title="Reset">↺</button>
+                <button class="tool-btn" id="invertBtn" title="Invert">⚫⚪</button>
+                <button class="tool-btn" id="downloadBtn" title="Download">⬇</button>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="dicomCanvas"></canvas>
+                <div class="image-info" id="imageInfo" style="display: none;">
+                    <div><strong>Patient:</strong> <span id="patientName">-</span></div>
+                    <div><strong>Study Date:</strong> <span id="studyDate">-</span></div>
+                    <div><strong>Modality:</strong> <span id="modality">-</span></div>
+                    <div><strong>Description:</strong> <span id="description">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/viewer.js"></script>
+    <script>
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        }
+    </script>
+</body>
+</html>

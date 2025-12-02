@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # Core DICOM Server (Orthanc)
+  pacs-orthanc:
+    build: ./orthanc
+    container_name: gotg-pacs-orthanc
+    restart: unless-stopped
+    ports:
+      - "4242:4242"  # DICOM protocol
+      - "8042:8042"  # HTTP/REST API
+    volumes:
+      - ./data/dicom:/var/lib/orthanc/db
+      - ./orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
+      - ./orthanc/plugins:/usr/share/orthanc/plugins
+    environment:
+      - ORTHANC_NAME=GOTG_PACS
+      - ORTHANC_AET=GOTG_PACS
+      - ORTHANC_USERNAME=orthanc
+      - ORTHANC_PASSWORD=orthanc
+      - ORTHANC_VERBOSE=false
+    networks:
+      - gotg-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8042/system"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Lightweight DICOM Viewer
+  pacs-viewer:
+    build: ./viewer
+    container_name: gotg-pacs-viewer
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - ORTHANC_URL=http://pacs-orthanc:8042
+    networks:
+      - gotg-network
+    depends_on:
+      - pacs-orthanc
+
+  # Intelligent Sync Engine
+  pacs-sync:
+    build: ./sync-engine
+    container_name: gotg-pacs-sync
+    restart: unless-stopped
+    ports:
+      - "5001:5001"  # Monitoring dashboard
+    volumes:
+      - ./data/sync-queue:/app/queue
+      - ./data/sync-logs:/app/logs
+      - ./sync-engine/config.yml:/app/config.yml:ro
+    environment:
+      - ORTHANC_URL=http://pacs-orthanc:8042
+      - ORTHANC_USERNAME=orthanc
+      - ORTHANC_PASSWORD=orthanc
+      - RIS_URL=http://host.docker.internal:5000
+      - SYNC_MODE=auto
+      - COMPRESSION_LEVEL=high
+      - MAX_BANDWIDTH_MBPS=1
+    networks:
+      - gotg-network
+    depends_on:
+      - pacs-orthanc
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # RIS Integration Bridge
+  pacs-ris-bridge:
+    build: ./ris-integration
+    container_name: gotg-pacs-ris-bridge
+    restart: unless-stopped
+    volumes:
+      - ./data/ris-sync:/app/data
+    environment:
+      - ORTHANC_URL=http://pacs-orthanc:8042
+      - ORTHANC_USERNAME=orthanc
+      - ORTHANC_PASSWORD=orthanc
+      - RIS_URL=http://host.docker.internal:5000
+      - WORKLIST_SYNC_INTERVAL=60
+    networks:
+      - gotg-network
+    depends_on:
+      - pacs-orthanc
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Backup & Recovery Service
+  pacs-backup:
+    build: ./backup
+    container_name: gotg-pacs-backup
+    restart: unless-stopped
+    volumes:
+      - ./data/dicom:/data/source:ro
+      - ./data/backups:/data/backups
+      - ./backup/config.yml:/app/config.yml:ro
+    environment:
+      - BACKUP_INTERVAL=6h
+      - RETENTION_DAYS=90
+      - COMPRESSION=true
+      - REMOTE_BACKUP_URL=${REMOTE_BACKUP_URL:-}
+    networks:
+      - gotg-network
+
+  # System Health Monitor
+  pacs-monitor:
+    build: ./monitoring
+    container_name: gotg-pacs-monitor
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./data/logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - ORTHANC_URL=http://pacs-orthanc:8042
+      - ALERT_EMAIL=${ALERT_EMAIL:-}
+      - ALERT_WHATSAPP=${ALERT_WHATSAPP:-}
+    networks:
+      - gotg-network
+    depends_on:
+      - pacs-orthanc
+
+networks:
+  gotg-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  dicom-data:
+  sync-queue:
+  backups:
