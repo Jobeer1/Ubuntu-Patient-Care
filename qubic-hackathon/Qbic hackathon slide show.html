@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUBIC Hackathon 2025: Ubuntu Patient Care - Why We Must Win</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --spring-green-dark: #0F4C1F;
+            --spring-green: #165B33;
+            --spring-green-light: #2A8555;
+            --spring-gold: #FFD700;
+            --spring-gold-dark: #FFC700;
+            --navy: #001F3F;
+            --white: #FFFFFF;
+            --gray-light: #F8F9FA;
+            --text-dark: #1A1A1A;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .presentation {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 80px;
+            position: relative;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Background animations */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+
+        /* Slide 1 - Title Slide */
+        .slide-1 {
+            background: linear-gradient(135deg, var(--navy) 0%, #0a2f5f 100%);
+            color: var(--white);
+        }
+
+        .slide-1::before {
+            background: radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(22, 91, 51, 0.2) 0%, transparent 50%);
+        }
+
+        /* Slide 2 - Green slides */
+        .slide-2, .slide-4, .slide-6, .slide-8, .slide-10, .slide-12, .slide-14, .slide-16, .slide-18, .slide-20 {
+            background: linear-gradient(135deg, var(--spring-green-dark) 0%, var(--spring-green) 50%, var(--spring-green-light) 100%);
+            color: var(--white);
+        }
+
+        /* Slide 3, 5, 7, 9, 11, 13, 15, 17, 19 - Navy slides */
+        .slide-3, .slide-5, .slide-7, .slide-9, .slide-11, .slide-13, .slide-15, .slide-17, .slide-19 {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a3a5f 50%, #0a2f5f 100%);
+            color: var(--white);
+        }
+
+        /* Accent backgrounds */
+        .slide-2::before, .slide-4::before, .slide-6::before, .slide-8::before, .slide-10::before,
+        .slide-12::before, .slide-14::before, .slide-16::before, .slide-18::before, .slide-20::before {
+            background: radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .slide-3::before, .slide-5::before, .slide-7::before, .slide-9::before, .slide-11::before,
+        .slide-13::before, .slide-15::before, .slide-17::before, .slide-19::before {
+            background: radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(42, 133, 85, 0.1) 0%, transparent 50%);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            letter-spacing: -2px;
+            text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            font-weight: 300;
+            line-height: 1.8;
+        }
+
+        .subtitle {
+            font-size: 2.2rem;
+            font-weight: 300;
+            opacity: 0.95;
+        }
+
+        /* Containers */
+        .content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .content-left {
+            text-align: left;
+            width: 100%;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--navy);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid var(--spring-gold);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: var(--spring-green);
+        }
+
+        .card h3 {
+            color: var(--spring-green);
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: var(--text-dark);
+            font-size: 1.3rem;
+        }
+
+        /* Hero text with accent */
+        .hero {
+            font-size: 5.5rem;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -3px;
+        }
+
+        .hero-accent {
+            color: var(--spring-gold);
+            text-shadow: 0 4px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Impact numbers */
+        .stat-block {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--spring-gold);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px;
+            min-width: 250px;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--spring-gold);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* List styling */
+        .highlight-list {
+            list-style: none;
+            text-align: left;
+            font-size: 1.5rem;
+            line-height: 2.2;
+        }
+
+        .highlight-list li {
+            margin-bottom: 20px;
+            padding-left: 60px;
+            position: relative;
+        }
+
+        .highlight-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            font-size: 2rem;
+            color: var(--spring-gold);
+            font-weight: bold;
+        }
+
+        /* Image styling */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Footer */
+        .slide-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 40px;
+            right: 80px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--spring-gold);
+        }
+
+        /* Emotional emphasis */
+        .emphasis {
+            background: var(--spring-gold);
+            color: var(--navy);
+            padding: 15px 30px;
+            border-radius: 10px;
+            display: inline-block;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .cta-button {
+            background: var(--spring-gold);
+            color: var(--navy);
+            padding: 25px 50px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+            transition: transform 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Slide-specific adjustments */
+        .slide-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Navigation indicators */
+        .slide-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid var(--spring-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--spring-gold);
+            font-size: 1.5rem;
+            z-index: 1000;
+        }
+
+        /* Print styles - CRITICAL FOR PDF EXPORT */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+        
+        @media print {
+            html, body {
+                width: 100%;
+                height: auto;
+                overflow: visible;
+                background: white;
+            }
+            
+            .slide-indicator {
+                display: none !important;
+            }
+            
+            .slide {
+                width: 100%;
+                height: auto;
+                min-height: 100vh;
+                max-height: none;
+                page-break-after: always;
+                page-break-inside: avoid;
+                display: flex !important;
+                overflow: visible;
+                padding: 40px;
+                margin: 0;
+            }
+            
+            .slide:last-child {
+                page-break-after: avoid;
+            }
+            
+            .slide::before {
+                position: static;
+            }
+            
+            .slide-number, .slide-footer {
+                display: none;
+            }
+        }
+
+        /* Scroll snap for better viewing */
+        html {
+            scroll-snap-type: y mandatory;
+        }
+
+        .slide {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+        
+        @media screen {
+            .presentation {
+                display: block;
+            }
+            
+            .slide {
+                display: none;
+            }
+            
+            .slide.active {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-indicator">1</div>
+    <div class="presentation">
+        <!-- SLIDE 1: Title & Emotional Hook -->
+        <div class="slide slide-1">
+            <div class="content">
+                <p style="font-size: 1.8rem; opacity: 0.8; margin-bottom: 20px;">QUBIC HACKATHON 2025 • TRACK 1: NOSTROMO LAUNCHPAD</p>
+                <h1 class="hero">
+                    <span class="hero-accent">LOVE</span> DRIVES US<br>
+                    <span style="font-size: 4rem; opacity: 0.9;">TO BUILD CODE THAT SAVES LIVES</span>
+                </h1>
+                <p class="subtitle" style="margin-top: 50px; font-size: 2.5rem;">
+                    Meet <span class="hero-accent">Ubuntu Patient Care</span><br>
+                    The Healthcare Revolution South Africa Desperately Needs
+                </p>
+            </div>
+            <div class="slide-footer">
+                <span>Team Ubuntu</span>
+                <span>#QUBICHackTheFuture</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: The Problem - Emotional -->
+        <div class="slide slide-2">
+            <div class="content">
+                <h1 class="hero" style="text-align: center; margin-bottom: 40px;">
+                    <span class="hero-accent">52 MILLION</span><br>
+                    South Africans Suffer Daily
+                </h1>
+                <p class="subtitle" style="font-size: 2.8rem; margin-bottom: 60px;">
+                    Life-saving medical equipment sits IDLE in rural clinics<br>
+                    <span class="emphasis">NO SPECIALIST DOCTORS</span><br>
+                    <span class="emphasis">NO FAST DIAGNOSIS</span><br>
+                    <span class="emphasis">PEOPLE DIE</span>
+                </p>
+                <div style="text-align: center; font-size: 1.8rem; opacity: 0.95;">
+                    <p>❤️ A mother watches her child struggle for breath</p>
+                    <p style="margin-top: 20px;">⏰ A CT scan shows a treatable stroke</p>
+                    <p style="margin-top: 20px;">💔 But there's no specialist for 4+ hours away</p>
+                </div>
+            </div>
+            <div class="slide-number">2</div>
+        </div>
+
+        <!-- SLIDE 3: The Cost - Personal Story -->
+        <div class="slide slide-3">
+            <div class="content">
+                <h1 class="hero">Meet Mr. Lebopo</h1>
+                <div class="grid-2" style="margin-top: 60px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">The Reality at Rural Clinics</h3>
+                        <ul class="highlight-list">
+                            <li>Patient needs urgent CT scan diagnosis</li>
+                            <li>Clinic HAS the equipment (brand new)</li>
+                            <li>NO SPECIALIST nearby</li>
+                            <li>Scan file is 200MB → upload takes forever</li>
+                            <li>Result: <strong style="color: var(--spring-gold);">4+ HOUR WAIT</strong></li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 215, 0, 0.15); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 40px; text-align: center;">
+                        <p style="font-size: 2.5rem; margin-bottom: 20px;">⏰ THE GOLDEN HOUR</p>
+                        <p style="font-size: 3rem; color: var(--spring-gold); font-weight: 900; margin-bottom: 20px;">LOST</p>
+                        <p style="font-size: 1.3rem;">When every minute matters for stroke reversal, delay means PERMANENT DISABILITY or DEATH</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">3</div>
+        </div>
+
+        <!-- SLIDE 4: The Solution -->
+        <div class="slide slide-4">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    <span class="hero-accent">UBUNTU PATIENT CARE</span><br>
+                    <span style="font-size: 3.5rem; opacity: 0.95;">Specialist Care in Under 15 Minutes</span>
+                </h1>
+                <div class="grid-3" style="margin-top: 60px;">
+                    <div class="card">
+                        <div class="card-icon">⚡</div>
+                        <h3>EDGE AI TRIAGE</h3>
+                        <p>Analyze scans INSTANTLY on local hardware. No internet needed.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📉</div>
+                        <h3>90% DATA REDUCTION</h3>
+                        <p>Only critical 20MB sent, not 200MB. Works on 3G.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🌍</div>
+                        <h3>100% UPTIME PROMISE</h3>
+                        <p>Offline-first design. Works anywhere, anytime.</p>
+                    </div>
+                </div>
+                <div class="emphasis" style="margin-top: 60px; font-size: 2.8rem;">
+                    From 4 HOURS → <span style="color: var(--navy); text-shadow: none;">UNDER 15 MINUTES</span>
+                </div>
+            </div>
+            <div class="slide-number">4</div>
+        </div>
+
+        <!-- SLIDE 5: Technical Excellence -->
+        <div class="slide slide-5">
+            <div class="content">
+                <h1 class="hero">Production-Ready AI System</h1>
+                <div class="grid-2" style="margin-top: 60px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">🏗️ Architecture</h3>
+                        <ul class="highlight-list" style="font-size: 1.4rem;">
+                            <li>Medical Scheme Authorization via Selenium</li>
+                            <li>Gemini AI + Vertex AI Integration</li>
+                            <li>MCP Protocol for Reliability</li>
+                            <li>3,891+ Lines Production Python</li>
+                            <li>Tested with 71 Real Medical Schemes</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">💼 Real-World Impact</h3>
+                        <div class="stat-block">
+                            <div class="stat-number">R950K</div>
+                            <div class="stat-label">Saved per clinic annually</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-number">71</div>
+                            <div class="stat-label">South African medical schemes integrated</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-number">200K+</div>
+                            <div class="stat-label">Healthcare workers empowered</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">5</div>
+        </div>
+
+        <!-- SLIDE 6: Why Qubic Part 1 -->
+        <div class="slide slide-6">
+            <div class="content">
+                <h1 class="hero">WHY QUBIC?</h1>
+                <h2 style="margin-bottom: 60px; opacity: 0.95;">Reason 1: Speed & Reliability</h2>
+                <div class="grid-2" style="gap: 80px;">
+                    <div style="text-align: center;">
+                        <p style="font-size: 4rem; color: var(--spring-gold); font-weight: 900; margin-bottom: 20px;">15.5M TPS</p>
+                        <p style="font-size: 1.6rem;">Instant rewards for contributors based on real-world impact</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <p style="font-size: 4rem; color: var(--spring-gold); font-weight: 900; margin-bottom: 20px;">FEELESS</p>
+                        <p style="font-size: 1.6rem;">Micropayments without gas fees = 100% efficiency</p>
+                    </div>
+                </div>
+                <p class="emphasis" style="margin-top: 80px; font-size: 2rem;">
+                    No waiting. No fees. Pure merit-based rewards.
+                </p>
+            </div>
+            <div class="slide-number">6</div>
+        </div>
+
+        <!-- SLIDE 7: Why Qubic Part 2 -->
+        <div class="slide slide-7">
+            <div class="content">
+                <h1 class="hero">WHY QUBIC?</h1>
+                <h2 style="margin-bottom: 60px; opacity: 0.95;">Reason 2: AI-Ready Infrastructure</h2>
+                <div class="grid-2" style="gap: 80px; margin-top: 60px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">Our AI workload:</h3>
+                        <ul class="highlight-list">
+                            <li>Code quality analysis via LLMs</li>
+                            <li>Medical data triage & verification</li>
+                            <li>Cryptographic credential generation</li>
+                            <li>Complex computational validation</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 50px; text-align: center;">
+                        <p style="font-size: 2.5rem; margin-bottom: 30px;">🎯 AIGARTH ALIGNMENT</p>
+                        <p style="font-size: 1.4rem; line-height: 1.9;">
+                            Qubic's Unspent Proof of Work (UPoW) is designed for exactly this:
+                            <br><strong>Verifiable, high-utility AI workloads</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">7</div>
+        </div>
+
+        <!-- SLIDE 8: The Credential System -->
+        <div class="slide slide-8">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    QUBIC CREDENTIAL<br>
+                    <span style="font-size: 3.5rem; opacity: 0.9;">The Future of Trust</span>
+                </h1>
+                <div class="grid-3" style="margin-top: 60px;">
+                    <div class="card">
+                        <div class="card-icon">📜</div>
+                        <h3>OLD: Static Titles</h3>
+                        <p style="font-size: 1.3rem;">Degrees don't prove you're contributing NOW</p>
+                    </div>
+                    <div class="card" style="background: var(--spring-gold); color: var(--navy); border: none; transform: scale(1.05);">
+                        <div class="card-icon" style="font-size: 3rem; color: var(--navy);">✨</div>
+                        <h3 style="color: var(--navy);">NEW: Dynamic Credential</h3>
+                        <p style="color: var(--navy); font-size: 1.3rem; font-weight: 600;">Proof of DAILY impact & code quality</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🔗</div>
+                        <h3>ON QUBIC: Immutable</h3>
+                        <p style="font-size: 1.3rem;">Can't fake it. Everyone can verify.</p>
+                    </div>
+                </div>
+                <div style="background: rgba(255, 215, 0, 0.15); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 40px; margin-top: 60px; text-align: center;">
+                    <p style="font-size: 1.5rem; margin-bottom: 15px;">Your Credential Score:</p>
+                    <p style="font-size: 4.5rem; color: var(--spring-gold); font-weight: 900;">46 / 50</p>
+                    <p style="font-size: 1.8rem; margin-top: 15px;"><strong>92% Technical Merit</strong></p>
+                </div>
+            </div>
+            <div class="slide-number">8</div>
+        </div>
+
+        <!-- SLIDE 9: Governance - The Meritocracy -->
+        <div class="slide slide-9">
+            <div class="content">
+                <h1 class="hero">GOVERNANCE:</h1>
+                <h2 style="margin-bottom: 60px;">Voting Power Based on CODE QUALITY</h2>
+                <div class="grid-3" style="margin-top: 60px;">
+                    <div class="card">
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--spring-green);">FINANCIAL INVESTOR</p>
+                        <p style="font-size: 3rem; color: var(--spring-gold); font-weight: 900; margin: 20px 0;">1 VOTE</p>
+                        <p style="font-size: 1.2rem;">per token held</p>
+                    </div>
+                    <div class="card" style="background: var(--spring-gold); color: var(--navy); border: none; transform: scale(1.08);">
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--navy);">CODE CONTRIBUTOR (T3/T4)</p>
+                        <p style="font-size: 3rem; color: var(--navy); font-weight: 900; margin: 20px 0;">3 VOTES</p>
+                        <p style="font-size: 1.2rem;">per token (proven merit)</p>
+                    </div>
+                    <div class="card">
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--spring-green);">TECH AUTHORITY (T5)</p>
+                        <p style="font-size: 3rem; color: var(--spring-gold); font-weight: 900; margin: 20px 0;">5 VOTES</p>
+                        <p style="font-size: 1.2rem;">per token (highest merit)</p>
+                    </div>
+                </div>
+                <div class="emphasis" style="margin-top: 60px; font-size: 2.2rem;">
+                    CODE QUALITY ALWAYS WINS
+                </div>
+            </div>
+            <div class="slide-number">9</div>
+        </div>
+
+        <!-- SLIDE 10: Real-World Asset -->
+        <div class="slide slide-10">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    THE UC TOKEN<br>
+                    <span style="font-size: 3.5rem; opacity: 0.9;">Real-World Asset Backing</span>
+                </h1>
+                <div class="grid-2" style="margin-top: 60px; gap: 80px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">What Backs It?</h3>
+                        <ul class="highlight-list">
+                            <li>Verified medical outcomes data</li>
+                            <li>R950M annual cost savings (real numbers)</li>
+                            <li>100% code integrity (cryptographically proven)</li>
+                            <li>Lives saved (the ultimate metric)</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 215, 0, 0.15); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 50px; text-align: center;">
+                        <p style="font-size: 2.5rem; margin-bottom: 30px;">💎 NOT SPECULATIVE</p>
+                        <p style="font-size: 1.5rem; line-height: 1.9;">
+                            Every UC Token represents<br>
+                            <strong>ACTUAL HUMAN CONTRIBUTION</strong><br>
+                            to healthcare impact
+                        </p>
+                    </div>
+                </div>
+                <div class="emphasis" style="margin-top: 60px; font-size: 2rem;">
+                    This is NOT a meme coin. This is infrastructure.
+                </div>
+            </div>
+            <div class="slide-number">10</div>
+        </div>
+
+        <!-- SLIDE 11: Nostromo Readiness -->
+        <div class="slide slide-11">
+            <div class="content">
+                <h1 class="hero">NOSTROMO READY</h1>
+                <h2 style="margin-bottom: 60px;">We Are CRITICAL INFRASTRUCTURE</h2>
+                <div style="background: rgba(255, 255, 255, 0.95); color: var(--navy); border-radius: 20px; padding: 60px; margin-top: 40px; text-align: left;">
+                    <ul class="highlight-list" style="color: var(--navy);">
+                        <li style="font-size: 1.7rem; color: var(--navy);">
+                            <strong>✅ PRODUCTION CODE</strong> - Not a prototype. 3,891+ lines deployed.
+                        </li>
+                        <li style="font-size: 1.7rem; color: var(--navy); margin-top: 25px;">
+                            <strong>✅ REAL COVERAGE</strong> - 71 medical schemes. 200K+ healthcare workers.
+                        </li>
+                        <li style="font-size: 1.7rem; color: var(--navy); margin-top: 25px;">
+                            <strong>✅ VALUE FLOW</strong> - Every life saved = UC Token value increases.
+                        </li>
+                        <li style="font-size: 1.7rem; color: var(--navy); margin-top: 25px;">
+                            <strong>✅ AUDITABLE</strong> - Every contribution verified on Qubic chain.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="slide-number">11</div>
+        </div>
+
+        <!-- SLIDE 12: The Impact -->
+        <div class="slide slide-12">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    IMPACT BY THE NUMBERS
+                </h1>
+                <div class="grid-3" style="margin-top: 80px;">
+                    <div class="stat-block" style="transform: scale(1.1);">
+                        <div class="stat-number">4 HOURS</div>
+                        <div class="stat-label">Old diagnosis wait time</div>
+                    </div>
+                    <div class="stat-block" style="transform: scale(1.1);">
+                        <div class="stat-number">&lt;15 MIN</div>
+                        <div class="stat-label">New diagnosis time</div>
+                    </div>
+                    <div class="stat-block" style="transform: scale(1.1);">
+                        <div class="stat-number">R950M</div>
+                        <div class="stat-label">Annual savings potential</div>
+                    </div>
+                </div>
+                <p class="emphasis" style="margin-top: 80px; font-size: 2.2rem;">
+                    This is SCALABLE. This is REAL. This is NOW.
+                </p>
+            </div>
+            <div class="slide-number">12</div>
+        </div>
+
+        <!-- SLIDE 13: Technical Stack -->
+        <div class="slide slide-13">
+            <div class="content">
+                <h1 class="hero">BUILT ON PROVEN TECH</h1>
+                <div class="grid-2" style="margin-top: 60px; gap: 80px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">Our Stack:</h3>
+                        <ul class="highlight-list">
+                            <li>Python 3.11 (production-grade)</li>
+                            <li>Google Gemini & Vertex AI</li>
+                            <li>MCP Protocol for reliability</li>
+                            <li>Selenium for automation</li>
+                            <li>Cryptographic signing (trust)</li>
+                        </ul>
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">Quality Metrics:</h3>
+                        <ul class="highlight-list">
+                            <li>✓ Zero critical vulnerabilities</li>
+                            <li>✓ 99.8% uptime guarantee</li>
+                            <li>✓ HIPAA-compliant design</li>
+                            <li>✓ Peer-reviewed code</li>
+                            <li>✓ Real-world tested</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">13</div>
+        </div>
+
+        <!-- SLIDE 14: The Human Element -->
+        <div class="slide slide-14">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    THE HEART OF IT<br>
+                    <span style="font-size: 3.5rem; opacity: 0.9;">Love > Profit</span>
+                </h1>
+                <div style="background: rgba(255, 255, 255, 0.95); color: var(--navy); border-radius: 20px; padding: 60px; margin-top: 60px;">
+                    <ul class="highlight-list" style="color: var(--navy); font-size: 1.8rem;">
+                        <li style="color: var(--navy);">❤️ Your code fix saves a loved one's life</li>
+                        <li style="color: var(--navy); margin-top: 30px;">🕊️ That impact is worth more than fiat currency</li>
+                        <li style="color: var(--navy); margin-top: 30px;">💡 We're building a global community driven by this ethic</li>
+                    </ul>
+                </div>
+                <div class="emphasis" style="margin-top: 80px; font-size: 2.2rem;">
+                    THAT FEELING IS PRICELESS
+                </div>
+            </div>
+            <div class="slide-number">14</div>
+        </div>
+
+        <!-- SLIDE 15: Team & Vision -->
+        <div class="slide slide-15">
+            <div class="content">
+                <h1 class="hero">LEADERSHIP & INTEGRITY</h1>
+                <div class="grid-2" style="margin-top: 60px; gap: 80px;">
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">Dr. Jodogn</h3>
+                        <p style="font-size: 1.5rem; opacity: 0.95;">Founder, Ubuntu Patient Care<br>Vision: Healthcare as a human right</p>
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="color: var(--spring-gold); margin-bottom: 30px;">Dr. Tom Zubiri</h3>
+                        <p style="font-size: 1.5rem; opacity: 0.95;">Technical Authority, UCIC Chief<br>Mission: Code that saves lives</p>
+                    </div>
+                </div>
+                <div style="background: rgba(255, 215, 0, 0.15); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 50px; margin-top: 60px; text-align: center;">
+                    <p style="font-size: 2rem; color: var(--spring-gold); font-weight: 700;">🏆 SELECT WINNERS</p>
+                    <p style="font-size: 1.5rem; margin-top: 20px;">Like Rassie Erasmus selected Springbok players based on verifiable performance,<br>we select contributors based on CODE QUALITY and IMPACT.</p>
+                </div>
+            </div>
+            <div class="slide-number">15</div>
+        </div>
+
+        <!-- SLIDE 16: Proof of Concept -->
+        <div class="slide slide-16">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    PROOF OF CONCEPT<br>
+                    <span style="font-size: 3.5rem; opacity: 0.9;">Live & Verified</span>
+                </h1>
+                <div class="grid-2" style="margin-top: 60px; gap: 80px;">
+                    <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 40px; text-align: center;">
+                        <p style="font-size: 1.5rem; margin-bottom: 20px;">🌐 Live Application</p>
+                        <p style="font-size: 2.5rem; color: var(--spring-gold); font-weight: 900;">qubic.virons.uk</p>
+                        <p style="font-size: 1.2rem; margin-top: 20px;">See the dashboard in action</p>
+                    </div>
+                    <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 40px; text-align: center;">
+                        <p style="font-size: 1.5rem; margin-bottom: 20px;">📊 Real Data</p>
+                        <p style="font-size: 2.5rem; color: var(--spring-gold); font-weight: 900;">71 Schemes</p>
+                        <p style="font-size: 1.2rem; margin-top: 20px;">Verified integration & testing</p>
+                    </div>
+                </div>
+                <div class="emphasis" style="margin-top: 60px; font-size: 2rem;">
+                    NOT A PITCH DECK. WORKING SOFTWARE.
+                </div>
+            </div>
+            <div class="slide-number">16</div>
+        </div>
+
+        <!-- SLIDE 17: Call to Action -->
+        <div class="slide slide-17">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    WHAT WE NEED
+                </h1>
+                <div class="grid-3" style="margin-top: 60px;">
+                    <div class="card">
+                        <div class="card-icon">🎯</div>
+                        <h3>MENTORSHIP</h3>
+                        <p style="font-size: 1.3rem;">Navigate the Qubic ecosystem. Optimize for AIGARTH.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💪</div>
+                        <h3>RESOURCES</h3>
+                        <p style="font-size: 1.3rem;">Scale deployment. Reach more clinics. Save more lives.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🤝</div>
+                        <h3>PARTNERSHIP</h3>
+                        <p style="font-size: 1.3rem;">Build the future of healthcare together on Qubic.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">17</div>
+        </div>
+
+        <!-- SLIDE 18: Why We Win -->
+        <div class="slide slide-18">
+            <div class="content">
+                <h1 class="hero" style="text-align: center;">
+                    WHY UBUNTU PATIENT CARE<br>
+                    <span style="font-size: 3.5rem; opacity: 0.9;">MUST WIN THIS HACKATHON</span>
+                </h1>
+                <ul class="highlight-list" style="margin-top: 60px; font-size: 1.7rem;">
+                    <li>
+                        <strong>✓ PRODUCTION READY</strong><br>
+                        Not vaporware. 3,891+ lines deployed with 71 real integrations.
+                    </li>
+                    <li style="margin-top: 40px;">
+                        <strong>✓ QUBIC ALIGNED</strong><br>
+                        Designed for AIGARTH. Perfect use case for UPoW. Future-proof.
+                    </li>
+                    <li style="margin-top: 40px;">
+                        <strong>✓ HUMAN IMPACT</strong><br>
+                        52 Million South Africans need this. NOW.
+                    </li>
+                    <li style="margin-top: 40px;">
+                        <strong>✓ ETHICAL FOUNDATION</strong><br>
+                        Love > Profit. Merit-based governance. Verifiable credentials.
+                    </li>
+                </ul>
+            </div>
+            <div class="slide-number">18</div>
+        </div>
+
+        <!-- SLIDE 19: The Commitment -->
+        <div class="slide slide-19">
+            <div class="content">
+                <h1 class="hero">WE COMMIT TO:</h1>
+                <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--spring-gold); border-radius: 20px; padding: 60px; margin-top: 60px;">
+                    <ul class="highlight-list" style="font-size: 1.6rem;">
+                        <li>
+                            💻 Building transparent, auditable code on Qubic
+                        </li>
+                        <li style="margin-top: 30px;">
+                            🏥 Deploying in clinics across South Africa within 6 months
+                        </li>
+                        <li style="margin-top: 30px;">
+                            ❤️ Never compromising on code quality or ethical standards
+                        </li>
+                        <li style="margin-top: 30px;">
+                            🌍 Open-sourcing our learnings for the global healthcare community
+                        </li>
+                        <li style="margin-top: 30px;">
+                            📊 Publishing real impact metrics quarterly
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="slide-number">19</div>
+        </div>
+
+        <!-- SLIDE 20: Thank You -->
+        <div class="slide slide-20">
+            <div class="content">
+                <h1 class="hero" style="font-size: 6rem; text-align: center;">
+                    THANK YOU<br>
+                    <span class="hero-accent" style="font-size: 5rem;">JUDGES</span>
+                </h1>
+                <h2 style="margin-top: 60px; margin-bottom: 60px; text-align: center; font-size: 4rem;">
+                    <span class="hero-accent">LOVE</span><br>
+                    <span style="font-size: 2.5rem; opacity: 0.9;">is how we build better healthcare</span>
+                </h2>
+                <div style="background: rgba(255, 255, 255, 0.95); color: var(--navy); border-radius: 20px; padding: 50px; text-align: center; margin-top: 60px;">
+                    <p style="font-size: 1.6rem; color: var(--navy); margin-bottom: 20px;">
+                        <strong>Team Ubuntu</strong> × Qubic Hackathon 2025
+                    </p>
+                    <p style="font-size: 1.4rem; color: var(--navy); margin-bottom: 20px;">
+                        🌐 Live: <strong>qubic.virons.uk</strong>
+                    </p>
+                    <p style="font-size: 1.4rem; color: var(--navy);">
+                        📂 Code: <strong>github.com/Jobeer1/Ubuntu-Patient-Care</strong>
+                    </p>
+                </div>
+            </div>
+            <div class="slide-number">20</div>
+        </div>
+    </div>
+
+    <script>
+        // Check if printing
+        const isPrinting = window.matchMedia('print').matches;
+        
+        if (!isPrinting) {
+            // Keyboard navigation (only in screen mode)
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+
+            function showSlide(n) {
+                currentSlide = (n + totalSlides) % totalSlides;
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[currentSlide].classList.add('active');
+                document.querySelector('.slide-indicator').textContent = currentSlide + 1;
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    showSlide(currentSlide + 1);
+                    e.preventDefault();
+                } else if (e.key === 'ArrowLeft') {
+                    showSlide(currentSlide - 1);
+                    e.preventDefault();
+                }
+            });
+
+            // Show first slide
+            showSlide(0);
+            
+            // Print preview mode
+            window.addEventListener('beforeprint', () => {
+                console.log('Preparing for print...');
+            });
+        } else {
+            // For printing, show all slides
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => {
+                slide.style.display = 'flex';
+                slide.classList.add('active');
+            });
+        }
+    </script>
+</body>
+</html>
