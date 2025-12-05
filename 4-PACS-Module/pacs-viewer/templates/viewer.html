@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ubuntu Patient Care - PACS DICOM Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='viewer.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <div>
+                    <h1>Ubuntu Patient Care</h1>
+                    <p class="subtitle">PACS DICOM Viewer</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <span class="badge badge-success" id="pacsStatus">
+                    <span class="status-dot"></span>
+                    PACS Connected
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Left Sidebar: Study List -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Studies</h3>
+                        <button class="btn btn-small" onclick="refreshStudies()">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search patient..." onkeyup="filterStudies()">
+                        </div>
+                        <div class="study-list" id="studyList">
+                            <p class="empty-state">Loading studies...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Presets -->
+                <div class="card preset-card">
+                    <div class="card-header">
+                        <h3>🎨 Presets</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="preset-grid">
+                            <button class="preset-btn" onclick="applyPreset('brain')" title="W:80 L:40">
+                                <span class="preset-icon">🧠</span>
+                                <span class="preset-name">Brain</span>
+                            </button>
+                            <button class="preset-btn" onclick="applyPreset('lung')" title="W:1500 L:-600">
+                                <span class="preset-icon">🫁</span>
+                                <span class="preset-name">Lung</span>
+                            </button>
+                            <button class="preset-btn" onclick="applyPreset('abdomen')" title="W:400 L:40">
+                                <span class="preset-icon">🫀</span>
+                                <span class="preset-name">Abdomen</span>
+                            </button>
+                            <button class="preset-btn" onclick="applyPreset('bone')" title="W:2000 L:300">
+                                <span class="preset-icon">🦴</span>
+                                <span class="preset-name">Bone</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Viewer -->
+            <div class="viewer-area">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="tool-group">
+                        <button class="tool-btn" onclick="activateTool('zoom')" title="Zoom (Z)">
+                            🔍 Zoom
+                        </button>
+                        <button class="tool-btn" onclick="activateTool('pan')" title="Pan (P)">
+                            ✋ Pan
+                        </button>
+                        <button class="tool-btn" onclick="activateTool('measure')" title="Measure (M)">
+                            📏 Measure
+                        </button>
+                    </div>
+                    <div class="tool-group">
+                        <button class="tool-btn" onclick="toggleInvert()" title="Invert (I)">
+                            ⚫⚪ Invert
+                        </button>
+                        <button class="tool-btn" onclick="resetView()" title="Reset (R)">
+                            ↺ Reset
+                        </button>
+                        <button class="tool-btn" onclick="toggleCine()" title="Play (Space)" id="cineBtn">
+                            ▶️ Play
+                        </button>
+                    </div>
+                    <div class="tool-group">
+                        <button class="tool-btn" onclick="downloadImage()" title="Download">
+                            ⬇️ Export
+                        </button>
+                        <button class="tool-btn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+                            ⛶ Full
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="dicomCanvas"></canvas>
+                    
+                    <!-- Overlay Info -->
+                    <div class="overlay-info">
+                        <div class="overlay-top-left">
+                            <div id="patientName"></div>
+                            <div id="patientId"></div>
+                            <div id="studyDate"></div>
+                        </div>
+                        <div class="overlay-top-right">
+                            <div id="modality"></div>
+                            <div id="seriesDescription"></div>
+                            <div id="imageSize"></div>
+                        </div>
+                        <div class="overlay-bottom-left">
+                            <div id="windowLevel">W: -- L: --</div>
+                            <div id="zoomLevel">Zoom: 100%</div>
+                        </div>
+                        <div class="overlay-bottom-right">
+                            <div id="sliceInfo">-- / --</div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                        <div class="spinner"></div>
+                        <div id="loadingText">Loading...</div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-viewer" id="emptyViewer">
+                        <div class="empty-icon">🖼️</div>
+                        <h3>No Study Selected</h3>
+                        <p>Select a study from the list to view images</p>
+                    </div>
+                </div>
+
+                <!-- Slice Controls -->
+                <div class="slice-controls">
+                    <button class="slice-btn" onclick="previousSlice()" title="Previous (↑)">◀</button>
+                    <input type="range" id="sliceSlider" min="0" max="0" value="0" class="slice-slider" oninput="goToSlice(this.value)">
+                    <button class="slice-btn" onclick="nextSlice()" title="Next (↓)">▶</button>
+                    <span id="sliceCounter">0 / 0</span>
+                    <input type="range" id="fpsSlider" min="1" max="30" value="10" class="fps-slider" oninput="updateFPS(this.value)">
+                    <span id="fpsLabel">10 FPS</span>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Series & Info -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📊 Series</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="series-list" id="seriesList">
+                            <p class="empty-state">No study selected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👤 Patient Info</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid" id="patientInfo">
+                            <div class="info-item">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Sex:</span>
+                                <span class="info-value">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Birth Date:</span>
+                                <span class="info-value">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='viewer.js') }}"></script>
+</body>
+</html>

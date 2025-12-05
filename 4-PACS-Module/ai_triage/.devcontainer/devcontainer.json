@@ -1,0 +1,17 @@
+{
+	"name": "AI Teleradiology Dev",
+	"dockerComposeFile": "../docker-compose.dev.yml",
+	"service": "ai-service",
+	"workspaceFolder": "/app",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"njpwerner.autodocstring",
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	},
+	"remoteUser": "root"
+}

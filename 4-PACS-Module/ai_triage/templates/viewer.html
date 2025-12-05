@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viewer - {{ study.patient_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- AMI Medical Imaging Toolkit -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/ami.js@0.0.22/build/ami.min.js"></script>
+
+    <style>
+        .cornerstone-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .viewer-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .control-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .control-btn:hover {
+            background: #555;
+        }
+        .control-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        #container3d {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center;">
+            <a href="/" style="margin-right: 1rem; color: var(--text-primary);"><i class="fas fa-arrow-left"></i> Back</a>
+            <span class="navbar-brand">{{ study.patient_name }} ({{ study.modality }}) - 3D Volume Render</span>
+        </div>
+        <div>
+            {% if study.status == 'Critical' %}
+                <span class="status-badge status-critical">Critical Findings Detected</span>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container viewer-container">
+        <div class="sidebar">
+            <h3>Controls</h3>
+            <p class="text-muted">3D Manipulation</p>
+            <div class="control-group">
+                <label>Presets (Layers)</label>
+                <button class="control-btn" style="width: 100%; margin-bottom: 5px;" onclick="setPreset('bone')">Bone</button>
+                <button class="control-btn" style="width: 100%; margin-bottom: 5px;" onclick="setPreset('soft')">Soft Tissue</button>
+                <button class="control-btn" style="width: 100%; margin-bottom: 5px;" onclick="setPreset('angio')">Angio (Vessels)</button>
+            </div>
+            <hr>
+            <p class="text-muted">Mouse Controls</p>
+            <ul style="font-size: 0.8rem; padding-left: 1.2rem;">
+                <li><strong>Left Click</strong>: Rotate</li>
+                <li><strong>Right Click</strong>: Pan</li>
+                <li><strong>Scroll</strong>: Zoom</li>
+            </ul>
+        </div>
+
+        <div class="main-view" id="mainView">
+            <div id="container3d"></div>
+            
+            <div class="viewer-controls">
+                <button class="control-btn" onclick="resetCamera()"><i class="fas fa-undo"></i> Reset View</button>
+                <button class="control-btn" onclick="toggleRotate()"><i class="fas fa-sync"></i> Auto Rotate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 3D Viewer Logic using AMI
+        let renderer, scene, camera, controls;
+        let volume;
+        let container = document.getElementById('container3d');
+        let autoRotate = false;
+
+        // Fetch file list
+        const studyId = "{{ study.id }}";
+        
+        // If this is a mock study without files, we can't render 3D
+        // But for the demo, we will try to load a sample if no files exist
+        const hasFiles = {{ 'true' if study.files else 'false' }};
+
+        init();
+
+        function init() {
+            // Setup Renderer
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0x000000, 1);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Setup Scene
+            scene = new THREE.Scene();
+
+            // Setup Camera
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 10000);
+            camera.position.x = 150;
+            camera.position.y = 150;
+            camera.position.z = 100;
+
+            // Setup Controls
+            controls = new AMI.TrackballControl(camera, container);
+            controls.rotateSpeed = 5.5;
+            controls.zoomSpeed = 1.2;
+            controls.panSpeed = 0.8;
+            controls.staticMoving = true;
+            controls.dynamicDampingFactor = 0.3;
+
+            // Load Data
+            if (hasFiles) {
+                loadStudyFiles();
+            } else {
+                // Load sample data for demo
+                console.log("Loading sample data...");
+                loadSampleData();
+            }
+
+            animate();
+        }
+
+        function loadStudyFiles() {
+            fetch(`/api/studies/${studyId}/files`)
+                .then(response => response.json())
+                .then(files => {
+                    if (files.length === 0) return;
+                    
+                    const loader = new AMI.VolumeLoader(container);
+                    loader.load(files)
+                        .then(() => {
+                            const series = loader.data[0].mergeSeries(loader.data);
+                            const stack = series[0].stack[0];
+                            loader.free();
+                            
+                            volume = new AMI.VolumeRenderHelper(stack);
+                            scene.add(volume);
+                            
+                            // Center camera
+                            const center = stack.worldCenter();
+                            controls.target = center;
+                            camera.position.x = center.x + 150;
+                            camera.position.y = center.y + 150;
+                            camera.position.z = center.z + 100;
+                            
+                            // Default preset
+                            setPreset('bone');
+                        })
+                        .catch(error => console.error("Error loading volume:", error));
+                });
+        }
+
+        function loadSampleData() {
+            // Fallback to a known sample if no files uploaded
+            // Using a small sample from AMI examples
+            const files = [
+                'https://cdn.rawgit.com/FNNDSC/data/master/nifti/adi_slice.nii.gz'
+            ];
+            // Note: AMI handles NIfTI too, which is easier for single file demo
+            // But for DICOM series, the logic above (loadStudyFiles) is correct.
+            
+            // For the sake of the demo not breaking if user didn't upload:
+            container.innerHTML = '<div style="color: white; text-align: center; padding-top: 200px;"><h3>Please upload a CT Series to view in 3D</h3><p>Upload multiple DICOM files (.dcm) from the dashboard.</p></div>';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            
+            if (autoRotate) {
+                scene.rotation.y += 0.01;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        window.addEventListener('resize', onWindowResize, false);
+
+        // Presets (Transfer Functions)
+        // AMI has some built-in, or we configure the LUT
+        function setPreset(name) {
+            if (!volume) return;
+
+            // Simple approximation of presets by changing window/level and opacity
+            // In a full implementation, we would load a LUT file
+            
+            // Note: AMI VolumeRenderHelper handles this via properties
+            // But for this demo, we might need to access the uniform or texture
+            
+            // Actually, AMI's VolumeRenderHelper is a bit complex to change presets dynamically without reloading LUTs.
+            // Let's try to adjust window/level which simulates it for Bone/Soft
+            
+            switch (name) {
+                case 'bone':
+                    volume.windowWidth = 1000;
+                    volume.windowCenter = 400;
+                    break;
+                case 'soft':
+                    volume.windowWidth = 400;
+                    volume.windowCenter = 40;
+                    break;
+                case 'angio':
+                    volume.windowWidth = 300;
+                    volume.windowCenter = 100;
+                    break;
+            }
+        }
+
+        function resetCamera() {
+            controls.reset();
+        }
+
+        function toggleRotate() {
+            autoRotate = !autoRotate;
+        }
+    </script>
+</body>
+</html>

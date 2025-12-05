@@ -41,15 +41,23 @@
         }
 
         .slide {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             padding: 60px 80px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             justify-content: center;
             align-items: center;
+        }
+        
+        @media screen {
+            .slide {
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
         }
 
         /* Background animations */
@@ -348,11 +356,24 @@
         }
         
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
             html, body {
                 width: 100%;
                 height: auto;
                 overflow: visible;
                 background: white;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .presentation {
+                width: 100%;
+                display: block;
             }
             
             .slide-indicator {
@@ -360,16 +381,19 @@
             }
             
             .slide {
-                width: 100%;
+                width: 100% !important;
                 height: auto;
-                min-height: 100vh;
-                max-height: none;
+                min-height: 297mm;
+                max-height: none !important;
                 page-break-after: always;
                 page-break-inside: avoid;
                 display: flex !important;
                 overflow: visible;
-                padding: 40px;
+                padding: 30mm 20mm;
                 margin: 0;
+                position: relative;
+                flex-direction: column;
+                justify-content: center;
             }
             
             .slide:last-child {
@@ -377,11 +401,38 @@
             }
             
             .slide::before {
-                position: static;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
             }
             
             .slide-number, .slide-footer {
-                display: none;
+                display: none !important;
+            }
+            
+            .content {
+                width: 100%;
+                position: relative;
+                z-index: 1;
+            }
+            
+            h1 {
+                font-size: 48pt;
+            }
+            
+            h2 {
+                font-size: 36pt;
+            }
+            
+            h3 {
+                font-size: 28pt;
+            }
+            
+            p {
+                font-size: 14pt;
             }
         }
 

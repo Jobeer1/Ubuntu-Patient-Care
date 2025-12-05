@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUBIC - Healthcare Contribution DAO</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <h1 class="logo">⚙️ QUBIC</h1>
+                <ul class="nav-links">
+                    <li><a href="#demo">Demo</a></li>
+                    <li><a href="#leaderboard">Leaderboard</a></li>
+                    <li><a href="#scoring">Scoring</a></li>
+                    <li><a href="#dao">DAO</a></li>
+                    <li><a href="#analytics">Analytics</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Quantified Ubuntu Contribution Integrity Crucible</h2>
+            <p>Blockchain-powered DAO for healthcare open-source contributions</p>
+            <button class="btn btn-primary" onclick="scrollTo('leaderboard')">View Leaderboard</button>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <h2>🚀 Live Demo</h2>
+            <div class="demo-grid">
+                <div class="stat-card">
+                    <h3 id="total-contributors">-</h3>
+                    <p>Total Contributors</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="total-contributions">-</h3>
+                    <p>Total Contributions</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="avg-score">-</h3>
+                    <p>Average Score</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="monthly-rewards">-</h3>
+                    <p>Monthly Rewards</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section id="leaderboard" class="leaderboard-section">
+        <div class="container">
+            <h2>🏆 Leaderboard</h2>
+            
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Search contributors..." class="search-box">
+                <select id="tierFilter" class="filter-select">
+                    <option value="">All Tiers</option>
+                    <option value="platinum">Platinum</option>
+                    <option value="gold">Gold</option>
+                    <option value="silver">Silver</option>
+                    <option value="bronze">Bronze</option>
+                    <option value="recognized">Recognized</option>
+                </select>
+            </div>
+
+            <div class="leaderboard-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Contributor</th>
+                            <th>Score</th>
+                            <th>Tier</th>
+                            <th>Module</th>
+                            <th>Contributions</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button id="prevBtn" class="btn btn-secondary" onclick="previousPage()">← Previous</button>
+                <span id="pageInfo"></span>
+                <button id="nextBtn" class="btn btn-secondary" onclick="nextPage()">Next →</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scoring Framework Section -->
+    <section id="scoring" class="scoring-section">
+        <div class="container">
+            <h2>📊 Scoring Framework</h2>
+            
+            <div class="scoring-grid">
+                <div class="dimension-card">
+                    <h3>Code Quality</h3>
+                    <div class="score-progress">
+                        <div class="progress-bar" style="width: 30%"></div>
+                    </div>
+                    <p>30% - Technical excellence</p>
+                </div>
+                <div class="dimension-card">
+                    <h3>Healthcare Impact</h3>
+                    <div class="score-progress">
+                        <div class="progress-bar" style="width: 25%"></div>
+                    </div>
+                    <p>25% - Patient care benefit</p>
+                </div>
+                <div class="dimension-card">
+                    <h3>Documentation</h3>
+                    <div class="score-progress">
+                        <div class="progress-bar" style="width: 20%"></div>
+                    </div>
+                    <p>20% - Clarity & completeness</p>
+                </div>
+                <div class="dimension-card">
+                    <h3>Innovation</h3>
+                    <div class="score-progress">
+                        <div class="progress-bar" style="width: 15%"></div>
+                    </div>
+                    <p>15% - Novel approaches</p>
+                </div>
+            </div>
+
+            <div class="ai-scoring">
+                <h3>🤖 AI-Powered Scoring</h3>
+                <p>Using advanced LLM analysis for objective evaluation:</p>
+                <div id="aiScoringInfo" class="ai-info">
+                    <p>Loading AI evaluation data...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DAO Section -->
+    <section id="dao" class="dao-section">
+        <div class="container">
+            <h2>🗳️ DAO Governance</h2>
+            
+            <div class="dao-grid">
+                <div class="governance-card">
+                    <h3>Voting System</h3>
+                    <ul id="votingPowerList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+                
+                <div class="governance-card">
+                    <h3>Treasury</h3>
+                    <div id="treasuryInfo">
+                        <p>Loading treasury data...</p>
+                    </div>
+                </div>
+                
+                <div class="governance-card">
+                    <h3>Governance Types</h3>
+                    <div id="governanceTypes">
+                        <p>Loading governance info...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="analytics-section">
+        <div class="container">
+            <h2>📈 Analytics Dashboard</h2>
+            
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <h3>Tier Distribution</h3>
+                    <canvas id="tierChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Score Distribution</h3>
+                    <canvas id="scoreChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Module Breakdown</h3>
+                    <canvas id="moduleChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Monthly Contributions</h3>
+                    <canvas id="contributionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contributor Modal -->
+    <div id="contributorModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 QUBIC - Qubic Hackathon Submission</p>
+            <p>API: <a href="/api" target="_blank">/api</a> | Health: <a href="/api/health" target="_blank">/api/health</a></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

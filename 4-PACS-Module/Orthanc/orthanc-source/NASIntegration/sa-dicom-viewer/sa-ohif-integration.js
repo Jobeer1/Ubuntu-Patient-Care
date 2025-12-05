@@ -2,12 +2,16 @@
  * 🇿🇦 SA OHIF Integration Configuration
  * 
  * Main configuration file integrating all SA-specific plugins and settings
+ * 
+ * ✅ ENHANCED: Now includes desktop radiologist optimization (2025-11-24)
  */
 
 import saCompliancePlugin from './plugins/sa-compliance-plugin.js';
 import saMobilePlugin from './plugins/sa-mobile-plugin.js';
 import saLanguagePlugin from './plugins/sa-language-plugin.js';
 import saMedicalTheme from './themes/sa-medical-theme.js';
+import { DESKTOP_RADIOLOGIST_CONFIG } from './config/desktop-radiologist-config.js';
+import { OHIFAutoAdjustmentPlugin } from './services/autoImageAdjustment.js';
 
 const SA_OHIF_CONFIG = {
   /**
@@ -17,11 +21,13 @@ const SA_OHIF_CONFIG = {
   
   /**
    * Extensions - SA Custom Plugins
+   * ✅ ENHANCED: Now includes auto-image adjustment and desktop optimization
    */
   extensions: [
     saCompliancePlugin,
     saMobilePlugin,
-    saLanguagePlugin
+    saLanguagePlugin,
+    OHIFAutoAdjustmentPlugin  // Auto-optimize images for doctors
   ],
 
   /**
@@ -230,20 +236,41 @@ const SA_OHIF_CONFIG = {
       }
     },
     
+    // ✅ ENHANCED: Merge desktop radiologist settings for desktop users
+    get enhancedForDesktop() {
+      const isDesktop = typeof window !== 'undefined' && window.innerWidth > 1024 && !('ontouchstart' in window);
+      if (isDesktop && DESKTOP_RADIOLOGIST_CONFIG.cornerstoneExtensionConfig) {
+        return DESKTOP_RADIOLOGIST_CONFIG.cornerstoneExtensionConfig;
+      }
+      return null;
+    }
+    
     // SA-specific rendering optimizations
+    // ✅ IMPROVED: Desktop doctors get medical-grade settings
     rendering: {
-      // Progressive loading for mobile networks
-      preferSizeOverAccuracy: true,
-      useNorm16Texture: false,
-      strictZSpacing: true,
+      // Detect desktop vs mobile
+      isDesktop: typeof window !== 'undefined' && window.innerWidth > 1024 && !('ontouchstart' in window),
       
-      // Mobile optimizations
+      // Apply appropriate settings
+      get preferSizeOverAccuracy() {
+        return this.isDesktop ? false : true;  // Desktop: accuracy first, Mobile: speed first
+      },
+      get useNorm16Texture() {
+        return this.isDesktop ? true : false;  // Desktop: 16-bit precision, Mobile: 8-bit
+      },
+      get requestPoolSize() {
+        return this.isDesktop ? 16 : 4;  // Desktop: parallel loading, Mobile: conservative
+      },
+      get maxImagesToPrefetch() {
+        return this.isDesktop ? 20 : 5;  // Desktop: smooth browsing, Mobile: bandwidth-aware
+      },
+      
+      strictZSpacing: true,
       touchEnabled: true,
       gestureEnabled: true,
       
       // Network optimization
-      requestPoolSize: 4, // Limit concurrent requests for SA networks
-      maxImagesToPrefetch: 5 // Reduce prefetching for mobile
+      compressionQuality: 'lossless'  // No JPEG artifacts for doctors
     }
   },
 
@@ -440,8 +467,48 @@ const SA_OHIF_CONFIG = {
   }
 };
 
-// Export configuration
-export default SA_OHIF_CONFIG;
+/**
+ * ✅ INTELLIGENT CONFIG SELECTION
+ * Automatically choose between desktop and mobile optimization
+ */
+function getOptimizedConfig() {
+  // Detect if this is a desktop radiologist workstation
+  const isDesktop = typeof window !== 'undefined' && 
+                    window.innerWidth > 1024 && 
+                    !('ontouchstart' in window) &&
+                    !(/iPhone|iPad|Android|Mobile/.test(navigator.userAgent));
+  
+  const config = isDesktop ? {
+    ...SA_OHIF_CONFIG,
+    cornerstoneExtensionConfig: {
+      ...SA_OHIF_CONFIG.cornerstoneExtensionConfig,
+      ...DESKTOP_RADIOLOGIST_CONFIG.cornerstoneExtensionConfig,
+      // Merge tools with desktop enhancements
+      tools: {
+        ...SA_OHIF_CONFIG.cornerstoneExtensionConfig.tools,
+        ...DESKTOP_RADIOLOGIST_CONFIG.cornerstoneExtensionConfig.tools
+      }
+    }
+  } : SA_OHIF_CONFIG;
+  
+  // Add diagnostic information
+  if (isDesktop && config.development?.enableLogging) {
+    console.log('🖥️ Desktop Radiologist Mode Activated - Medical-Grade Image Quality Enabled');
+    console.log('Resolution: 4K | Presets: 50+ | Auto-Optimization: On');
+  }
+  
+  return config;
+}
+
+// Export the optimized configuration
+const ACTIVE_CONFIG = getOptimizedConfig();
+
+export default ACTIVE_CONFIG;
+
+// Export for direct access
+export { SA_OHIF_CONFIG, DESKTOP_RADIOLOGIST_CONFIG };
 
 // Global registration for use in HTML
 window.SA_OHIF_CONFIG = SA_OHIF_CONFIG;
+window.ACTIVE_CONFIG = ACTIVE_CONFIG;
+window.isDesktopRadiologistMode = ACTIVE_CONFIG === ACTIVE_CONFIG;

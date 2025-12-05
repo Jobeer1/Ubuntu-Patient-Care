@@ -1,0 +1,7 @@
+﻿tunnel: qubic-hackathon
+credentials-file: C:\Users\Admin\.cloudflared\693bc217-87d3-49d3-a143-379713e97ef9.json
+
+ingress:
+  - hostname: qubic.virons.uk
+    service: http://localhost:5000
+  - service: http_status:404

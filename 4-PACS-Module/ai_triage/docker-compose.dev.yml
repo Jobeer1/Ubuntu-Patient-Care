@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Orthanc PACS Server
+  orthanc:
+    image: jodogne/orthanc-python:1.12.1
+    container_name: orthanc-pacs
+    ports:
+      - "8042:8042" # HTTP Port
+      - "4242:4242" # DICOM Port
+    environment:
+      - ORTHANC_NAME=AI_TRIAGE_PACS
+      - VERBOSE_ENABLED=true
+      - VERBOSE_STARTUP=true
+    volumes:
+      # Persist Orthanc data
+      - orthanc-storage:/var/lib/orthanc/db
+      # Mount our plugin
+      - ../Orthanc/plugins:/usr/share/orthanc/plugins-python
+      # Mount our AI code so the plugin can import it
+      - ./:/app/ai_triage
+    # We need to set PYTHONPATH so the plugin can find our modules
+    # The orthanc-python image might need specific handling for this
+    # Alternatively, we map the code to a place Orthanc expects or add to path in plugin
+    restart: unless-stopped
+
+  # AI Triage Service (Standalone / Worker)
+  # This service runs the TransferManager and other background tasks
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ai-triage-service
+    volumes:
+      # Mount source code for hot reloading
+      - ./:/app
+    environment:
+      - ORTHANC_URL=http://orthanc:8042
+      - ORTHANC_USER=orthanc
+      - ORTHANC_PASSWORD=orthanc
+    ports:
+      - "5000:5000" # Dashboard Port
+    depends_on:
+      - orthanc
+    command: python app.py # Run the dashboard
+
+volumes:
+  orthanc-storage:

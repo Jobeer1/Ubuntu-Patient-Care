@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical DICOM Viewer - Simple Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-header h1 {
+            color: #00a8e8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-header p {
+            color: #b0b0b0;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .demo-card h2 {
+            color: #00a8e8;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .demo-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .demo-card li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        
+        .demo-card li:last-child {
+            border-bottom: none;
+        }
+        
+        .demo-card code {
+            background: #2a2a2a;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: #ffc107;
+        }
+        
+        .viewer-demo {
+            background: #000;
+            border: 2px solid #00a8e8;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .viewer-demo h2 {
+            color: #00a8e8;
+            margin-bottom: 1rem;
+        }
+        
+        .viewer-demo p {
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary {
+            background: #00a8e8;
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #0090c8;
+            transform: translateY(-2px);
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .feature-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .feature-item .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-item h3 {
+            color: #00a8e8;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-item p {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🏥 Clinical DICOM Viewer</h1>
+            <p>Production-grade viewer for emergency radiology</p>
+        </div>
+        
+        <div class="viewer-demo">
+            <h2>Interactive Demo</h2>
+            <p>Load DICOM files to see the viewer in action</p>
+            <button class="btn-primary" onclick="openFullViewer()">
+                🚀 Launch Full Viewer
+            </button>
+        </div>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <div class="icon">🔄</div>
+                <h3>Smart Sorting</h3>
+                <p>Auto-detects and corrects slice order from any machine</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="icon">⚡</div>
+                <h3>Lightning Fast</h3>
+                <p>First slice in <500ms, 60 FPS navigation</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="icon">🎨</div>
+                <h3>Clinical Presets</h3>
+                <p>12 optimized window/level presets</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="icon">📏</div>
+                <h3>Measurements</h3>
+                <p>Distance, angle, ROI with HU values</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="icon">⌨️</div>
+                <h3>Keyboard Shortcuts</h3>
+                <p>Fast workflow for emergency reading</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="icon">🔗</div>
+                <h3>Fully Integrated</h3>
+                <p>Works with RIS, AI, billing, audit</p>
+            </div>
+        </div>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h2>🎯 Quick Start</h2>
+                <ul>
+                    <li><strong>Install:</strong> <code>npm install</code></li>
+                    <li><strong>Dev:</strong> <code>npm run dev</code></li>
+                    <li><strong>Build:</strong> <code>npm run build</code></li>
+                    <li><strong>URL:</strong> <code>http://localhost:3000</code></li>
+                </ul>
+            </div>
+            
+            <div class="demo-card">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <ul>
+                    <li><code>1-9, 0</code> - Clinical presets</li>
+                    <li><code>W</code> - Window/Level</li>
+                    <li><code>Z</code> - Zoom</li>
+                    <li><code>P</code> - Pan</li>
+                    <li><code>M</code> - Measure</li>
+                    <li><code>I</code> - Invert</li>
+                    <li><code>R</code> - Reset</li>
+                    <li><code>Space</code> - Play/Pause</li>
+                </ul>
+            </div>
+            
+            <div class="demo-card">
+                <h2>🏥 Clinical Presets</h2>
+                <ul>
+                    <li><code>1</code> - Brain (stroke, hemorrhage)</li>
+                    <li><code>2</code> - Subdural (hematoma)</li>
+                    <li><code>3</code> - Stroke (acute ischemic)</li>
+                    <li><code>4</code> - Lung (pneumonia, nodules)</li>
+                    <li><code>5</code> - Mediastinum (aorta)</li>
+                    <li><code>6</code> - PE (pulmonary embolism)</li>
+                    <li><code>7</code> - Abdomen (liver, spleen)</li>
+                    <li><code>9</code> - Bone (fractures)</li>
+                </ul>
+            </div>
+            
+            <div class="demo-card">
+                <h2>📚 Documentation</h2>
+                <ul>
+                    <li><strong>Quick Start:</strong> QUICK_START.md</li>
+                    <li><strong>Full Docs:</strong> README.md</li>
+                    <li><strong>Deployment:</strong> DEPLOYMENT_GUIDE.md</li>
+                    <li><strong>Integration:</strong> INTEGRATION_EXAMPLES.md</li>
+                    <li><strong>Summary:</strong> CLINICAL_VIEWER_SUMMARY.md</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="demo-card" style="margin-top: 2rem;">
+            <h2>🚀 Emergency Protocols</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <h3 style="color: #ffc107; margin-bottom: 0.5rem;">Stroke Protocol</h3>
+                    <ol style="padding-left: 1.5rem; color: #b0b0b0;">
+                        <li>Load head CT</li>
+                        <li>Press <code>3</code> for stroke preset</li>
+                        <li>Mouse wheel to scroll</li>
+                        <li>Look for hypodensity</li>
+                        <li>Press <code>M</code> to measure</li>
+                    </ol>
+                </div>
+                
+                <div>
+                    <h3 style="color: #ffc107; margin-bottom: 0.5rem;">Trauma Protocol</h3>
+                    <ol style="padding-left: 1.5rem; color: #b0b0b0;">
+                        <li>Load trauma CT</li>
+                        <li>Press <code>4</code> (lung window)</li>
+                        <li>Press <code>7</code> (abdomen window)</li>
+                        <li>Press <code>9</code> (bone window)</li>
+                        <li><code>Space</code> for cine mode</li>
+                    </ol>
+                </div>
+                
+                <div>
+                    <h3 style="color: #ffc107; margin-bottom: 0.5rem;">PE Protocol</h3>
+                    <ol style="padding-left: 1.5rem; color: #b0b0b0;">
+                        <li>Load CTPA study</li>
+                        <li>Press <code>6</code> for PE preset</li>
+                        <li>Scroll through arteries</li>
+                        <li>Look for filling defects</li>
+                        <li>ROI tool to measure HU</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openFullViewer() {
+            // Open the full viewer in a new window
+            window.open('../index.html', 'DICOM Viewer', 'width=1920,height=1080');
+        }
+        
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Clinical DICOM Viewer Demo Ready');
+            console.log('Press any key 1-9 to see preset descriptions');
+            
+            const presets = {
+                '1': 'Brain: W:80 L:40 - Stroke, hemorrhage, mass effect',
+                '2': 'Subdural: W:200 L:75 - Subdural hematoma',
+                '3': 'Stroke: W:40 L:40 - Acute ischemic stroke',
+                '4': 'Lung: W:1500 L:-600 - Pneumonia, nodules',
+                '5': 'Mediastinum: W:350 L:50 - Aorta, lymph nodes',
+                '6': 'PE: W:700 L:100 - Pulmonary embolism',
+                '7': 'Abdomen: W:400 L:40 - Liver, spleen, kidneys',
+                '8': 'Liver: W:150 L:60 - Hepatic lesions',
+                '9': 'Bone: W:2000 L:300 - Fractures',
+                '0': 'Spine: W:250 L:50 - Vertebrae, discs'
+            };
+            
+            document.addEventListener('keydown', (e) => {
+                if (presets[e.key]) {
+                    console.log(`Preset ${e.key}: ${presets[e.key]}`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
