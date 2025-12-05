@@ -21,7 +21,7 @@ body {
         sans-serif;
     line-height: 1.6;
     color: var(--text);
-    background: linear-gradient(135deg, #0F4C1F 0%, #165B33 25%, #1A6B3F 50%, #0D3A1B 75%, #0F4C1F 100%);
+    background: linear-gradient(135deg, #0F4C1F 0%, #1A6B3F 15%, #2A8555 30%, #34A56F 45%, #FFD700 50%, #FFC700 55%, #FFB700 65%, #165B33 80%, #0F3F1A 100%);
     background-attachment: fixed;
     min-height: 100vh;
 }
