@@ -3,7 +3,7 @@
 // South African Rugby Healthcare Contribution DAO
 // ============================================================================
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = `${window.location.protocol}//${window.location.host}/api`;
 let currentPage = 1;
 const pageSize = 10;
 let allContributors = [];
