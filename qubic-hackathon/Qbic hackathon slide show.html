@@ -116,19 +116,11 @@
             .slide-5 { padding: 35px 65px; }
             .slide-6 { padding: 55px 75px; }
             .slide-7 { padding: 20px 50px; }
-            .slide-8 { padding: 50px 75px; }
-            .slide-9 { padding: 50px 75px; }
-            .slide-10 { padding: 50px 75px; }
-            .slide-11 { padding: 50px 75px; }
-            .slide-12 { padding: 50px 75px; }
-            .slide-13 { padding: 50px 75px; }
-            .slide-14 { padding: 50px 75px; }
-            .slide-15 { padding: 50px 75px; }
-            .slide-16 { padding: 50px 75px; }
-            .slide-17 { padding: 50px 75px; }
-            .slide-18 { padding: 50px 75px; }
-            .slide-19 { padding: 50px 75px; }
-            .slide-20 { padding: 50px 75px; }
+            .slide-8, .slide-9, .slide-10, .slide-11, .slide-12, 
+            .slide-13, .slide-14, .slide-15, .slide-16, .slide-17, 
+            .slide-18, .slide-19, .slide-20 { 
+                padding: 50px 75px;
+            }
         }
 
         /* Typography */
@@ -407,13 +399,13 @@
             .slide {
                 width: 100% !important;
                 height: auto;
-                min-height: 280mm;
+                min-height: 280mm !important;
                 max-height: none !important;
                 page-break-after: always;
                 page-break-inside: avoid;
                 display: flex !important;
                 overflow: visible;
-                padding: 25mm 18mm;
+                padding: 25mm 18mm !important;
                 margin: 0;
                 position: relative;
                 flex-direction: column;
@@ -459,7 +451,7 @@
                 font-size: 14pt;
             }
 
-            /* Per-slide padding adjustments for perfect A4 fit */
+            /* Per-slide padding adjustments for perfect A4 fit - All 20 slides */
             .slide-1 { padding: 27.5mm 18mm !important; min-height: 285mm !important; } /* +10% */
             .slide-2 { padding: 22.5mm 18mm !important; min-height: 280mm !important; } /* -10% */
             .slide-3 { padding: 27.5mm 18mm !important; min-height: 285mm !important; } /* +10% */
@@ -467,6 +459,12 @@
             .slide-5 { padding: 18.75mm 18mm !important; min-height: 270mm !important; } /* -25% */
             .slide-6 { padding: 27.5mm 18mm !important; min-height: 285mm !important; } /* +10% */
             .slide-7 { padding: 12.5mm 18mm !important; min-height: 260mm !important; } /* -50% */
+            .slide-8, .slide-9, .slide-10, .slide-11, .slide-12, 
+            .slide-13, .slide-14, .slide-15, .slide-16, .slide-17, 
+            .slide-18, .slide-19, .slide-20 { 
+                padding: 25mm 18mm !important; 
+                min-height: 280mm !important; 
+            } /* Standard A4 */
         }
 
         /* Scroll snap for better viewing */
