@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Volumetric Viewer - PACS Advanced Tools</title>
+    <link rel="stylesheet" href="../css/viewer.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="../js/viewers/3d-renderer.js" defer></script>
+</head>
+<body>
+    <div class="viewer-container">
+        <!-- Header -->
+        <header class="viewer-header">
+            <h1>3D Volumetric Viewer</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="btn-secondary">← Back to Dashboard</button>
+                <button id="helpBtn" class="btn-secondary">Help</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="viewer-content">
+            <!-- Left Sidebar - Study Selector & Controls -->
+            <aside class="sidebar-left">
+                <div class="panel">
+                    <h3>Study Selection</h3>
+                    <div class="form-group">
+                        <label for="studySelect">Select Study:</label>
+                        <select id="studySelect" class="form-control">
+                            <option value="">-- Select a study --</option>
+                        </select>
+                    </div>
+                    <button id="loadStudyBtn" class="btn-primary" disabled>Load Study</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Rendering Controls</h3>
+                    
+                    <div class="form-group">
+                        <label for="renderMode">Render Mode:</label>
+                        <select id="renderMode" class="form-control">
+                            <option value="volume">Volume Rendering</option>
+                            <option value="mip">Maximum Intensity Projection</option>
+                            <option value="surface">Surface Rendering</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="windowLevel">Window Level:</label>
+                        <input type="range" id="windowLevel" min="-1000" max="3000" value="40" class="slider">
+                        <span id="windowLevelValue">40</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="windowWidth">Window Width:</label>
+                        <input type="range" id="windowWidth" min="1" max="4000" value="400" class="slider">
+                        <span id="windowWidthValue">400</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="opacity">Opacity:</label>
+                        <input type="range" id="opacity" min="0" max="100" value="100" class="slider">
+                        <span id="opacityValue">100%</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="autoRotate"> Auto Rotate
+                        </label>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Presets</h3>
+                    <button class="btn-preset" data-preset="bone">Bone</button>
+                    <button class="btn-preset" data-preset="lung">Lung</button>
+                    <button class="btn-preset" data-preset="soft">Soft Tissue</button>
+                    <button class="btn-preset" data-preset="brain">Brain</button>
+                    <button class="btn-preset" data-preset="liver">Liver</button>
+                </div>
+            </aside>
+
+            <!-- Center - 3D Canvas -->
+            <main class="viewer-main">
+                <div class="canvas-container">
+                    <canvas id="viewerCanvas"></canvas>
+                    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading volume...</p>
+                    </div>
+                    <div id="errorOverlay" class="error-overlay" style="display: none;">
+                        <p id="errorMessage"></p>
+                        <button id="retryBtn" class="btn-primary">Retry</button>
+                    </div>
+                </div>
+
+                <!-- Canvas Controls Overlay -->
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <button id="resetViewBtn" class="btn-icon" title="Reset View">
+                            <span>⟲</span>
+                        </button>
+                        <button id="screenshotBtn" class="btn-icon" title="Screenshot">
+                            <span>📷</span>
+                        </button>
+                        <button id="fullscreenBtn" class="btn-icon" title="Fullscreen">
+                            <span>⛶</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Overlay -->
+                <div class="info-overlay">
+                    <div id="studyInfo" class="info-panel">
+                        <p><strong>Patient:</strong> <span id="patientName">-</span></p>
+                        <p><strong>Study Date:</strong> <span id="studyDate">-</span></p>
+                        <p><strong>Modality:</strong> <span id="modality">-</span></p>
+                        <p><strong>Dimensions:</strong> <span id="dimensions">-</span></p>
+                    </div>
+                    <div id="performanceInfo" class="info-panel">
+                        <p><strong>FPS:</strong> <span id="fps">0</span></p>
+                        <p><strong>Memory:</strong> <span id="memory">0 MB</span></p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Measurement Tools -->
+            <aside class="sidebar-right">
+                <div class="panel">
+                    <h3>Measurement Tools</h3>
+                    <div class="tool-buttons">
+                        <button id="distanceTool" class="btn-tool" data-tool="distance">
+                            <span>📏</span> Distance
+                        </button>
+                        <button id="angleTool" class="btn-tool" data-tool="angle">
+                            <span>📐</span> Angle
+                        </button>
+                        <button id="areaTool" class="btn-tool" data-tool="area">
+                            <span>⬜</span> Area
+                        </button>
+                        <button id="volumeTool" class="btn-tool" data-tool="volume">
+                            <span>🧊</span> Volume
+                        </button>
+                        <button id="huTool" class="btn-tool" data-tool="hu">
+                            <span>🔢</span> HU Value
+                        </button>
+                    </div>
+                    <button id="clearMeasurements" class="btn-secondary">Clear All</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Measurements</h3>
+                    <div id="measurementsList" class="measurements-list">
+                        <p class="empty-state">No measurements yet</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Export Options</h3>
+                    <button id="exportSTL" class="btn-secondary">Export as STL</button>
+                    <button id="exportOBJ" class="btn-secondary">Export as OBJ</button>
+                    <button id="exportDICOM" class="btn-secondary">Export DICOM</button>
+                    <button id="exportReport" class="btn-primary">Generate Report</button>
+                </div>
+
+                <div class="panel">
+                    <h3>Clipping Planes</h3>
+                    <div class="form-group">
+                        <label for="clipX">X Axis:</label>
+                        <input type="range" id="clipX" min="0" max="100" value="0" class="slider">
+                        <span id="clipXValue">0%</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="clipY">Y Axis:</label>
+                        <input type="range" id="clipY" min="0" max="100" value="0" class="slider">
+                        <span id="clipYValue">0%</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="clipZ">Z Axis:</label>
+                        <input type="range" id="clipZ" min="0" max="100" value="0" class="slider">
+                        <span id="clipZValue">0%</span>
+                    </div>
+                    <button id="resetClipping" class="btn-secondary">Reset Clipping</button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="viewer-footer">
+            <div class="footer-left">
+                <span id="statusMessage">Ready</span>
+            </div>
+            <div class="footer-right">
+                <span>Controls: Left Click = Rotate | Right Click = Pan | Scroll = Zoom</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>3D Viewer Help</h2>
+            <div class="help-content">
+                <h3>Mouse Controls</h3>
+                <ul>
+                    <li><strong>Left Click + Drag:</strong> Rotate volume</li>
+                    <li><strong>Right Click + Drag:</strong> Pan view</li>
+                    <li><strong>Scroll Wheel:</strong> Zoom in/out</li>
+                    <li><strong>Double Click:</strong> Reset view</li>
+                </ul>
+
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><strong>R:</strong> Reset view</li>
+                    <li><strong>F:</strong> Toggle fullscreen</li>
+                    <li><strong>S:</strong> Take screenshot</li>
+                    <li><strong>Space:</strong> Toggle auto-rotate</li>
+                    <li><strong>1-5:</strong> Apply presets (Bone, Lung, Soft, Brain, Liver)</li>
+                </ul>
+
+                <h3>Measurement Tools</h3>
+                <ul>
+                    <li><strong>Distance:</strong> Click two points to measure distance</li>
+                    <li><strong>Angle:</strong> Click three points to measure angle</li>
+                    <li><strong>Area:</strong> Click multiple points to define ROI</li>
+                    <li><strong>Volume:</strong> Select region for volume calculation</li>
+                    <li><strong>HU Value:</strong> Click to get Hounsfield Unit value</li>
+                </ul>
+
+                <h3>Rendering Modes</h3>
+                <ul>
+                    <li><strong>Volume Rendering:</strong> Full 3D visualization</li>
+                    <li><strong>MIP:</strong> Maximum Intensity Projection</li>
+                    <li><strong>Surface:</strong> Surface-based rendering</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize viewer when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('3D Volumetric Viewer initialized');
+            
+            // Load available studies
+            loadStudies();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        function loadStudies() {
+            // Fetch studies from API
+            fetch('/api/viewer/studies')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('studySelect');
+                    data.studies.forEach(study => {
+                        const option = document.createElement('option');
+                        option.value = study.id;
+                        option.textContent = `${study.patient_name} - ${study.study_date}`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to load studies:', error);
+                    showError('Failed to load studies. Please refresh the page.');
+                });
+        }
+
+        function setupEventListeners() {
+            // Study selection
+            document.getElementById('studySelect').addEventListener('change', function() {
+                document.getElementById('loadStudyBtn').disabled = !this.value;
+            });
+
+            // Load study button
+            document.getElementById('loadStudyBtn').addEventListener('click', loadSelectedStudy);
+
+            // Window/Level sliders
+            document.getElementById('windowLevel').addEventListener('input', function() {
+                document.getElementById('windowLevelValue').textContent = this.value;
+                updateWindowLevel();
+            });
+
+            document.getElementById('windowWidth').addEventListener('input', function() {
+                document.getElementById('windowWidthValue').textContent = this.value;
+                updateWindowWidth();
+            });
+
+            document.getElementById('opacity').addEventListener('input', function() {
+                document.getElementById('opacityValue').textContent = this.value + '%';
+                updateOpacity();
+            });
+
+            // Clipping planes
+            ['clipX', 'clipY', 'clipZ'].forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    document.getElementById(id + 'Value').textContent = this.value + '%';
+                    updateClipping();
+                });
+            });
+
+            // Preset buttons
+            document.querySelectorAll('.btn-preset').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    applyPreset(this.dataset.preset);
+                });
+            });
+
+            // Tool buttons
+            document.querySelectorAll('.btn-tool').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    activateTool(this.dataset.tool);
+                });
+            });
+
+            // Canvas controls
+            document.getElementById('resetViewBtn').addEventListener('click', resetView);
+            document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
+            // Export buttons
+            document.getElementById('exportSTL').addEventListener('click', () => exportVolume('stl'));
+            document.getElementById('exportOBJ').addEventListener('click', () => exportVolume('obj'));
+            document.getElementById('exportDICOM').addEventListener('click', () => exportVolume('dicom'));
+            document.getElementById('exportReport').addEventListener('click', generateReport);
+
+            // Other controls
+            document.getElementById('clearMeasurements').addEventListener('click', clearAllMeasurements);
+            document.getElementById('resetClipping').addEventListener('click', resetClipping);
+            document.getElementById('autoRotate').addEventListener('change', toggleAutoRotate);
+
+            // Navigation
+            document.getElementById('backBtn').addEventListener('click', () => window.location.href = '../dashboard.html');
+            document.getElementById('helpBtn').addEventListener('click', showHelp);
+
+            // Modal close
+            document.querySelector('.close').addEventListener('click', () => {
+                document.getElementById('helpModal').style.display = 'none';
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function loadSelectedStudy() {
+            const studyId = document.getElementById('studySelect').value;
+            if (!studyId) return;
+
+            showLoading(true);
+            updateStatus('Loading study...');
+
+            fetch('/api/viewer/load-study', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ study_id: studyId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateStudyInfo(data.metadata);
+                    initializeRenderer(data);
+                    updateStatus('Study loaded successfully');
+                } else {
+                    showError(data.message || 'Failed to load study');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading study:', error);
+                showError('Failed to load study. Please try again.');
+            })
+            .finally(() => {
+                showLoading(false);
+            });
+        }
+
+        function updateStudyInfo(metadata) {
+            document.getElementById('patientName').textContent = metadata.patient_name || 'Unknown';
+            document.getElementById('studyDate').textContent = metadata.study_date || 'Unknown';
+            document.getElementById('modality').textContent = metadata.modality || 'Unknown';
+            document.getElementById('dimensions').textContent = 
+                `${metadata.dimensions[0]} × ${metadata.dimensions[1]} × ${metadata.dimensions[2]}`;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorOverlay').style.display = 'flex';
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
+
+        function handleKeyboard(e) {
+            switch(e.key) {
+                case 'r':
+                case 'R':
+                    resetView();
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 's':
+                case 'S':
+                    takeScreenshot();
+                    break;
+                case ' ':
+                    document.getElementById('autoRotate').checked = !document.getElementById('autoRotate').checked;
+                    toggleAutoRotate();
+                    break;
+                case '1':
+                    applyPreset('bone');
+                    break;
+                case '2':
+                    applyPreset('lung');
+                    break;
+                case '3':
+                    applyPreset('soft');
+                    break;
+                case '4':
+                    applyPreset('brain');
+                    break;
+                case '5':
+                    applyPreset('liver');
+                    break;
+            }
+        }
+
+        // Placeholder functions - will be implemented in 3d-renderer.js
+        function initializeRenderer(data) { console.log('Initialize renderer:', data); }
+        function updateWindowLevel() { console.log('Update window level'); }
+        function updateWindowWidth() { console.log('Update window width'); }
+        function updateOpacity() { console.log('Update opacity'); }
+        function updateClipping() { console.log('Update clipping'); }
+        function applyPreset(preset) { console.log('Apply preset:', preset); }
+        function activateTool(tool) { console.log('Activate tool:', tool); }
+        function resetView() { console.log('Reset view'); }
+        function takeScreenshot() { console.log('Take screenshot'); }
+        function toggleFullscreen() { console.log('Toggle fullscreen'); }
+        function exportVolume(format) { console.log('Export volume:', format); }
+        function generateReport() { console.log('Generate report'); }
+        function clearAllMeasurements() { console.log('Clear measurements'); }
+        function resetClipping() { console.log('Reset clipping'); }
+        function toggleAutoRotate() { console.log('Toggle auto-rotate'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA Offline DICOM Viewer - Ubuntu Patient Care</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/cornerstone.css">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="assets/ubuntu-logo.svg" alt="Ubuntu Patient Care" class="logo">
+                <h1>SA Offline DICOM Viewer</h1>
+                <span class="version">v1.0.0</span>
+            </div>
+            <div class="connection-status">
+                <span id="offline-indicator" class="status-indicator offline">
+                    <i class="icon-offline"></i>
+                    Offline Mode
+                </span>
+                <span id="popi-compliance" class="popi-badge">
+                    <i class="icon-shield"></i>
+                    POPI Compliant
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Patient Studies</h3>
+                <div class="study-list" id="studyList">
+                    <div class="empty-state">
+                        <i class="icon-folder-open"></i>
+                        <p>No studies loaded</p>
+                        <button class="btn-primary" onclick="loadStudyFromFile()">
+                            Load DICOM Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Series</h3>
+                <div class="series-list" id="seriesList">
+                    <!-- Series will be populated here -->
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Tools</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn" data-tool="wwwc" title="Window/Level">
+                        <i class="icon-adjust"></i>
+                        W/L
+                    </button>
+                    <button class="tool-btn" data-tool="zoom" title="Zoom">
+                        <i class="icon-search-plus"></i>
+                        Zoom
+                    </button>
+                    <button class="tool-btn" data-tool="pan" title="Pan">
+                        <i class="icon-move"></i>
+                        Pan
+                    </button>
+                    <button class="tool-btn" data-tool="length" title="Length Measurement">
+                        <i class="icon-ruler"></i>
+                        Length
+                    </button>
+                    <button class="tool-btn" data-tool="angle" title="Angle Measurement">
+                        <i class="icon-angle"></i>
+                        Angle
+                    </button>
+                    <button class="tool-btn" data-tool="rectangle" title="Rectangle ROI">
+                        <i class="icon-square"></i>
+                        ROI
+                    </button>
+                    <button class="tool-btn" data-tool="ellipse" title="Ellipse ROI">
+                        <i class="icon-circle"></i>
+                        Ellipse
+                    </button>
+                    <button class="tool-btn" data-tool="reset" title="Reset View">
+                        <i class="icon-refresh"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Actions</h3>
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="exportStudy()">
+                        <i class="icon-download"></i>
+                        Export Study
+                    </button>
+                    <button class="btn-secondary" onclick="printCurrentImage()">
+                        <i class="icon-print"></i>
+                        Print Image
+                    </button>
+                    <button class="btn-secondary" onclick="generateReport()">
+                        <i class="icon-file-text"></i>
+                        Generate Report
+                    </button>
+                    <button class="btn-secondary" onclick="shareSecurely()">
+                        <i class="icon-share"></i>
+                        Secure Share
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="viewer-container">
+                <!-- Image Viewport -->
+                <div class="viewport-wrapper">
+                    <div class="viewport" id="dicomElement">
+                        <canvas class="cornerstone-canvas"></canvas>
+                        <div class="viewport-overlay">
+                            <div class="overlay-top-left">
+                                <div class="patient-info" id="patientInfo">
+                                    <div class="patient-name">Patient Name</div>
+                                    <div class="patient-id">ID: </div>
+                                    <div class="patient-dob">DOB: </div>
+                                </div>
+                            </div>
+                            <div class="overlay-top-right">
+                                <div class="study-info" id="studyInfo">
+                                    <div class="study-date">Study Date: </div>
+                                    <div class="modality">Modality: </div>
+                                    <div class="body-part">Body Part: </div>
+                                </div>
+                            </div>
+                            <div class="overlay-bottom-left">
+                                <div class="image-info" id="imageInfo">
+                                    <div class="window-level">W/L: </div>
+                                    <div class="zoom-level">Zoom: 100%</div>
+                                    <div class="slice-info">Image: 1/1</div>
+                                </div>
+                            </div>
+                            <div class="overlay-bottom-right">
+                                <div class="institution-info">
+                                    <div class="institution-name" id="institutionName"></div>
+                                    <div class="sa-compliance">🇿🇦 POPI Act Compliant</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Bar -->
+                <div class="controls-bar">
+                    <div class="playback-controls">
+                        <button class="control-btn" onclick="firstImage()" title="First Image">
+                            <i class="icon-step-backward"></i>
+                        </button>
+                        <button class="control-btn" onclick="previousImage()" title="Previous Image">
+                            <i class="icon-chevron-left"></i>
+                        </button>
+                        <button class="control-btn" id="playBtn" onclick="togglePlayback()" title="Play/Pause">
+                            <i class="icon-play"></i>
+                        </button>
+                        <button class="control-btn" onclick="nextImage()" title="Next Image">
+                            <i class="icon-chevron-right"></i>
+                        </button>
+                        <button class="control-btn" onclick="lastImage()" title="Last Image">
+                            <i class="icon-step-forward"></i>
+                        </button>
+                    </div>
+
+                    <div class="slider-controls">
+                        <label>Image:</label>
+                        <input type="range" id="imageSlider" min="1" max="1" value="1" 
+                               oninput="goToImage(this.value)" class="image-slider">
+                        <span id="imageCounter">1/1</span>
+                    </div>
+
+                    <div class="window-controls">
+                        <label>Window:</label>
+                        <input type="range" id="windowSlider" min="1" max="4096" value="400" 
+                               oninput="adjustWindow(this.value)" class="window-slider">
+                        <label>Level:</label>
+                        <input type="range" id="levelSlider" min="-1024" max="3071" value="40" 
+                               oninput="adjustLevel(this.value)" class="level-slider">
+                    </div>
+
+                    <div class="preset-controls">
+                        <select id="windowPresets" onchange="applyWindowPreset(this.value)">
+                            <option value="">Select Preset</option>
+                            <option value="bone">Bone</option>
+                            <option value="lung">Lung</option>
+                            <option value="soft_tissue">Soft Tissue</option>
+                            <option value="brain">Brain</option>
+                            <option value="liver">Liver</option>
+                            <option value="spine">Spine</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thumbnail Strip -->
+            <div class="thumbnail-strip" id="thumbnailStrip">
+                <!-- Thumbnails will be populated here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Study Information Modal -->
+    <div id="studyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Study Information</h2>
+                <span class="close" onclick="closeModal('studyModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="study-details" id="studyDetails">
+                    <!-- Study details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Export Study</h2>
+                <span class="close" onclick="closeModal('exportModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="option-group">
+                        <h3>Export Format</h3>
+                        <label><input type="radio" name="exportFormat" value="dicom" checked> DICOM Files</label>
+                        <label><input type="radio" name="exportFormat" value="images"> Image Files (PNG/JPEG)</label>
+                        <label><input type="radio" name="exportFormat" value="pdf"> PDF Report</label>
+                    </div>
+                    <div class="option-group">
+                        <h3>Anonymization</h3>
+                        <label><input type="checkbox" id="anonymize" checked> Remove patient identifiers (POPI Compliant)</label>
+                        <label><input type="checkbox" id="includeStudyInfo"> Include study information</label>
+                    </div>
+                    <div class="option-group">
+                        <h3>Quality</h3>
+                        <select id="exportQuality">
+                            <option value="high">High Quality</option>
+                            <option value="medium" selected>Medium Quality</option>
+                            <option value="low">Low Quality</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="performExport()">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Input (hidden) -->
+    <input type="file" id="fileInput" multiple accept=".dcm,.dicom" style="display: none;" onchange="handleFileSelect(event)">
+
+    <!-- Progress Overlay -->
+    <div id="progressOverlay" class="progress-overlay" style="display: none;">
+        <div class="progress-content">
+            <div class="progress-spinner"></div>
+            <div class="progress-text" id="progressText">Processing...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/cornerstone.min.js"></script>
+    <script src="js/cornerstoneTools.min.js"></script>
+    <script src="js/cornerstoneWebImageLoader.min.js"></script>
+    <script src="js/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="js/dicomParser.min.js"></script>
+    <script src="js/hammer.min.js"></script>
+    <script src="js/localforage.min.js"></script>
+    <script src="js/dexie.min.js"></script>
+    <script src="js/jszip.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
+    <script src="js/pdf-lib.min.js"></script>
+    <script src="js/html2canvas.min.js"></script>
+    <script src="js/crypto-js.min.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="src/core/dicomViewer.js"></script>
+    <script src="src/core/studyManager.js"></script>
+    <script src="src/core/toolManager.js"></script>
+    <script src="src/core/exportManager.js"></script>
+    <script src="src/core/popiCompliance.js"></script>
+    <script src="src/utils/dicomUtils.js"></script>
+    <script src="src/utils/saUtils.js"></script>
+    <script src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Indexing Status Test</title>
+</head>
+<body>
+    <h1>Indexing Status Test</h1>
+    <div id="status"></div>
+    <div id="details"></div>
+    <button onclick="checkStatus()">Check Status</button>
+    
+    <script>
+        async function checkStatus() {
+            try {
+                console.log('🧪 Testing indexing status API...');
+                
+                const response = await fetch('/api/nas/indexing/status');
+                const data = await response.json();
+                
+                console.log('📊 API Response:', data);
+                console.log('📊 Full JSON:', JSON.stringify(data, null, 2));
+                
+                document.getElementById('status').innerHTML = `
+                    <h3>Status: ${data.status?.state || 'unknown'}</h3>
+                    <p>Progress: ${data.status?.progress || 0}%</p>
+                    <p>Details: ${data.status?.details || 'No details'}</p>
+                `;
+                
+                // Test the condition
+                const state = data.status?.state;
+                const isRunning = state === 'running' || state === 'indexing';
+                
+                console.log(`🔍 State: ${state}`);
+                console.log(`🔍 Is Running: ${isRunning}`);
+                
+                document.getElementById('details').innerHTML = `
+                    <h4>Debug Info:</h4>
+                    <p>State: "${state}"</p>
+                    <p>Condition (running || indexing): ${isRunning}</p>
+                    <p>Should show as active: ${isRunning ? 'YES' : 'NO'}</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('status').innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        // Auto-check on load
+        checkStatus();
+        
+        // Auto-refresh every 5 seconds
+        setInterval(checkStatus, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: orthanc-ohif
+Upstream-Contact: Sebastien Jodogne <s.jodogne@gmail.com>
+Source: https://orthanc.uclouvain.be/
+
+Files: NEWS README TODO CITATION.cff
+Copyright: 2023-2025 Sebastien Jodogne, ICTEAM UCLouvain, Belgium, and 2018-2025 Open Health Imaging Foundation
+License: GPL-3.0-or-later
+
+Files: Resources/Orthanc/CMake/* Resources/Orthanc/Toolchains/*
+Copyright: 2012-2016 Sebastien Jodogne <s.jodogne@gmail.com>, University Hospital of Liege (Belgium), and 2017-2023 Osimis S.A. (Belgium), and 2021-2025 ICTEAM UCLouvain (Belgium)
+License: LGPL-3.0-or-later
+
+Files: Resources/Orthanc/Plugins/*
+Copyright: 2012-2016 Sebastien Jodogne <s.jodogne@gmail.com>, University Hospital of Liege (Belgium), and 2017-2023 Osimis S.A. (Belgium), and 2021-2025 ICTEAM UCLouvain (Belgium)
+License: GPL-3.0-or-later
+
+Files: Resources/Orthanc/Sdk-1.0.0/orthanc/OrthancCPlugin.h
+Copyright: 2012-2015 Sebastien Jodogne <s.jodogne@gmail.com>, University Hospital of Liege (Belgium)
+License: GPL-3.0-or-later

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇿🇦 NAS Integration - Medical Imaging</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nas_integration.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏥🇿🇦 NAS Integration & Network Discovery</h1>
+            <p class="subtitle">Medical Image Storage & Network Device Management</p>
+            <a href="/" class="back-link">← Back to Dashboard</a>
+        </header>
+
+        <!-- System Status Dashboard -->
+        <div class="dashboard-container mb-4">
+            <div class="row g-3">
+                <!-- Orthanc PACS Status -->
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <div class="status-header">
+                            <i class="fas fa-hospital status-icon"></i>
+                            <h5>Orthanc PACS</h5>
+                        </div>
+                        <div class="status-body">
+                            <div id="dashboardOrthancStatus" class="status-value">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Checking...
+                            </div>
+                            <div id="dashboardOrthancDetails" class="status-details">
+                                Connecting to PACS server...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connected NAS Devices -->
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <div class="status-header">
+                            <i class="fas fa-server status-icon"></i>
+                            <h5>NAS Devices</h5>
+                        </div>
+                        <div class="status-body">
+                            <div id="dashboardNasDevices" class="status-value">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Scanning...
+                            </div>
+                            <div id="dashboardNasDetails" class="status-details">
+                                Discovering network devices...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indexing Progress -->
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <div class="status-header">
+                            <i class="fas fa-database status-icon"></i>
+                            <h5>Index Status</h5>
+                        </div>
+                        <div class="status-body">
+                            <div id="dashboardIndexStatus" class="status-value">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Loading...
+                            </div>
+                            <div id="dashboardIndexDetails" class="status-details">
+                                Checking indexing progress...
+                            </div>
+                            <div id="dashboardIndexProgress" class="progress mt-2" style="height: 6px; display: none;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Bar -->
+            <div class="quick-actions mt-3">
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh Status
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="connectOrthanc()" title="Connect to Orthanc">
+                        <i class="fas fa-plug me-1"></i>Connect PACS
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="startIndexing()" title="Start NAS Indexing">
+                        <i class="fas fa-play me-1"></i>Start Indexing
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="enhancedDiscover(true, true)" title="Discover NAS Devices">
+                        <i class="fas fa-search me-1"></i>Discover Devices
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="NASDiscoveryUI.show()" title="Advanced NAS Discovery">
+                        <i class="fas fa-network-wired me-1"></i>Auto-Discover NAS
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="openPatientSearch()" title="Smart Patient Search">
+                        <i class="fas fa-user-injured me-1"></i>Patient Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Orthanc Integration Section -->
+            <div class="section">
+                <h3>🏥 Orthanc PACS Integration</h3>
+                <p>Connect to your Orthanc PACS server for DICOM management</p>
+                <input type="text" id="orthancUrl" placeholder="Orthanc URL (e.g., http://localhost:8042)" value="http://localhost:8042">
+                <input type="text" id="orthancUser" placeholder="Username (optional)">
+                <input type="password" id="orthancPass" placeholder="Password (optional)">
+                <br>
+                <button class="btn btn-primary" onclick="connectOrthanc()">🔗 Connect to Orthanc</button>
+                <button class="btn" onclick="testOrthancConnection()">🧪 Test Connection</button>
+                <div id="orthancStatus" class="result-area">No connection attempted...</div>
+            </div>
+
+            <!-- Image Indexing Section -->
+            <div class="section">
+                <h3>📂 Medical Image Indexing</h3>
+                <p>Scan and index DICOM images from network storage</p>
+                <div class="mb-2">
+                    <label>NAS Share Path</label>
+                    <input type="text" id="indexPath" placeholder="\\\\nas-host\\share\\dicom or /share/dicom" value="/nas/dicom/" class="form-control">
+                </div>
+                <div class="mb-2">
+                    <label>Username</label>
+                    <input type="text" id="indexUsername" placeholder="username" class="form-control">
+                </div>
+                <div class="mb-2">
+                    <label>Password</label>
+                    <input type="password" id="indexPassword" placeholder="password" class="form-control">
+                </div>
+                <div class="mb-2">
+                    <select id="indexOptions" class="form-select">
+                        <option value="scan_only">Scan Only (No Database)</option>
+                        <option value="index_metadata">Index Metadata Only</option>
+                        <option value="full_index">Full Index with Thumbnails</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <button class="btn btn-warning" onclick="startIndexing()">📊 Start Indexing</button>
+                    <button class="btn" onclick="getIndexStatus()">📈 Check Progress</button>
+                </div>
+                <div id="indexResults" class="result-area">Indexing not started...</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Patient Search Section -->
+            <div class="section">
+                <h3>🔍 Patient Image Search</h3>
+                <p>Search indexed medical images by patient information</p>
+                <input type="text" id="patientQuery" placeholder="Patient Name, ID, or Study Date">
+                <select id="searchType">
+                    <option value="name">Patient Name</option>
+                    <option value="id">Patient ID</option>
+                    <option value="study_date">Study Date</option>
+                    <option value="modality">Modality (CT, MRI, etc.)</option>
+                </select>
+                <br>
+                <button class="btn btn-success" onclick="searchPatients()">🔍 Search Images</button>
+                <button class="btn" onclick="clearSearchResults()">🗑️ Clear Results</button>
+                <div id="searchResults" class="result-area">No search performed...</div>
+            </div>
+
+            <!-- Enhanced Medical Sharing Section -->
+            <div class="section">
+                <h3>🏥 Medical Image Sharing</h3>
+                <p>Generate secure links for doctors and patients</p>
+                
+                <!-- Patient Information -->
+                <div class="form-group mb-3">
+                    <label class="form-label"><strong>📋 Patient Information:</strong></label>
+                    <input type="text" id="sharePatientId" class="form-control" placeholder="Patient ID (required)" required>
+                </div>
+                
+                <!-- Doctor Information -->
+                <div class="form-group mb-3">
+                    <label class="form-label"><strong>👨‍⚕️ Doctor Information:</strong></label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" id="doctorName" class="form-control mb-2" placeholder="Doctor Name" value="Dr. ">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="email" id="doctorEmail" class="form-control mb-2" placeholder="Doctor Email (optional)">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sharing Options -->
+                <div class="form-group mb-3">
+                    <label class="form-label"><strong>🔗 Sharing Options:</strong></label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select id="recipientType" class="form-select mb-2">
+                                <option value="doctor">Doctor/Colleague</option>
+                                <option value="patient">Patient</option>
+                                <option value="colleague">Medical Colleague</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" id="linkExpiry" class="form-control mb-2" placeholder="Expiry (hours)" value="72" min="1" max="168">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="allowDownload" checked>
+                                <label class="form-check-label" for="allowDownload">Allow Downloads</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Message -->
+                <div class="form-group mb-3">
+                    <label class="form-label"><strong>💬 Message (optional):</strong></label>
+                    <textarea id="shareMessage" class="form-control" placeholder="Message for recipient..." rows="2"></textarea>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mb-3">
+                    <button class="btn btn-success me-2" onclick="generateShareLink()">
+                        🔗 Generate Secure Link
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearShareForm()">
+                        �️ Clear Form
+                    </button>
+                </div>
+                
+                <!-- Results Area -->
+                <div id="shareResults" class="result-area">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Enter patient ID and doctor information to generate a secure sharing link
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Enhanced Network Discovery -->
+            <div class="section">
+                <h3>🔍 Enhanced NAS Network Discovery</h3>
+                <p>Advanced network discovery with ARP table and range ping capabilities</p>
+                
+                <!-- ARP Table Section -->
+                <div class="discovery-subsection">
+                    <h4>📋 ARP Table Discovery</h4>
+                    <p class="subsection-desc">View devices currently in the system's ARP table</p>
+                    <button class="btn" onclick="getArpTable()">📋 View ARP Table</button>
+                    <button class="btn" onclick="enhancedDiscover(true, false)">🔍 Quick ARP Scan</button>
+                </div>
+                
+                <!-- Range Ping Section -->
+                <div class="discovery-subsection">
+                    <h4>🎯 Range Ping Discovery</h4>
+                    <div class="network-config-grid">
+                        <div class="config-item">
+                            <label>Start IP:</label>
+                            <input type="text" id="startIp" placeholder="192.168.1.1" value="192.168.1.1">
+                        </div>
+                        <div class="config-item">
+                            <label>End IP:</label>
+                            <input type="text" id="endIp" placeholder="192.168.1.50" value="192.168.1.50">
+                        </div>
+                        <div class="config-item">
+                            <label>Timeout (sec):</label>
+                            <input type="number" id="pingTimeout" min="1" max="10" value="2">
+                        </div>
+                        <div class="config-item">
+                            <label>Max Concurrent:</label>
+                            <input type="number" id="maxConcurrent" min="1" max="50" value="10">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="pingRange()">🎯 Ping IP Range</button>
+                        <button class="btn" onclick="enhancedDiscover(false, true)">🔍 Range Scan Only</button>
+                        <button class="btn btn-warning" onclick="enhancedDiscover(true, true)">🚀 Full Discovery (ARP + Range)</button>
+                        <button class="btn btn-success" onclick="saveNetworkSettings()">💾 Save Network Settings</button>
+                    </div>
+                </div>
+                
+                <!-- Quick Ping Section -->
+                <div class="discovery-subsection">
+                    <h4>📡 Quick Ping Test</h4>
+                    <div class="quick-ping-form">
+                        <div class="ping-input-group">
+                            <label>IP Address:</label>
+                            <input type="text" id="singlePingIp" placeholder="192.168.1.100">
+                        </div>
+                        <div class="ping-input-group">
+                            <label>Timeout:</label>
+                            <input type="number" id="singlePingTimeout" min="1" max="30" value="5">
+                        </div>
+                        <button class="btn" onclick="pingSingleDevice()">📡 Ping</button>
+                    </div>
+                </div>
+                
+                <!-- Legacy Discovery -->
+                <div class="discovery-subsection legacy">
+                    <h4>🔄 Legacy Network Scan</h4>
+                    <div class="legacy-form">
+                        <input type="text" id="networkRange" placeholder="Network Range (e.g., 155.235.81.0/24)" value="155.235.81.0/24">
+                        <button class="btn" onclick="startNetworkScan()">🔍 Start Network Scan</button>
+                    </div>
+                </div>
+                
+                <div id="discoveryResults" class="result-area">Ready to discover network devices...</div>
+            </div>
+
+            <!-- Storage Configuration -->
+            <div class="section">
+                <h3>⚙️ Storage Configuration</h3>
+                <p>Configure DICOM storage paths and backup settings</p>
+                <input type="text" id="storagePath" placeholder="Primary Storage Path" value="/nas/dicom/primary/">
+                <input type="text" id="backupPath" placeholder="Backup Storage Path" value="/nas/dicom/backup/">
+                <select id="compressionLevel">
+                    <option value="none">No Compression</option>
+                    <option value="lossless">Lossless Compression</option>
+                    <option value="lossy">Lossy Compression</option>
+                </select>
+                <br>
+                <button class="btn btn-warning" onclick="configureStorage()">⚙️ Configure Storage</button>
+                <button class="btn" onclick="testStoragePaths()">🧪 Test Paths</button>
+                <div id="storageResults" class="result-area">Storage not configured...</div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            <p>Processing request...</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Load modular JavaScript files in correct order -->
+    <script src="{{ url_for('static', filename='js/nas-core.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-helpers.js') }}"></script>
+    <!-- Modular UI helper parts (must load after loader) -->
+    <script src="{{ url_for('static', filename='js/ui-helpers/ports.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-helpers/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-helpers/formatters.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/orthanc-integration.js') }}?v=20250929100000"></script>
+    <script src="{{ url_for('static', filename='js/network-discovery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/device-management.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/global-aliases.js') }}"></script>
+    <!-- NAS Configuration Modal -->
+    <script src="{{ url_for('static', filename='js/nas-config-modal.js') }}"></script>
+    <!-- NAS Discovery and Auto-Connection Module -->
+    <script src="{{ url_for('static', filename='js/nas-discovery-ui.js') }}"></script>
+    <!-- Debug test script to verify NAS config loading -->
+    <script src="{{ url_for('static', filename='js/test-nas-loading.js') }}"></script>
+</body>
+</html>

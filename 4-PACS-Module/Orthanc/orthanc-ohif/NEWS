@@ -1,0 +1,68 @@
+Version 1.7 (2025-08-12)
+========================
+
+* Updated OHIF to 3.11.0
+
+
+Version 1.6 (2025-04-29)
+========================
+
+* Updated OHIF to 3.10.1
+* Known issues: 
+  - authorization tokens are not functional with videos.
+    Waiting for this PR to be validated and incorporated: 
+    https://github.com/OHIF/Viewers/pull/4958
+  
+
+Version 1.5 (2025-01-17)
+========================
+
+* Updated OHIF to 3.9.2
+* In "dicom-web" data source, fixed the default "app-config.js"
+  configuration to enable display of PDFs.
+* Updated cached "dicom-json" version to 2. This implies that, when using
+  the "dicom-json" source, the cached metadata will have to be recomputed
+  the first time you open a study.
+
+
+Version 1.4 (2024-11-26)
+========================
+
+* Updated OHIF to 3.9.1
+* The default value for the "DataSource" configuration is now "dicom-web"
+  instead of "dicom-json" since "dicom-web" is usually
+  more optimized.
+
+
+Version 1.3 (2024-07-12)
+========================
+
+* Updated OHIF to 3.8.3
+* Enabled support for segmentation and microscopy modes
+  Note that the microscopy mode is not stable yet in OHIF!
+
+
+Version 1.2 (2024-01-04)
+========================
+
+* Fixed wrong MIME type for app-config.js that prevents the OHIF
+  viewer from loading with Orthanc 1.12.2
+
+
+Version 1.1 (2023-11-24)
+========================
+
+* Updated OHIF to 3.7.0
+* The default configuration has been adapted to avoid unneccesary
+  transcoding on Orthanc side
+* Patch to make the build of static assets reproducible, following a
+  suggestion by Bernhard M. Wiedemann (bwiedemann@suse.de)
+
+
+Version 1.0 (2023-06-19)
+========================
+
+=> Minimum SDK version: 1.0.0 <=
+
+* Initial release
+* Contains OHIF 3.6.0

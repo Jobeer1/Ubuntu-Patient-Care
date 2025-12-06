@@ -1,0 +1,12 @@
+{
+  "nas_devices": {},
+  "default_settings": {
+    "dicom_port": 4242,
+    "web_port": 8042,
+    "storage_path": "/var/lib/orthanc/db",
+    "auto_routing": false,
+    "compression": true
+  },
+  "last_updated": "2025-11-03T12:56:57.433001",
+  "version": "1.0"
+}

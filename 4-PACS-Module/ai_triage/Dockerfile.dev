@@ -1,0 +1,35 @@
+# Base image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+# libgl1-mesa-glx is needed for opencv-python
+# libgomp1 is needed for onnxruntime
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development tools
+RUN pip install --no-cache-dir pytest black flake8 mypy
+
+# Copy source code
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Default command (can be overridden in docker-compose)
+CMD ["python", "-m", "ai_triage.triage_engine"]

@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mammography Viewer - PACS Advanced Tools</title>
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="../css/viewer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Mammography-specific styles */
+        .mammo-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: #1a1a1a;
+        }
+        
+        .mammo-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: white;
+        }
+        
+        .mammo-sidebar {
+            background: #1e1e1e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #333;
+        }
+        
+        .mammo-main {
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .mammo-results {
+            background: #1e1e1e;
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+        }
+        
+        .view-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .view-btn {
+            padding: 12px;
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        .view-btn:hover {
+            background: #444;
+            border-color: #e91e63;
+        }
+        
+        .view-btn.active {
+            background: #e91e63;
+            border-color: #e91e63;
+        }
+        
+        .image-display {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            padding: 10px;
+        }
+        
+        .image-panel {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .image-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .image-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .lesion-marker {
+            position: absolute;
+            border: 2px solid #ff4444;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: pulse 2s infinite;
+        }
+        
+        .microcalc-marker {
+            position: absolute;
+            border: 2px solid #44ff44;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .cad-controls {
+            background: #2a2a2a;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .cad-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .cad-sensitivity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sensitivity-slider {
+            flex: 1;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .sensitivity-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #e91e63;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .birads-panel {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .birads-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .score-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .score-1, .score-2 { background: #4CAF50; color: white; }
+        .score-3 { background: #FF9800; color: white; }
+        .score-4 { background: #FF5722; color: white; }
+        .score-5, .score-6 { background: #F44336; color: white; }
+        
+        .density-assessment {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .density-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .density-option {
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .density-option:hover {
+            background: #444;
+            border-color: #e91e63;
+        }
+        
+        .density-option.active {
+            background: #e91e63;
+            border-color: #e91e63;
+            color: white;
+        }
+        
+        .findings-list {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .finding-item {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .finding-type {
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 4px;
+        }
+        
+        .finding-details {
+            color: #ccc;
+        }
+        
+        .measurement-tools {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tool-btn {
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 11px;
+        }
+        
+        .tool-btn:hover {
+            background: #444;
+            border-color: #e91e63;
+        }
+        
+        .tool-btn.active {
+            background: #e91e63;
+            border-color: #e91e63;
+        }
+        
+        .comparison-mode {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .report-section {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .report-textarea {
+            width: 100%;
+            height: 120px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #333;
+            border-top: 3px solid #e91e63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .mammo-container {
+                grid-template-columns: 280px 1fr 320px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .mammo-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px auto 1fr auto;
+            }
+            
+            .image-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .mammo-sidebar,
+            .mammo-results {
+                position: relative;
+                height: auto;
+                max-height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .view-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .measurement-tools {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .density-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mammo-container">
+        <!-- Header -->
+        <div class="mammo-header">
+            <div class="header-left">
+                <h1><i class="fas fa-user-md"></i> Mammography Viewer</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="showHelp()">
+                    <i class="fas fa-question-circle"></i> Help
+                </button>
+                <button class="btn btn-primary" onclick="exportReport()">
+                    <i class="fas fa-file-pdf"></i> Export Report
+                </button>
+            </div>
+        </div>
+        
+        <!-- Left Sidebar - Controls -->
+        <div class="mammo-sidebar">
+            <!-- Study Selector -->
+            <div class="panel">
+                <h3><i class="fas fa-folder-open"></i> Study Selection</h3>
+                <select id="studySelector" class="form-control" onchange="loadStudy()">
+                    <option value="">Select Mammography Study...</option>
+                    <option value="mammo_001">Screening Mammo - Patient A (2025-10-22)</option>
+                    <option value="mammo_002">Diagnostic Mammo - Patient B (2025-10-21)</option>
+                    <option value="mammo_003">Follow-up Mammo - Patient C (2025-10-20)</option>
+                </select>
+                
+                <div class="study-info" id="studyInfo" style="display: none;">
+                    <div class="info-item">
+                        <span class="label">Patient:</span>
+                        <span class="value" id="patientName">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Study Date:</span>
+                        <span class="value" id="studyDate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Study Type:</span>
+                        <span class="value" id="studyType">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- View Selector -->
+            <div class="panel">
+                <h3><i class="fas fa-images"></i> View Selection</h3>
+                <div class="view-selector">
+                    <div class="view-btn active" data-view="cc" onclick="selectView(this)">
+                        <i class="fas fa-compress-arrows-alt"></i><br>
+                        CC Views
+                    </div>
+                    <div class="view-btn" data-view="mlo" onclick="selectView(this)">
+                        <i class="fas fa-expand-arrows-alt"></i><br>
+                        MLO Views
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Laterality:</label>
+                    <select id="lateralitySelect" class="form-control">
+                        <option value="bilateral">Bilateral</option>
+                        <option value="left">Left Only</option>
+                        <option value="right">Right Only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- CAD Controls -->
+            <div class="panel">
+                <h3><i class="fas fa-robot"></i> CAD Analysis</h3>
+                
+                <div class="cad-toggle">
+                    <input type="checkbox" id="cadEnabled" checked onchange="toggleCAD()">
+                    <label for="cadEnabled">Enable CAD Overlay</label>
+                </div>
+                
+                <div class="cad-sensitivity">
+                    <label>Sensitivity:</label>
+                    <input type="range" class="sensitivity-slider" id="cadSensitivity" 
+                           min="0.1" max="1.0" step="0.1" value="0.5" oninput="updateCADSensitivity(this.value)">
+                    <span id="sensitivityValue">0.5</span>
+                </div>
+                
+                <button class="btn btn-primary btn-block" onclick="runCADAnalysis()" style="margin-top: 15px;">
+                    <i class="fas fa-search"></i> Run CAD Analysis
+                </button>
+            </div>
+            
+            <!-- Measurement Tools -->
+            <div class="panel">
+                <h3><i class="fas fa-ruler"></i> Measurement Tools</h3>
+                <div class="measurement-tools">
+                    <button class="tool-btn" onclick="activateTool('distance')" title="Distance">
+                        <i class="fas fa-ruler"></i><br>Distance
+                    </button>
+                    <button class="tool-btn" onclick="activateTool('area')" title="Area">
+                        <i class="fas fa-vector-square"></i><br>Area
+                    </button>
+                    <button class="tool-btn" onclick="activateTool('angle')" title="Angle">
+                        <i class="fas fa-drafting-compass"></i><br>Angle
+                    </button>
+                    <button class="tool-btn" onclick="activateTool('roi')" title="ROI">
+                        <i class="fas fa-draw-polygon"></i><br>ROI
+                    </button>
+                    <button class="tool-btn" onclick="activateTool('lesion')" title="Mark Lesion">
+                        <i class="fas fa-crosshairs"></i><br>Lesion
+                    </button>
+                    <button class="tool-btn" onclick="activateTool('microcalc')" title="Mark Microcalc">
+                        <i class="fas fa-dot-circle"></i><br>Microcalc
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Comparison Mode -->
+            <div class="panel">
+                <h3><i class="fas fa-columns"></i> Comparison</h3>
+                <div class="comparison-mode">
+                    <div class="form-group">
+                        <label>Compare with:</label>
+                        <select id="comparisonStudy" class="form-control">
+                            <option value="">No Comparison</option>
+                            <option value="prior_001">Prior Study (2024-10-22)</option>
+                            <option value="prior_002">Prior Study (2023-10-22)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="comparison-controls">
+                        <button class="btn btn-sm btn-secondary" onclick="syncViews()">
+                            <i class="fas fa-sync"></i> Sync Views
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="toggleFlicker()">
+                            <i class="fas fa-exchange-alt"></i> Flicker
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Viewer Area -->
+        <div class="mammo-main">
+            <!-- Image Display -->
+            <div class="image-display">
+                <!-- Left Breast -->
+                <div class="image-panel">
+                    <canvas id="leftCanvas" class="image-canvas"></canvas>
+                    <div class="image-overlay" id="leftOverlay"></div>
+                    <div class="image-info">
+                        <div>Left Breast - CC</div>
+                        <div id="leftImageInfo">No image loaded</div>
+                    </div>
+                </div>
+                
+                <!-- Right Breast -->
+                <div class="image-panel">
+                    <canvas id="rightCanvas" class="image-canvas"></canvas>
+                    <div class="image-overlay" id="rightOverlay"></div>
+                    <div class="image-info">
+                        <div>Right Breast - CC</div>
+                        <div id="rightImageInfo">No image loaded</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CAD Controls Bar -->
+            <div class="cad-controls">
+                <div class="cad-toggle">
+                    <span style="color: #ccc; font-size: 12px;">CAD Overlay:</span>
+                    <label style="margin-left: 15px;">
+                        <input type="checkbox" id="showLesions" checked onchange="toggleLesionOverlay()">
+                        Lesions
+                    </label>
+                    <label style="margin-left: 15px;">
+                        <input type="checkbox" id="showMicrocalcs" checked onchange="toggleMicrocalcOverlay()">
+                        Microcalcifications
+                    </label>
+                    <label style="margin-left: 15px;">
+                        <input type="checkbox" id="showConfidence" onchange="toggleConfidenceOverlay()">
+                        Confidence Scores
+                    </label>
+                </div>
+                
+                <div class="cad-sensitivity">
+                    <span style="color: #ccc; font-size: 12px;">Window/Level:</span>
+                    <input type="range" id="windowSlider" min="0" max="100" value="50" 
+                           style="width: 100px; margin-left: 10px;" oninput="adjustWindow(this.value)">
+                    <input type="range" id="levelSlider" min="0" max="100" value="50" 
+                           style="width: 100px; margin-left: 10px;" oninput="adjustLevel(this.value)">
+                </div>
+            </div>
+            
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <p style="color: white; margin-top: 15px;">Analyzing mammogram...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar - Results -->
+        <div class="mammo-results">
+            <!-- BI-RADS Assessment -->
+            <div class="panel">
+                <h3><i class="fas fa-clipboard-check"></i> BI-RADS Assessment</h3>
+                <div class="birads-panel">
+                    <div class="birads-score">
+                        <span>BI-RADS Category:</span>
+                        <span class="score-badge score-2" id="biradsScore">2</span>
+                    </div>
+                    <div style="font-size: 12px; color: #ccc; margin-bottom: 10px;">
+                        <span id="biradsDescription">Benign - Routine screening</span>
+                    </div>
+                    <div style="font-size: 11px; color: #aaa;">
+                        Confidence: <span id="biradsConfidence">85%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Breast Density Assessment -->
+            <div class="panel">
+                <h3><i class="fas fa-th-large"></i> Breast Density</h3>
+                <div class="density-assessment">
+                    <div style="font-size: 12px; color: #ccc; margin-bottom: 10px;">
+                        ACR Breast Density:
+                    </div>
+                    <div class="density-grid">
+                        <div class="density-option" data-density="A" onclick="selectDensity(this)">
+                            A - Fatty
+                        </div>
+                        <div class="density-option active" data-density="B" onclick="selectDensity(this)">
+                            B - Scattered
+                        </div>
+                        <div class="density-option" data-density="C" onclick="selectDensity(this)">
+                            C - Heterogeneous
+                        </div>
+                        <div class="density-option" data-density="D" onclick="selectDensity(this)">
+                            D - Extremely Dense
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CAD Results -->
+            <div class="panel">
+                <h3><i class="fas fa-chart-bar"></i> CAD Results</h3>
+                <div class="birads-panel">
+                    <div class="birads-score">
+                        <span>CAD Score:</span>
+                        <span style="color: #e91e63; font-weight: bold;" id="cadScore">23.5</span>
+                    </div>
+                    <div style="font-size: 12px; color: #ccc; margin-bottom: 10px;">
+                        Risk Level: <span id="cadRiskLevel">Low</span>
+                    </div>
+                    <div style="font-size: 11px; color: #aaa;">
+                        Detection Confidence: <span id="cadConfidence">78%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Findings List -->
+            <div class="panel">
+                <h3><i class="fas fa-list"></i> Findings</h3>
+                <div class="findings-list" id="findingsList">
+                    <div class="finding-item">
+                        <div class="finding-type">Lesion #1</div>
+                        <div class="finding-details">
+                            Location: Left breast, upper outer quadrant<br>
+                            Size: 8.2 mm<br>
+                            Shape: Oval<br>
+                            Margin: Circumscribed<br>
+                            Confidence: 72%
+                        </div>
+                    </div>
+                    
+                    <div class="finding-item">
+                        <div class="finding-type">Microcalcification Cluster #1</div>
+                        <div class="finding-details">
+                            Location: Right breast, retroareolar<br>
+                            Count: 7 calcifications<br>
+                            Morphology: Amorphous<br>
+                            Distribution: Grouped<br>
+                            Confidence: 65%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            <div class="panel">
+                <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+                <div class="findings-list">
+                    <div class="finding-item">
+                        <div class="finding-details">
+                            • Continue routine annual screening<br>
+                            • No additional imaging needed<br>
+                            • Consider supplemental screening if high risk
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Generation -->
+            <div class="panel">
+                <h3><i class="fas fa-file-alt"></i> Report</h3>
+                <div class="report-section">
+                    <textarea id="reportText" class="report-textarea" 
+                              placeholder="Mammography report will be auto-generated...">MAMMOGRAPHY REPORT
+
+CLINICAL HISTORY:
+Routine screening mammography
+
+TECHNIQUE:
+Digital mammography with CAD analysis
+
+FINDINGS:
+Breast composition: Scattered fibroglandular density (ACR B)
+No suspicious masses or microcalcifications identified
+
+IMPRESSION:
+BI-RADS Category 2 - Benign
+Routine annual screening recommended</textarea>
+                    
+                    <div class="report-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="generateReport()">
+                            <i class="fas fa-magic"></i> Auto-Generate
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="exportReport()">
+                            <i class="fas fa-download"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-question-circle"></i> Mammography Viewer Help</h2>
+                <button class="modal-close" onclick="closeHelp()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>BI-RADS Categories</h3>
+                <ul>
+                    <li><strong>0:</strong> Incomplete - Additional imaging needed</li>
+                    <li><strong>1:</strong> Negative - Routine screening</li>
+                    <li><strong>2:</strong> Benign - Routine screening</li>
+                    <li><strong>3:</strong> Probably benign - Short-term follow-up</li>
+                    <li><strong>4:</strong> Suspicious - Tissue sampling considered</li>
+                    <li><strong>5:</strong> Highly suspicious - Appropriate action</li>
+                    <li><strong>6:</strong> Known malignancy</li>
+                </ul>
+                
+                <h3>Breast Density (ACR)</h3>
+                <ul>
+                    <li><strong>A:</strong> Almost entirely fatty</li>
+                    <li><strong>B:</strong> Scattered fibroglandular density</li>
+                    <li><strong>C:</strong> Heterogeneously dense</li>
+                    <li><strong>D:</strong> Extremely dense</li>
+                </ul>
+                
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><kbd>W</kbd> - Adjust window</li>
+                    <li><kbd>L</kbd> - Adjust level</li>
+                    <li><kbd>R</kbd> - Reset view</li>
+                    <li><kbd>C</kbd> - Toggle CAD overlay</li>
+                    <li><kbd>M</kbd> - Mark lesion</li>
+                    <li><kbd>Space</kbd> - Toggle flicker comparison</li>
+                </ul>
+                
+                <h3>CAD Analysis</h3>
+                <ul>
+                    <li><strong>Lesion Detection:</strong> Automated mass detection</li>
+                    <li><strong>Microcalcification Analysis:</strong> Cluster identification</li>
+                    <li><strong>CAD Score:</strong> Overall suspicion level (0-100)</li>
+                    <li><strong>Confidence:</strong> Algorithm certainty</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Mammography Viewer Controller
+        class MammographyViewerController {
+            constructor() {
+                this.currentStudy = null;
+                this.currentView = 'cc';
+                this.cadEnabled = true;
+                this.cadSensitivity = 0.5;
+                this.currentDensity = 'B';
+                this.findings = [];
+                
+                this.initializeCanvases();
+                this.setupEventListeners();
+            }
+            
+            initializeCanvases() {
+                this.leftCanvas = document.getElementById('leftCanvas');
+                this.rightCanvas = document.getElementById('rightCanvas');
+                this.leftCtx = this.leftCanvas.getContext('2d');
+                this.rightCtx = this.rightCanvas.getContext('2d');
+                
+                // Set canvas sizes
+                this.resizeCanvases();
+                window.addEventListener('resize', () => this.resizeCanvases());
+            }
+            
+            resizeCanvases() {
+                const panels = document.querySelectorAll('.image-panel');
+                panels.forEach((panel, index) => {
+                    const canvas = index === 0 ? this.leftCanvas : this.rightCanvas;
+                    canvas.width = panel.clientWidth;
+                    canvas.height = panel.clientHeight;
+                });
+                
+                this.redrawImages();
+            }
+            
+            setupEventListeners() {
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key.toLowerCase()) {
+                        case 'w':
+                            e.preventDefault();
+                            this.adjustWindow();
+                            break;
+                        case 'l':
+                            e.preventDefault();
+                            this.adjustLevel();
+                            break;
+                        case 'r':
+                            this.resetView();
+                            break;
+                        case 'c':
+                            this.toggleCAD();
+                            break;
+                        case 'm':
+                            this.activateTool('lesion');
+                            break;
+                        case ' ':
+                            e.preventDefault();
+                            this.toggleFlicker();
+                            break;
+                    }
+                });
+                
+                // Canvas mouse events
+                this.leftCanvas.addEventListener('click', (e) => this.handleCanvasClick(e, 'left'));
+                this.rightCanvas.addEventListener('click', (e) => this.handleCanvasClick(e, 'right'));
+            }
+            
+            handleCanvasClick(event, side) {
+                const rect = event.target.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                console.log(`Clicked on ${side} canvas at (${x}, ${y})`);
+                
+                // Handle tool-specific actions
+                const activeTool = document.querySelector('.tool-btn.active');
+                if (activeTool) {
+                    const tool = activeTool.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    this.handleToolAction(tool, x, y, side);
+                }
+            }
+            
+            handleToolAction(tool, x, y, side) {
+                switch(tool) {
+                    case 'lesion':
+                        this.markLesion(x, y, side);
+                        break;
+                    case 'microcalc':
+                        this.markMicrocalc(x, y, side);
+                        break;
+                    case 'distance':
+                        this.measureDistance(x, y, side);
+                        break;
+                    case 'area':
+                        this.measureArea(x, y, side);
+                        break;
+                }
+            }
+            
+            markLesion(x, y, side) {
+                const overlay = side === 'left' ? 'leftOverlay' : 'rightOverlay';
+                const marker = document.createElement('div');
+                marker.className = 'lesion-marker';
+                marker.style.left = (x - 10) + 'px';
+                marker.style.top = (y - 10) + 'px';
+                marker.style.width = '20px';
+                marker.style.height = '20px';
+                
+                document.getElementById(overlay).appendChild(marker);
+                
+                // Add to findings
+                this.addFinding('lesion', x, y, side);
+            }
+            
+            markMicrocalc(x, y, side) {
+                const overlay = side === 'left' ? 'leftOverlay' : 'rightOverlay';
+                const marker = document.createElement('div');
+                marker.className = 'microcalc-marker';
+                marker.style.left = (x - 3) + 'px';
+                marker.style.top = (y - 3) + 'px';
+                marker.style.width = '6px';
+                marker.style.height = '6px';
+                
+                document.getElementById(overlay).appendChild(marker);
+                
+                // Add to findings
+                this.addFinding('microcalc', x, y, side);
+            }
+            
+            addFinding(type, x, y, side) {
+                const finding = {
+                    id: this.findings.length + 1,
+                    type: type,
+                    x: x,
+                    y: y,
+                    side: side,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.findings.push(finding);
+                this.updateFindingsList();
+            }
+            
+            updateFindingsList() {
+                const findingsList = document.getElementById('findingsList');
+                // Update findings display (implementation would go here)
+            }
+            
+            redrawImages() {
+                // Redraw mammogram images (implementation would go here)
+                this.drawMockMammogram(this.leftCtx);
+                this.drawMockMammogram(this.rightCtx);
+            }
+            
+            drawMockMammogram(ctx) {
+                const canvas = ctx.canvas;
+                
+                // Clear canvas
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw mock breast outline
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.ellipse(canvas.width * 0.6, canvas.height * 0.5, 
+                           canvas.width * 0.3, canvas.height * 0.4, 0, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Add some texture
+                ctx.fillStyle = '#555';
+                for (let i = 0; i < 20; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const radius = Math.random() * 5 + 2;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Initialize controller
+        const mammoController = new MammographyViewerController();
+        
+        // Global functions for UI interaction
+        function loadStudy() {
+            const studyId = document.getElementById('studySelector').value;
+            if (!studyId) return;
+            
+            // Show loading
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Simulate study loading
+            setTimeout(() => {
+                document.getElementById('studyInfo').style.display = 'block';
+                document.getElementById('patientName').textContent = 'Jane Doe';
+                document.getElementById('studyDate').textContent = '2025-10-22';
+                document.getElementById('studyType').textContent = 'Screening Mammography';
+                
+                document.getElementById('loadingOverlay').style.display = 'none';
+                mammoController.currentStudy = studyId;
+                mammoController.redrawImages();
+            }, 2000);
+        }
+        
+        function selectView(element) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            mammoController.currentView = element.dataset.view;
+            
+            // Update image info
+            const viewType = element.dataset.view.toUpperCase();
+            document.querySelector('#leftImageInfo').parentElement.firstElementChild.textContent = `Left Breast - ${viewType}`;
+            document.querySelector('#rightImageInfo').parentElement.firstElementChild.textContent = `Right Breast - ${viewType}`;
+        }
+        
+        function toggleCAD() {
+            mammoController.cadEnabled = document.getElementById('cadEnabled').checked;
+            console.log('CAD toggled:', mammoController.cadEnabled);
+        }
+        
+        function updateCADSensitivity(value) {
+            mammoController.cadSensitivity = parseFloat(value);
+            document.getElementById('sensitivityValue').textContent = value;
+        }
+        
+        function runCADAnalysis() {
+            if (!mammoController.currentStudy) {
+                alert('Please select a study first');
+                return;
+            }
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Simulate CAD analysis
+            setTimeout(() => {
+                // Update CAD results
+                document.getElementById('cadScore').textContent = '34.7';
+                document.getElementById('cadRiskLevel').textContent = 'Moderate';
+                document.getElementById('cadConfidence').textContent = '82%';
+                
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 3000);
+        }
+        
+        function activateTool(tool) {
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.tool-btn').classList.add('active');
+            console.log('Activated tool:', tool);
+        }
+        
+        function selectDensity(element) {
+            document.querySelectorAll('.density-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            mammoController.currentDensity = element.dataset.density;
+        }
+        
+        function toggleLesionOverlay() {
+            const show = document.getElementById('showLesions').checked;
+            document.querySelectorAll('.lesion-marker').forEach(marker => {
+                marker.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        function toggleMicrocalcOverlay() {
+            const show = document.getElementById('showMicrocalcs').checked;
+            document.querySelectorAll('.microcalc-marker').forEach(marker => {
+                marker.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        function toggleConfidenceOverlay() {
+            const show = document.getElementById('showConfidence').checked;
+            console.log('Toggle confidence overlay:', show);
+        }
+        
+        function adjustWindow(value) {
+            console.log('Adjust window:', value);
+        }
+        
+        function adjustLevel(value) {
+            console.log('Adjust level:', value);
+        }
+        
+        function syncViews() {
+            console.log('Sync views');
+        }
+        
+        function toggleFlicker() {
+            console.log('Toggle flicker comparison');
+        }
+        
+        function generateReport() {
+            const reportTemplate = `MAMMOGRAPHY REPORT
+
+CLINICAL HISTORY:
+Routine screening mammography
+
+TECHNIQUE:
+Digital mammography with CAD analysis
+Breast density: ${mammoController.currentDensity}
+
+FINDINGS:
+Breast composition: ${getDensityDescription(mammoController.currentDensity)}
+${mammoController.findings.length} findings identified by CAD analysis
+
+IMPRESSION:
+BI-RADS Category ${document.getElementById('biradsScore').textContent}
+${document.getElementById('biradsDescription').textContent}
+
+RECOMMENDATIONS:
+Continue routine annual screening`;
+            
+            document.getElementById('reportText').value = reportTemplate;
+        }
+        
+        function getDensityDescription(density) {
+            const descriptions = {
+                'A': 'Almost entirely fatty (ACR A)',
+                'B': 'Scattered fibroglandular density (ACR B)',
+                'C': 'Heterogeneously dense (ACR C)',
+                'D': 'Extremely dense (ACR D)'
+            };
+            return descriptions[density] || 'Unknown density';
+        }
+        
+        function exportReport() {
+            console.log('Export report as PDF');
+        }
+        
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        
+        function closeHelp() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

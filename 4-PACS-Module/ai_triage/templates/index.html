@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Teleradiology Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <i class="fas fa-heartbeat"></i> AI Teleradiology
+        </a>
+        <div class="user-profile">
+            <i class="fas fa-user-md"></i> Dr. Smith
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="card">
+                <div class="stat-label">Total Studies</div>
+                <div class="stat-value">{{ stats.count }}</div>
+                <div class="stat-trend"><i class="fas fa-arrow-up"></i> 12% this week</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Bandwidth Saved</div>
+                <div class="stat-value">{{ stats.total_saved_mb }} MB</div>
+                <div class="stat-trend text-success">
+                    <i class="fas fa-check"></i> Optimized
+                </div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Original Size</div>
+                <div class="stat-value">{{ stats.total_original_mb }} MB</div>
+                <div class="stat-trend">Raw Data</div>
+            </div>
+        </div>
+
+        <div class="studies-header">
+            <h2>Recent Studies</h2>
+            <div>
+                <form action="/upload" method="post" enctype="multipart/form-data" style="display: inline-block;">
+                    <label for="file-upload" class="btn-filter" style="cursor: pointer; background-color: var(--primary-color); color: white;">
+                        <i class="fas fa-upload"></i> Upload CT Series (3D)
+                    </label>
+                    <input id="file-upload" name="file" type="file" multiple style="display: none;" onchange="this.form.submit()">
+                </form>
+                <button class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+            </div>
+        </div>
+
+        <div class="study-list">
+            {% for study in studies %}
+            <a href="/viewer/{{ study.id }}" class="study-item">
+                <div class="study-icon">
+                    {% if study.modality == 'CT' %}
+                        <i class="fas fa-x-ray"></i>
+                    {% elif study.modality == 'MRI' %}
+                        <i class="fas fa-magnet"></i>
+                    {% else %}
+                        <i class="fas fa-file-medical-alt"></i>
+                    {% endif %}
+                </div>
+                <div class="study-info">
+                    <div class="study-title">{{ study.patient_name }}</div>
+                    <div class="study-meta">
+                        {{ study.modality }} • {{ study.date }} • {{ study.total_slices }} Slices
+                    </div>
+                </div>
+                <div class="study-status">
+                    {% if study.status == 'Critical' %}
+                        <span class="status-badge status-critical">Critical</span>
+                    {% elif study.status == 'Normal' %}
+                        <span class="status-badge status-normal">Normal</span>
+                    {% else %}
+                        <span class="status-badge status-low">Low Priority</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

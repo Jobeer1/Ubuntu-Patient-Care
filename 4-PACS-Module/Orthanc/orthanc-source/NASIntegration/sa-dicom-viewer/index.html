@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA Medical DICOM Viewer</title>
+    <meta name="description" content="South African Healthcare DICOM Medical Image Viewer - HPCSA Compliant, POPIA Protected">
+    
+    <!-- SA Healthcare Compliance Meta -->
+    <meta name="healthcare-compliance" content="HPCSA,POPIA">
+    <meta name="medical-grade" content="true">
+    <meta name="data-protection" content="POPIA-compliant">
+    
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e88e5">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="./sa-ohif-integration.js" as="script">
+    <link rel="preload" href="./themes/sa-medical-theme.js" as="script">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzFlODhlNSIvPgo8cGF0aCBkPSJNMTYgOFYyNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHA
+ath IGQ9Ik04IDE2SDI0IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- OHIF Dependencies -->
+    <script src="https://unpkg.com/@ohif/core@latest/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@ohif/ui@latest/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@ohif/extension-cornerstone@latest/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@ohif/extension-default@latest/dist/index.umd.js"></script>
+    
+    <!-- Cornerstone Dependencies -->
+    <script src="https://unpkg.com/cornerstone-core@latest/dist/cornerstone.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-math@latest/dist/cornerstoneMath.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-tools@latest/dist/cornerstoneTools.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader@latest/dist/cornerstoneWADOImageLoader.bundle.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-web-image-loader@latest/dist/cornerstoneWebImageLoader.min.js"></script>
+    
+    <!-- DICOM Parser -->
+    <script src="https://unpkg.com/dicom-parser@latest/dist/dicomParser.min.js"></script>
+    
+    <!-- Performance and Analytics for SA Networks -->
+    <script>
+        // Performance monitoring for slow networks
+        window.saPerformance = {
+            startTime: Date.now(),
+            networkType: navigator.connection?.effectiveType || 'unknown',
+            loadTimes: {},
+            
+            logLoadTime: function(resource, time) {
+                this.loadTimes[resource] = time;
+                console.log(`SA Performance: ${resource} loaded in ${time}ms`);
+            }
+        };
+        
+        // Service Worker registration for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw-sa-medical.js')
+                    .then(registration => {
+                        console.log('SA Medical SW registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('SA Medical SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    
+    <style>
+        /* Critical CSS for initial load */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #fafafa;
+            overflow: hidden;
+        }
+        
+        .sa-loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 9999;
+        }
+        
+        .sa-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        .sa-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .sa-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .sa-loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .sa-loading-progress {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .sa-loading-text {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .sa-compliance-badges {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sa-badge {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        /* SA Flag Colors */
+        .sa-flag-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(
+                to right,
+                #007749 0%,
+                #007749 16.66%,
+                #ffffff 16.66%,
+                #ffffff 33.33%,
+                #de3831 33.33%,
+                #de3831 50%,
+                #ffffff 50%,
+                #ffffff 66.66%,
+                #001489 66.66%,
+                #001489 83.33%,
+                #ffb81c 83.33%,
+                #ffb81c 100%
+            );
+        }
+        
+        /* Hide loading screen when app is ready */
+        .app-ready .sa-loading-screen {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* Main app container */
+        #sa-dicom-viewer {
+            width: 100%;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .app-ready #sa-dicom-viewer {
+            opacity: 1;
+        }
+        
+        /* Error handling */
+        .sa-error-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f44336;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 9998;
+        }
+        
+        .sa-error-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .sa-error-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .sa-error-message {
+            font-size: 16px;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .sa-error-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sa-error-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .sa-error-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- SA Loading Screen -->
+    <div class="sa-loading-screen">
+        <div class="sa-flag-accent"></div>
+        
+        <div class="sa-logo">
+            🏥
+        </div>
+        
+        <div class="sa-title">SA Medical DICOM Viewer</div>
+        <div class="sa-subtitle">Initializing Healthcare System...</div>
+        
+        <div class="sa-loading-bar">
+            <div class="sa-loading-progress" id="loadingProgress"></div>
+        </div>
+        <div class="sa-loading-text" id="loadingText">Loading dependencies...</div>
+        
+        <div class="sa-compliance-badges">
+            <div class="sa-badge">🛡️ HPCSA Compliant</div>
+            <div class="sa-badge">🔒 POPIA Protected</div>
+            <div class="sa-badge">📱 Mobile Optimized</div>
+            <div class="sa-badge">🌐 Multi-Language</div>
+        </div>
+    </div>
+    
+    <!-- SA Error Screen -->
+    <div class="sa-error-screen" id="errorScreen">
+        <div class="sa-error-icon">⚠️</div>
+        <div class="sa-error-title">System Error</div>
+        <div class="sa-error-message" id="errorMessage">
+            An error occurred while loading the medical viewer. Please check your connection and try again.
+        </div>
+        <div class="sa-error-actions">
+            <button class="sa-error-btn" onclick="location.reload()">Retry</button>
+            <button class="sa-error-btn" onclick="window.history.back()">Go Back</button>
+        </div>
+    </div>
+    
+    <!-- Main DICOM Viewer Container -->
+    <div id="sa-dicom-viewer"></div>
+    
+    <!-- SA Medical Scripts -->
+    <script type="module">
+        // Loading progress simulation
+        let progress = 0;
+        const progressBar = document.getElementById('loadingProgress');
+        const loadingText = document.getElementById('loadingText');
+        
+        const loadingSteps = [
+            { progress: 10, text: 'Loading OHIF core...' },
+            { progress: 25, text: 'Initializing Cornerstone...' },
+            { progress: 40, text: 'Loading SA compliance modules...' },
+            { progress: 55, text: 'Setting up mobile optimizations...' },
+            { progress: 70, text: 'Configuring multi-language support...' },
+            { progress: 85, text: 'Applying SA medical theme...' },
+            { progress: 95, text: 'Finalizing healthcare settings...' },
+            { progress: 100, text: 'SA Medical Viewer ready!' }
+        ];
+        
+        function updateProgress(step) {
+            if (step < loadingSteps.length) {
+                const current = loadingSteps[step];
+                progressBar.style.width = current.progress + '%';
+                loadingText.textContent = current.text;
+                
+                setTimeout(() => updateProgress(step + 1), 300);
+            } else {
+                // Loading complete
+                setTimeout(initializeViewer, 500);
+            }
+        }
+        
+        // Start loading progress
+        updateProgress(0);
+        
+        // Error handling
+        window.addEventListener('error', (event) => {
+            console.error('SA Medical Viewer Error:', event.error);
+            showError('JavaScript Error', event.error.message);
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('SA Medical Viewer Promise Rejection:', event.reason);
+            showError('Promise Rejection', event.reason);
+        });
+        
+        function showError(title, message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorScreen').style.display = 'flex';
+        }
+        
+        // Initialize SA Medical DICOM Viewer
+        async function initializeViewer() {
+            try {
+                // Import SA configuration
+                const { default: SA_OHIF_CONFIG } = await import('./sa-ohif-integration.js');
+                
+                // Validate required services
+                if (!window.OHIF) {
+                    throw new Error('OHIF library not loaded');
+                }
+                
+                if (!window.cornerstone) {
+                    throw new Error('Cornerstone library not loaded');
+                }
+                
+                // Initialize authentication
+                await initializeAuthentication();
+                
+                // Initialize OHIF with SA configuration
+                const app = new window.OHIF.App({
+                    config: SA_OHIF_CONFIG,
+                    container: document.getElementById('sa-dicom-viewer')
+                });
+                
+                // Configure cornerstone for SA healthcare
+                configureCornerstoneForSA();
+                
+                // Setup SA-specific event handlers
+                setupSAEventHandlers(app);
+                
+                // Mark app as ready
+                document.body.classList.add('app-ready');
+                
+                console.log('🇿🇦 SA Medical DICOM Viewer initialized successfully');
+                
+                // Performance logging
+                window.saPerformance.logLoadTime('total', Date.now() - window.saPerformance.startTime);
+                
+            } catch (error) {
+                console.error('Failed to initialize SA Medical Viewer:', error);
+                showError('Initialization Error', error.message);
+            }
+        }
+        
+        // Authentication initialization
+        async function initializeAuthentication() {
+            // Check if user is already authenticated
+            const authToken = sessionStorage.getItem('sa-auth-token');
+            
+            if (!authToken) {
+                // Redirect to login if not authenticated
+                const currentPath = window.location.pathname;
+                if (!currentPath.includes('/login') && !currentPath.includes('/secure-link')) {
+                    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+                    return;
+                }
+            }
+            
+            // Validate session
+            try {
+                const response = await fetch('/api/auth/validate', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Session invalid');
+                }
+                
+                const userInfo = await response.json();
+                
+                // Store user info
+                sessionStorage.setItem('user-info', JSON.stringify(userInfo));
+                
+                console.log('User authenticated:', userInfo);
+                
+            } catch (error) {
+                console.warn('Authentication validation failed:', error);
+                // Continue with limited functionality for secure links
+            }
+        }
+        
+        // Configure Cornerstone for SA healthcare requirements
+        function configureCornerstoneForSA() {
+            // Enable image cache for offline support
+            window.cornerstone.imageCache.setMaximumSizeBytes(100 * 1024 * 1024); // 100MB
+            
+            // Configure for mobile networks
+            if (window.cornerstoneWADOImageLoader) {
+                window.cornerstoneWADOImageLoader.configure({
+                    beforeSend: function(xhr) {
+                        // Add SA-specific headers
+                        xhr.setRequestHeader('X-SA-Healthcare', 'true');
+                        
+                        const authToken = sessionStorage.getItem('sa-auth-token');
+                        if (authToken) {
+                            xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+                        }
+                    }
+                });
+            }
+            
+            // Setup web workers for performance
+            if (window.cornerstoneWADOImageLoader && window.cornerstoneWADOImageLoader.webWorkerManager) {
+                const config = {
+                    maxWebWorkers: navigator.hardwareConcurrency || 2,
+                    startWebWorkersOnDemand: true,
+                    taskConfiguration: {
+                        decodeTask: {
+                            initializeCodecsOnStartup: false,
+                            usePDFJS: false,
+                            strict: false
+                        }
+                    }
+                };
+                
+                window.cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
+            }
+        }
+        
+        // Setup SA-specific event handlers
+        function setupSAEventHandlers(app) {
+            // Network status monitoring
+            window.addEventListener('online', () => {
+                console.log('SA Network: Back online');
+                if (window.saMobileOptimization) {
+                    window.saMobileOptimization.network.bandwidthMonitoring.startMonitoring();
+                }
+            });
+            
+            window.addEventListener('offline', () => {
+                console.log('SA Network: Gone offline');
+                if (window.saMobileOptimization) {
+                    window.saMobileOptimization.offline.showOfflineIndicator();
+                }
+            });
+            
+            // Mobile orientation changes
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (window.saMobileOptimization) {
+                        window.saMobileOptimization.interface.mobileUI.adaptLayout();
+                    }
+                }, 100);
+            });
+            
+            // HPCSA session monitoring
+            if (window.saCompliance) {
+                window.saCompliance.hpcsa.sessionManagement.setupSessionTimeout(30);
+            }
+            
+            // Audit logging for HPCSA compliance
+            document.addEventListener('studyLoaded', (event) => {
+                if (window.saCompliance && event.detail) {
+                    const userInfo = JSON.parse(sessionStorage.getItem('user-info') || '{}');
+                    window.saCompliance.hpcsa.userVerification.logUserAccess(userInfo, event.detail);
+                }
+            });
+        }
+        
+        // Handle secure link access
+        function handleSecureLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const secureToken = urlParams.get('token');
+            const studyUID = urlParams.get('study');
+            
+            if (secureToken && studyUID) {
+                // Validate secure link
+                fetch(`/api/secure-links/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: secureToken, studyUID })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        // Load study directly
+                        sessionStorage.setItem('secure-link-access', 'true');
+                        sessionStorage.setItem('secure-study-uid', studyUID);
+                        
+                        // Continue with viewer initialization
+                        initializeViewer();
+                    } else {
+                        showError('Invalid Link', 'This secure link has expired or is invalid.');
+                    }
+                })
+                .catch(error => {
+                    showError('Link Validation Error', error.message);
+                });
+                
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Check for secure link access first
+        if (!handleSecureLink()) {
+            // Normal authentication flow
+            // (already handled in initializeViewer)
+        }
+    </script>
+    
+    <!-- PWA Manifest -->
+    <script>
+        // Dynamic manifest generation for PWA
+        const manifest = {
+            name: "SA Medical DICOM Viewer",
+            short_name: "SA Medical",
+            description: "South African Healthcare DICOM Medical Image Viewer",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#1e88e5",
+            theme_color: "#1e88e5",
+            orientation: "any",
+            icons: [
+                {
+                    src: "data:image/svg+xml;charset=UTF-8,%3csvg width='192' height='192' viewBox='0 0 192 192' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='192' height='192' rx='24' fill='%231e88e5'/%3e%3cpath d='M96 48V144' stroke='white' stroke-width='8' stroke-linecap='round'/%3e%3cpath d='M48 96H144' stroke='white' stroke-width='8' stroke-linecap='round'/%3e%3c/svg%3e",
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                },
+                {
+                    src: "data:image/svg+xml;charset=UTF-8,%3csvg width='512' height='512' viewBox='0 0 512 512' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='512' height='512' rx='64' fill='%231e88e5'/%3e%3cpath d='M256 128V384' stroke='white' stroke-width='32' stroke-linecap='round'/%3e%3cpath d='M128 256H384' stroke='white' stroke-width='32' stroke-linecap='round'/%3e%3c/svg%3e",
+                    sizes: "512x512",
+                    type: "image/svg+xml"
+                }
+            ],
+            categories: ["medical", "healthcare", "productivity"],
+            lang: "en-ZA"
+        };
+        
+        // Create manifest blob and URL
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        
+        // Create and append manifest link
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+    </script>
+</body>
+</html>
