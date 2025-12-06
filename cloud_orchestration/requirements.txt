@@ -1,0 +1,27 @@
+# Flask Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# OAuth & Authentication
+Authlib==1.3.0
+requests==2.31.0
+
+# Google Cloud & AI Dependencies
+google-cloud-aiplatform==1.38.0
+google-cloud-storage==2.10.0
+google-api-python-client==2.108.0
+google-auth-oauthlib==1.1.0
+google-auth==2.25.0
+google-generativeai==0.3.2
+
+# Azure Cognitive Services
+azure-cognitiveservices-speech==1.34.0
+azure-cognitiveservices-vision-computervision==0.9.0
+azure-ai-formrecognizer==3.3.0
+
+# Configuration
+configparser==6.0.0
+
+# Web Automation
+selenium==4.16.0
+webdriver-manager==4.0.1

@@ -1,0 +1,71 @@
+{
+  "name": "GOTG Medical Billing",
+  "short_name": "Medical Billing",
+  "description": "Gift of the Givers Medical Billing and Sustainability Revenue Management",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231e40af' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.35em'>MB</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%231e40af' width='512' height='512'/><text x='50%' y='50%' font-size='300' font-weight='bold' fill='white' text-anchor='middle' dy='.33em'>MB</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["medical", "business"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23667eea' width='540' height='720'/><text x='270' y='360' font-size='60' font-weight='bold' fill='white' text-anchor='middle' text-anchor='middle' dy='.35em'>Medical Billing</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Verify Insurance",
+      "short_name": "Insurance",
+      "description": "Verify patient insurance coverage",
+      "url": "index.html?tab=insurance",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%232563eb' width='96' height='96'/><text x='48' y='48' font-size='50' font-weight='bold' fill='white' text-anchor='middle' dy='.33em'>✓</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Submit Claim",
+      "short_name": "Claim",
+      "description": "Submit medical claim",
+      "url": "index.html?tab=claims",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%2310b981' width='96' height='96'/><text x='48' y='48' font-size='50' font-weight='bold' fill='white' text-anchor='middle' dy='.33em'>📋</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "index.html",
+    "method": "POST",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

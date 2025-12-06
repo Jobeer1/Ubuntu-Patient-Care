@@ -1,0 +1,130 @@
+{
+  "Name": "GOTG_PACS",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+  
+  "HttpPort": 8042,
+  "DicomPort": 4242,
+  
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": false,
+  "RegisteredUsers": {
+    "orthanc": "orthanc"
+  },
+  
+  "DicomAet": "GOTG_PACS",
+  "DicomCheckCalledAet": false,
+  "DicomAlwaysAllowEcho": true,
+  "DicomAlwaysAllowStore": true,
+  
+  "StableAge": 60,
+  "StrictAetComparison": false,
+  
+  "HttpTimeout": 60,
+  "HttpVerbose": false,
+  
+  "DicomModalities": {
+    "sample": ["SAMPLE_AET", "localhost", 2000]
+  },
+  
+  "OrthancPeers": {},
+  
+  "LuaScripts": [],
+  
+  "Plugins": [],
+  
+  "ConcurrentJobs": 2,
+  
+  "JobsHistorySize": 100,
+  
+  "SaveJobs": true,
+  
+  "OverwriteInstances": false,
+  
+  "MediaArchiveSize": 1,
+  
+  "StorageCompression": false,
+  
+  "MaximumStorageSize": 0,
+  "MaximumPatientCount": 0,
+  
+  "DicomScuTimeout": 10,
+  "DicomScpTimeout": 30,
+  
+  "HttpsCACertificates": "/etc/ssl/certs/ca-certificates.crt",
+  
+  "UserMetadata": {},
+  
+  "UserContentType": {},
+  
+  "StableAge": 60,
+  
+  "LogExportedResources": false,
+  
+  "KeepAlive": true,
+  
+  "TcpNoDelay": true,
+  
+  "HttpThreadsCount": 50,
+  
+  "StoreMD5ForAttachments": true,
+  
+  "LimitFindResults": 0,
+  "LimitFindInstances": 0,
+  
+  "LogLevel": "default",
+  
+  "DicomAssociationCloseDelay": 5,
+  
+  "QueryRetrieveSize": 100,
+  
+  "CaseSensitivePN": false,
+  
+  "LoadPrivateDictionary": true,
+  
+  "Dictionary": {},
+  
+  "SynchronousCMove": true,
+  
+  "JobsEngineThreadsCount": {
+    "ResourceModification": 1
+  },
+  
+  "DicomTlsEnabled": false,
+  
+  "ExecuteLuaEnabled": false,
+  
+  "HttpRequestTimeout": 30,
+  
+  "DefaultEncoding": "Latin1",
+  
+  "AcceptedTransferSyntaxes": ["1.2.840.10008.1.*"],
+  
+  "UnknownSopClassAccepted": false,
+  
+  "DicomScuPreferredTransferSyntax": "1.2.840.10008.1.2.1",
+  
+  "IngestTranscoding": "1.2.840.10008.1.2.1",
+  
+  "IngestTranscodingOfUncompressed": true,
+  
+  "IngestTranscodingOfCompressed": true,
+  
+  "DicomLossyTranscodingQuality": 90,
+  
+  "SyncStorageArea": true,
+  
+  "MallocArenaMax": 5,
+  
+  "DeidentifyLogs": true,
+  
+  "DeidentifyLogsDicomVersion": "2023b",
+  
+  "MaximumPduLength": 16384,
+  
+  "CheckRevisions": false,
+  
+  "SynchronousZipStream": true,
+  
+  "ZipLoaderThreads": 0
+}
