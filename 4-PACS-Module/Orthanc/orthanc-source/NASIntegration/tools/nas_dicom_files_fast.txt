@@ -1,4 +1,0 @@
-﻿ERROR : Invalid Parameter #12 : "C:\Users\Admin\AppData\Local\Temp\robocopy_dummy\*"
-Simple Usage :: ROBOCOPY source destination /MIR
-For more usage information run ROBOCOPY /?
-****  /MIR can DELETE files as well as copy them !

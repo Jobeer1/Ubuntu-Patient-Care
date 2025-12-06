@@ -1,7 +1,0 @@
-{
-  "startIp": "155.235.81.0",
-  "endIp": "155.235.81.255",
-  "timeout": 2000,
-  "maxConcurrent": 5,
-  "networkRange": "155.235.81.1/24"
-}

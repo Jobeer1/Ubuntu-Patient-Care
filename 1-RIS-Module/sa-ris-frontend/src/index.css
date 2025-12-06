@@ -1,4 +1,0 @@
-body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#071029;color:#e6f2ff}
-.app-root{display:flex;align-items:center;justify-content:center;height:100vh}
-.app-header{max-width:800px;padding:28px;background:linear-gradient(135deg,#07203a,#031425);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-.app-header h1{margin:0 0 8px 0}

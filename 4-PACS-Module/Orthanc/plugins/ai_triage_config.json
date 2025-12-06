@@ -1,6 +1,0 @@
-{
-    "Enabled": true,
-    "SupportedModalities": ["CT", "MR", "XR"],
-    "ModelConfigPath": "../../ai_triage/config.yaml",
-    "Debug": true
-}

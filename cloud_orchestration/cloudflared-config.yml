@@ -1,7 +1,0 @@
-tunnel: ubuntu-patient-care
-credentials-file: C:\Users\Admin\.cloudflared\7870623a-d32f-4b58-bf21-e4d5bc22f0c9.json
-
-ingress:
-  - hostname: ubuntu-care.virons.uk
-    service: http://localhost:8080
-  - service: http_status:404
