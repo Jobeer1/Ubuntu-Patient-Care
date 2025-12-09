@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Compute Coordinator API
+  coordinator:
+    build: ./coordinator
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/healthcare_compute
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=your-jwt-secret-key
+      - QUBIC_RPC_URL=https://rpc.qubic.org
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./coordinator:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Worker Node Agent
+  worker:
+    build: ./worker
+    environment:
+      - COORDINATOR_URL=http://coordinator:8000
+      - NODE_ID=local-test-node
+      - RESOURCES={"cpu": 4, "memory": "8GB", "gpu": false}
+    depends_on:
+      - coordinator
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - worker_data:/app/data
+    command: python worker.py
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=healthcare_compute
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Frontend Dashboard
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Grafana Monitoring
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+
+  # Prometheus Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  worker_data:
+  grafana_data:
+  prometheus_data:
+
+networks:
+  default:
+    name: healthcare-compute-network

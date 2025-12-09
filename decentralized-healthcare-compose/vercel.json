@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "name": "healthcare-compute-dashboard",
+  "builds": [
+    {
+      "src": "dashboard/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/dashboard/$1"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "@api-url"
+  },
+  "functions": {
+    "coordinator/api/*.js": {
+      "maxDuration": 30
+    }
+  }
+}

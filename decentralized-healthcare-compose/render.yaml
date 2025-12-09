@@ -1,0 +1,58 @@
+services:
+  # Compute Coordinator API
+  - type: web
+    name: healthcare-compute-api
+    runtime: docker
+    dockerfilePath: ./coordinator/Dockerfile
+    dockerContext: ./coordinator
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healthcare-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: healthcare-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: QUBIC_RPC_URL
+        value: https://rpc.qubic.org
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # PostgreSQL Database
+  - type: pserv
+    name: healthcare-db
+    plan: free
+    databaseName: healthcare_compute
+    user: postgres
+
+  # Redis Cache
+  - type: redis
+    name: healthcare-redis
+    plan: free
+
+  # Background Worker
+  - type: worker
+    name: healthcare-worker
+    runtime: docker
+    dockerfilePath: ./worker/Dockerfile
+    dockerContext: ./worker
+    plan: free
+    envVars:
+      - key: COORDINATOR_URL
+        fromService:
+          type: web
+          name: healthcare-compute-api
+          property: url
+      - key: NODE_ID
+        value: render-worker-node
+      - key: RESOURCES
+        value: '{"cpu": 2, "memory": "4GB", "gpu": false}'
+
+databases:
+  - name: healthcare-db
+    plan: free
