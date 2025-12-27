@@ -1,0 +1,34 @@
+# SDOH Chat Configuration Template
+# IMPORTANT: Never commit your actual config.ini with API keys!
+# Copy this file to config.ini and fill in your own API keys
+
+[GEMINI]
+# Google Generative AI (Gemini 2.5 Flash Lite)
+# Get your API key from: https://aistudio.google.com/app/apikey
+api_key = YOUR_GEMINI_API_KEY_HERE
+project_id = YOUR_GCP_PROJECT_ID
+model = gemini-2.5-flash-lite
+
+[ELEVENLABS]
+# ElevenLabs Voice API for realistic speech synthesis
+# Get your API key from: https://elevenlabs.io/app/speech-synthesis/keys
+api_key = YOUR_ELEVENLABS_API_KEY_HERE
+# Voice IDs for different use cases (optional - for premium voices)
+default_voice_id = 21m00Tcm4TlvDq8ikWAM
+emergency_voice_id = 29vD33N1CtxCmqQRPOHJ
+medical_voice_id = EXAVITQu4vr4xnSDxMaL
+
+[KAFKA]
+# Confluent Cloud Kafka for event streaming (optional)
+# Get credentials from: https://confluent.cloud
+bootstrap_servers = pkc-XXXXX.REGION.provider.confluent.cloud:9092
+api_key = YOUR_KAFKA_API_KEY
+api_secret = YOUR_KAFKA_API_SECRET
+security_protocol = SASL_SSL
+
+[DATADOG]
+# Datadog observability and monitoring (optional)
+# Get credentials from: https://datadog.com
+api_key = YOUR_DATADOG_API_KEY
+app_key = YOUR_DATADOG_APP_KEY
+site = us5.datadoghq.com

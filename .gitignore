@@ -28,6 +28,15 @@ env/
 venv/
 ENV/
 env.bak/
+
+# Configuration & Secrets (NEVER commit API keys!)
+config.ini
+.env.local
+.env.*.local
+*.key
+*.pem
+cert.pem
+key.pem
 venv.bak/
 
 # Database (PI Protection)
