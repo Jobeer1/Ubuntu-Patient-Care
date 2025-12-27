@@ -90,108 +90,132 @@ End-to-end observability monitors the health of our agents. We track:
 ### 1. High-Level Architecture
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4285F4', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#fff'}}}%%
+%%{init: {'theme': 'default', 'themeVariables': { 'primaryColor': '#4285F4', 'primaryBorderColor': '#2C5AA0', 'primaryTextColor': '#fff', 'lineColor': '#2C5AA0', 'secondaryColor': '#34A853', 'tertiaryColor': '#EA4335', 'fontSize': '16px', 'fontFamily': 'arial'}}}%%
 graph TD
-    subgraph Client ["📱 User Interface (Low Bandwidth)"]
-        UI[Web Dashboard]
-        Mic[Microphone Input]
-        Speaker[Audio Output]
+    subgraph Client["📱 CLIENT LAYER - User Interface"]
+        UI["🖥️ Web Dashboard<br/>Low-Bandwidth Optimized"]
+        Mic["🎤 Voice Input<br/>Whisper STT"]
+        Speaker["🔊 Audio Output<br/>Browser TTS"]
     end
 
-    subgraph Edge ["🛡️ Secure Edge"]
-        CF[Cloudflare Tunnel]
+    subgraph Security["🔐 SECURITY LAYER - Cloudflare Edge"]
+        CF["🛡️ Cloudflare Tunnel<br/>SSL/TLS Encryption<br/>Global CDN"]
     end
 
-    subgraph Backend ["⚙️ Flask Core"]
-        API[REST API]
-        Auth[JWT & RBAC]
-        Proxy[TTS Proxy Manager]
+    subgraph Backend["⚙️ BACKEND LAYER - Flask Core"]
+        API["📡 REST API<br/>Low-Latency Routing"]
+        Auth["🔑 JWT & RBAC<br/>Permission System"]
+        Proxy["🔄 TTS Manager<br/>Smart Fallback Logic"]
     end
 
-    subgraph AI_Cloud ["☁️ AI Intelligence"]
-        Gemini["Google Gemini 2.0<br/>Reasoning"]
-        Eleven["ElevenLabs API<br/>Voice Synthesis"]
+    subgraph AI_Cloud["☁️ AI INTELLIGENCE LAYER"]
+        Gemini["🧠 Google Gemini 2.0<br/>Advanced Reasoning<br/>Context Understanding"]
+        Eleven["🎙️ ElevenLabs API<br/>Premium Voice Synthesis<br/>Multi-Language Support"]
     end
 
-    subgraph Data_Stream ["🌊 Data & State"]
-        Kafka["Confluent Kafka<br/>Event Streaming"]
-        SQLite["SQLite<br/>Local DB"]
+    subgraph Data_Stream["🌊 DATA & STATE LAYER"]
+        Kafka["📊 Confluent Kafka<br/>Real-Time Event Streaming<br/>Community Pulse"]
+        SQLite["💾 SQLite Database<br/>User Data & Messages<br/>Offline Capable"]
     end
 
-    subgraph Fallback ["⚓ Resilience Layer"]
-        Silero["Silero TTS<br/>Local Neural"]
-        Whisper["Whisper Mini<br/>Local Speech"]
+    subgraph Fallback["⚓ RESILIENCE LAYER - Auto-Fallback"]
+        Silero["🎵 Silero TTS<br/>Local Neural Model<br/>Instant Response"]
+        Whisper["👂 Whisper Mini<br/>Local Speech Recognition<br/>Privacy First"]
     end
 
-    Mic -->|Audio| API
-    API -->|Speech-to-Text| Whisper
-    Whisper -->|Text| Gemini
-    Gemini -->|Response| API
+    Mic -->|🎙️ Voice| API
+    API -->|🔄 Speech-to-Text| Whisper
+    Whisper -->|📝 Text| Gemini
+    Gemini -->|💬 Response| API
     
-    API -->|Text| Proxy
-    Proxy -->|Primary| Eleven
-    Proxy -.->|Failover| Silero
+    API -->|📄 Synthesize| Proxy
+    Proxy -->|⭐ Primary| Eleven
+    Proxy -.->|⚡ Fallback| Silero
     
-    Eleven -->|Audio Stream| Speaker
-    Silero -->|WAV Data| Speaker
+    Eleven -->|🔊 Stream| Speaker
+    Silero -->|🔊 WAV| Speaker
     
-    API -->|Events| Kafka
-    API -->|State| SQLite
+    API -->|📤 Events| Kafka
+    API -->|💾 Persist| SQLite
     
-    UI <--> CF <--> API
+    Client <-->|🔐 HTTPS| CF
+    CF <-->|🚀 Fast| Backend
+    Backend <-->|☁️ Async| AI_Cloud
+    Backend -->|🔌 Hybrid| Fallback
+    Backend <-->|📊 Real-Time| Data_Stream
+
+    style Client fill:#E8F0FE,stroke:#4285F4,stroke-width:3px,color:#1a73e8
+    style Security fill:#C5E1A5,stroke:#7CB342,stroke-width:3px,color:#33691E
+    style Backend fill:#FFE0B2,stroke:#F57C00,stroke-width:3px,color:#E65100
+    style AI_Cloud fill:#F8BBD0,stroke:#C2185B,stroke-width:3px,color:#880E4F
+    style Data_Stream fill:#B3E5FC,stroke:#0277BD,stroke-width:3px,color:#01579B
+    style Fallback fill:#D1C4E9,stroke:#512DA8,stroke-width:3px,color:#311B92
 ```
 
-### 2. The "Ghost to Pillar" User Journey
+### 2. The "Ghost to Pillar" Transformation Journey
 
 ```mermaid
-%%{init: {'theme': 'forest'}}%%
+%%{init: {'theme': 'default', 'themeVariables': { 'primaryColor': '#9C27B0', 'primaryBorderColor': '#6A1B9A', 'primaryTextColor': '#fff', 'lineColor': '#6A1B9A', 'fontSize': '14px'}}}%%
 sequenceDiagram
-    actor Ghost as 👻 The "Ghost" (User)
-    participant Forge as ⚒️ The Forge (Gemini)
-    participant Quest as 📜 Quest Master
-    participant Tribe as 🏘️ The Tribe (Community)
+    actor Ghost as 👻 The "Ghost"<br/>Invisible & Disconnected
+    participant Forge as ⚒️ The Forge<br/>AI Integrity Coach
+    participant Quest as 📜 Quest Master<br/>Task Generator
+    participant Tribe as 🏘️ The Tribe<br/>Community
 
-    Note over Ghost: Feeling invisible, disconnected
-    Ghost->>Forge: "I have nothing left."
-    Forge->>Ghost: Analyzes Sentiment (Gemini)
-    Forge->>Quest: Request "Meaningful Task"
-    Quest->>Ghost: Assigns Quest: "Check on Mrs. Higgins"
+    Note over Ghost,Tribe: STAGE 1: THE VOID - User Feels Invisible
+    Ghost->>Forge: "I have no one left who needs me..."
+    Forge->>Forge: 🧠 Analyzes emotional depth using Gemini
     
-    Note over Ghost: The Action
-    Ghost->>Tribe: Delivers Water / Checks In
-    Tribe->>Ghost: "Thank you, we needed you."
+    Note over Ghost,Tribe: STAGE 2: THE QUEST - System Creates Meaning
+    Forge->>Quest: "Create a meaningful task for this person"
+    Quest->>Ghost: 📋 Quest Assigned: "Check on Mrs. Higgins<br/>She hasn't had water today"
     
-    Note over Ghost: The Transformation
-    Ghost->>Forge: "I did it."
-    Forge->>Ghost: Updates Integrity Score
-    Forge->>Ghost: "You are seen."
+    Note over Ghost,Tribe: STAGE 3: THE ACTION - User Becomes Useful
+    Ghost->>Tribe: 💧 Delivers water to Mrs. Higgins
+    Ghost->>Tribe: 🤝 Checks in on 2 other elderly neighbors
+    Tribe->>Ghost: "Thank you, we couldn't do this without you!"
     
-    Note over Ghost: 👻 Ghost becomes 🏛️ Pillar
+    Note over Ghost,Tribe: STAGE 4: THE TRANSFORMATION - Recognition & Identity
+    Ghost->>Forge: "I actually helped people today."
+    Forge->>Ghost: ⭐ Integrity Score: 10 → 47
+    Forge->>Ghost: 🏛️ New Status: "Community Pillar"
+    Forge->>Ghost: "You are SEEN. You are NEEDED."
+    
+    Note over Ghost,Tribe: RESULT: 👻 Ghost becomes 🏛️ Pillar of Community
 ```
 
-### 3. Resilience & Fallback Logic
+### 3. Resilience & Fallback Logic - "Always Speaking"
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
-flowchart LR
-    Start([TTS Request]) --> CheckKey{API Key Valid?}
+%%{init: {'theme': 'default', 'themeVariables': { 'primaryColor': '#FF6F00', 'primaryBorderColor': '#E65100', 'primaryTextColor': '#fff', 'lineColor': '#E65100', 'fontSize': '13px'}}}%%
+flowchart TD
+    Start(["🎯 User Requests TTS<br/>Speak Response"]) 
     
-    CheckKey -- Yes --> CallEleven[Call ElevenLabs API]
-    CheckKey -- No --> LocalTTS
+    Start --> CheckAPI{🔑 API Key Valid?}
     
-    CallEleven --> Success{Success?}
-    Success -- Yes --> StreamAudio[Stream High-Fidelity Audio]
-    Success -- No (401/502) --> LocalTTS[Fallback: Silero Local Neural]
+    CheckAPI -->|✅ YES| CallEleven["⭐ PRIMARY:<br/>ElevenLabs API<br/>Premium Voice<br/>Highest Quality"]
+    CheckAPI -->|❌ NO| SkipEleven["Skip Premium"]
     
-    LocalTTS --> LocalSuccess{Success?}
-    LocalSuccess -- Yes --> StreamWav[Stream Local WAV]
-    LocalSuccess -- No --> BrowserTTS[Fallback: Browser Native]
+    CallEleven --> ElevenSuccess{⚡ API Responds<br/>in 2-3 seconds?}
+    ElevenSuccess -->|✅ YES| StreamAudio["🎙️ Stream<br/>High-Fidelity Audio<br/>Multiple Voices"]
+    ElevenSuccess -->|⚠️ TIMEOUT<br/>or ERROR| LocalTTS
     
-    BrowserTTS --> Speak[System Voice]
+    SkipEleven --> LocalTTS["⚡ SECONDARY:<br/>Silero Local TTS<br/>Instant Response<br/>less than 100ms"]
     
-    style CallEleven fill:#4285F4,stroke:#fff,color:#fff
-    style LocalTTS fill:#34A853,stroke:#fff,color:#fff
-    style BrowserTTS fill:#FBBC05,stroke:#fff,color:#333
+    LocalTTS --> LocalSuccess{✓ Model<br/>Initialized?}
+    LocalSuccess -->|✅ YES| StreamWav["🔊 Stream Local WAV<br/>Fast & Reliable"]
+    LocalSuccess -->|❌ FAIL| BrowserTTS["🌐 TERTIARY:<br/>Browser Native TTS<br/>Always Available<br/>Ultimate Fallback"]
+    
+    StreamAudio --> Success["✅ User Hears Voice<br/>Experience Uninterrupted"]
+    StreamWav --> Success
+    BrowserTTS --> Success
+    
+    style Start fill:#FFF9C4,stroke:#F57F17,stroke-width:3px,color:#000
+    style CheckAPI fill:#FFE0B2,stroke:#FF6F00,stroke-width:2px,color:#000
+    style CallEleven fill:#FFB74D,stroke:#E65100,stroke-width:3px,color:#fff
+    style LocalTTS fill:#FFCC80,stroke:#FF6F00,stroke-width:3px,color:#000
+    style BrowserTTS fill:#FFD54F,stroke:#F57F17,stroke-width:3px,color:#000
+    style Success fill:#C8E6C9,stroke:#388E3C,stroke-width:3px,color:#000
 ```
 
 ## 🎬 Try It Now
