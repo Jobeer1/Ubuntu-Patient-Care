@@ -109,18 +109,18 @@ graph TD
     end
 
     subgraph AI_Cloud ["☁️ AI Intelligence"]
-        Gemini[Google Gemini 2.0 Flash<br/>(Reasoning & Logic)]
-        Eleven[ElevenLabs API<br/>(Empathetic Voice)]
+        Gemini["Google Gemini 2.0<br/>Reasoning"]
+        Eleven["ElevenLabs API<br/>Voice Synthesis"]
     end
 
     subgraph Data_Stream ["🌊 Data & State"]
-        Kafka[Confluent Kafka<br/>(Event Streaming)]
-        SQLite[(Local DB)]
+        Kafka["Confluent Kafka<br/>Event Streaming"]
+        SQLite["SQLite<br/>Local DB"]
     end
 
     subgraph Fallback ["⚓ Resilience Layer"]
-        Silero[Silero TTS<br/>(Local Neural Model)]
-        Whisper[Whisper Mini STT<br/>(Local Transcription)]
+        Silero["Silero TTS<br/>Local Neural"]
+        Whisper["Whisper Mini<br/>Local Speech"]
     end
 
     Mic -->|Audio| API
