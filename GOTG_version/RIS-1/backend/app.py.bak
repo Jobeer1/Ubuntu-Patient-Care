@@ -1,0 +1,2020 @@
+# backend/app.py
+"""
+GOTG Emergency RIS - Main Application (Phase 3)
+Flask app initialization and blueprint registration
+All route logic moved to blueprints/ (each <100 lines)
+"""
+
+import os
+from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
+from config import *
+
+# Initialize Flask app
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
+
+# Configure app
+app.config['JSON_SORT_KEYS'] = False
+app.config['PROPAGATE_EXCEPTIONS'] = True
+
+# Enable CORS
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Config
+flask_config = config.get_flask_config() if PHASE2_ENABLED else {}
+app.config['SECRET_KEY'] = flask_config.get('secret_key', 'gotg-emergency-key-change-in-production')
+app.config['DATABASE'] = os.getenv('DB_PATH', './database/ris_emergency.db')
+app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', './uploads')
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(os.path.dirname(app.config['DATABASE']), exist_ok=True)
+
+# =============================================
+# Database Helper Functions
+# =============================================
+
+def get_db():
+    """Get database connection with row factory"""
+    conn = sqlite3.connect(app.config['DATABASE'])
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode = WAL")  # Write-Ahead Logging for concurrent access
+    conn.execute("PRAGMA synchronous = NORMAL")  # Good balance between speed and safety
+    return conn
+
+def init_db():
+    """Initialize database from schema"""
+    db_path = app.config['DATABASE']
+    
+    # Check if database needs initialization (doesn't exist or is empty)
+    needs_init = False
+    if not os.path.exists(db_path):
+        needs_init = True
+    else:
+        # Check if tables exist
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='patients'")
+            if cursor.fetchone() is None:
+                needs_init = True
+            conn.close()
+        except:
+            needs_init = True
+    
+    if needs_init:
+        conn = get_db()
+        schema_path = os.path.join(os.path.dirname(__file__), '..', 'database', 'schema.sql')
+        with open(schema_path, 'r') as f:
+            conn.executescript(f.read())
+        conn.commit()
+        conn.close()
+        print("[OK] Database initialized successfully")
+
+# =============================================
+# Authentication & Authorization
+# =============================================
+
+def token_required(f):
+    """Decorator to check JWT token (DISABLED FOR DEVELOPMENT)"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # DEVELOPMENT MODE: Skip authentication
+        # In production, uncomment the actual auth logic below
+        request.user_id = 'dev_user'
+        request.clinic_id = 'dev_clinic'
+        request.role = 'admin'
+        
+        # Uncomment for production:
+        # token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        # if not token:
+        #     return jsonify({'error': 'Missing token'}), 401
+        # try:
+        #     data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        #     request.user_id = data['user_id']
+        #     request.clinic_id = data['clinic_id']
+        #     request.role = data['role']
+        # except jwt.ExpiredSignatureError:
+        #     return jsonify({'error': 'Token expired'}), 401
+        # except jwt.InvalidTokenError:
+        #     return jsonify({'error': 'Invalid token'}), 401
+        
+        return f(*args, **kwargs)
+    
+    return decorated
+
+# =============================================
+# Data Compression & Serialization
+# =============================================
+
+class DataCompressor:
+    """Compress and decompress data efficiently"""
+    
+    @staticmethod
+    def compress_json(data: Dict) -> Tuple[bytes, Dict]:
+        """Compress JSON data and return compressed bytes + metadata"""
+        json_str = json.dumps(data, separators=(',', ':'))
+        original_size = len(json_str.encode('utf-8'))
+        
+        # Compress
+        compressed = gzip.compress(json_str.encode('utf-8'), compresslevel=6)
+        compressed_size = len(compressed)
+        
+        # Calculate compression ratio
+        ratio = 1 - (compressed_size / original_size) if original_size > 0 else 0
+        
+        metadata = {
+            'original_size': original_size,
+            'compressed_size': compressed_size,
+            'compression_ratio': round(ratio, 2),
+            'algorithm': 'gzip',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        
+        return compressed, metadata
+    
+    @staticmethod
+    def decompress_json(compressed_data: bytes) -> Dict:
+        """Decompress JSON data"""
+        try:
+            json_str = gzip.decompress(compressed_data).decode('utf-8')
+            return json.loads(json_str)
+        except Exception as e:
+            raise ValueError(f"Decompression failed: {str(e)}")
+    
+    @staticmethod
+    def calculate_checksum(data: bytes) -> str:
+        """Calculate SHA256 checksum of data"""
+        return hashlib.sha256(data).hexdigest()
+
+# =============================================
+# Sync Engine
+# =============================================
+
+class OfflineSyncEngine:
+    """Manages offline-first data synchronization"""
+    
+    @staticmethod
+    def get_sync_queue(conn, status='pending', limit=100):
+        """Get pending sync operations"""
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM sync_queue 
+            WHERE sync_status = ? 
+            ORDER BY priority DESC, created_at ASC 
+            LIMIT ?
+        """, (status, limit))
+        return cursor.fetchall()
+    
+    @staticmethod
+    def add_to_sync_queue(conn, entity_type: str, operation: str, 
+                         entity_id: int = None, entity_uid: str = None,
+                         payload: Dict = None, priority: int = 0):
+        """Add operation to sync queue"""
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO sync_queue (entity_type, entity_id, entity_uid, operation, 
+                                   payload, priority, sync_status)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending')
+        """, (entity_type, entity_id, entity_uid, json.dumps(payload or {}), priority))
+        conn.commit()
+        return cursor.lastrowid
+    
+    @staticmethod
+    def mark_synced(conn, sync_queue_id: int, success: bool = True, 
+                   error_message: str = None):
+        """Mark item as synced or failed"""
+        cursor = conn.cursor()
+        status = 'synced' if success else 'failed'
+        cursor.execute("""
+            UPDATE sync_queue 
+            SET sync_status = ?, last_sync_attempt = ?, sync_attempts = sync_attempts + 1,
+                error_message = ?
+            WHERE id = ?
+        """, (status, datetime.now(timezone.utc).isoformat(), error_message, sync_queue_id))
+        conn.commit()
+    
+    @staticmethod
+    def check_conflict(conn, entity_type: str, entity_id: int, 
+                      local_version: str, remote_version: str) -> Dict:
+        """Check for sync conflicts"""
+        if local_version == remote_version:
+            return {'conflict': False}
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO conflicts (entity_type, entity_id, local_version, 
+                                 remote_version, resolution_strategy)
+            VALUES (?, ?, ?, ?, 'pending')
+        """, (entity_type, entity_id, local_version, remote_version))
+        conn.commit()
+        
+        return {
+            'conflict': True,
+            'resolution_needed': True,
+            'local_version': local_version,
+            'remote_version': remote_version
+        }
+    
+    @staticmethod
+    def resolve_conflict(conn, conflict_id: int, resolution_strategy: str,
+                        resolved_value: str = None):
+        """Resolve a conflict"""
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE conflicts 
+            SET resolution_strategy = ?, resolved_value = ?, resolved_at = ?
+            WHERE id = ?
+        """, (resolution_strategy, resolved_value, datetime.now(timezone.utc).isoformat(), conflict_id))
+        conn.commit()
+
+# =============================================
+# Authentication Endpoints
+# =============================================
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """User login"""
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({'error': 'Username and password required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if not user or not check_password_hash(user['password_hash'], password):
+        return jsonify({'error': 'Invalid credentials'}), 401
+    
+    if not user['is_active']:
+        return jsonify({'error': 'User account is inactive'}), 403
+    
+    # Generate JWT token
+    token = jwt.encode({
+        'user_id': user['id'],
+        'clinic_id': user['clinic_id'],
+        'role': user['role'],
+        'exp': datetime.now(timezone.utc) + timedelta(days=7)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+    
+    return jsonify({
+        'token': token,
+        'user': {
+            'id': user['id'],
+            'username': user['username'],
+            'full_name': user['full_name'],
+            'role': user['role']
+        }
+    }), 200
+
+@app.route('/api/auth/change-password', methods=['POST'])
+@token_required
+def change_password():
+    """Change user password"""
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    
+    if not old_password or not new_password:
+        return jsonify({'error': 'Both passwords required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (request.user_id,))
+    user = cursor.fetchone()
+    
+    if not check_password_hash(user['password_hash'], old_password):
+        conn.close()
+        return jsonify({'error': 'Current password incorrect'}), 401
+    
+    new_hash = generate_password_hash(new_password)
+    cursor.execute('UPDATE users SET password_hash = ? WHERE id = ?',
+                  (new_hash, request.user_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Password changed successfully'}), 200
+
+# =============================================
+# Patient Endpoints (Offline-First)
+# =============================================
+
+@app.route('/api/patients', methods=['GET'])
+@token_required
+def get_patients():
+    """Get all patients for clinic"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    search = request.args.get('search', '')
+    if search:
+        cursor.execute("""
+            SELECT * FROM patients 
+            WHERE clinic_id = ? AND (first_name LIKE ? OR last_name LIKE ? OR patient_id LIKE ?)
+            LIMIT 1000
+        """, (request.clinic_id, f'%{search}%', f'%{search}%', f'%{search}%'))
+    else:
+        cursor.execute("""
+            SELECT * FROM patients 
+            WHERE clinic_id = ? AND status = 'active'
+            LIMIT 1000
+        """, (request.clinic_id,))
+    
+    patients = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify(patients), 200
+
+@app.route('/api/patients', methods=['POST'])
+@token_required
+def create_patient():
+    """Create new patient (instant local save, queued for sync)"""
+    data = request.get_json()
+    
+    # Validate required fields
+    if not data.get('first_name') or not data.get('last_name'):
+        return jsonify({'error': 'First and last name required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Generate patient ID
+    patient_id = f"GOTG_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Save to local database immediately (INSTANT LOCAL PERSISTENCE)
+    cursor.execute("""
+        INSERT INTO patients 
+        (patient_id, first_name, last_name, middle_name, date_of_birth, gender, phone, email, 
+         id_number, passport_number, address_line1, address_line2, city, province, postal_code,
+         emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
+         medical_history, allergies, current_medications, blood_type, pregnancy_status,
+         insurance_provider, insurance_number, insurance_plan,
+         clinic_id, status, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'pending')
+    """, (patient_id, data['first_name'], data['last_name'], data.get('middle_name'),
+          data.get('date_of_birth'), data.get('gender'), data.get('phone'), data.get('email'),
+          data.get('id_number'), data.get('passport_number'),
+          data.get('address_line1'), data.get('address_line2'), data.get('city'),
+          data.get('province'), data.get('postal_code'),
+          data.get('emergency_contact_name'), data.get('emergency_contact_phone'),
+          data.get('emergency_contact_relation'),
+          json.dumps(data.get('medical_history', [])), json.dumps(data.get('allergies', [])),
+          json.dumps(data.get('current_medications', [])), data.get('blood_type'),
+          data.get('pregnancy_status'),
+          data.get('insurance_provider'), data.get('insurance_number'), data.get('insurance_plan'),
+          request.clinic_id))
+    
+    patient_row_id = cursor.lastrowid
+    
+    # Queue for sync
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'patient', 'create', patient_row_id, patient_id, data, priority=1
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'id': patient_row_id,
+        'patient_id': patient_id,
+        'message': 'Patient saved locally (will sync when online)',
+        'status': 'saved_locally'
+    }), 201
+
+@app.route('/api/patients/<int:patient_id>', methods=['GET'])
+@token_required
+def get_patient(patient_id):
+    """Get patient details with all studies"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Get patient
+    cursor.execute('SELECT * FROM patients WHERE id = ? AND clinic_id = ?',
+                  (patient_id, request.clinic_id))
+    patient = cursor.fetchone()
+    
+    if not patient:
+        conn.close()
+        return jsonify({'error': 'Patient not found'}), 404
+    
+    # Get patient's studies
+    cursor.execute("""
+        SELECT * FROM studies 
+        WHERE patient_id = ?
+        ORDER BY study_date DESC
+    """, (patient_id,))
+    studies = [dict(row) for row in cursor.fetchall()]
+    
+    conn.close()
+    
+    return jsonify({
+        'patient': dict(patient),
+        'studies': studies,
+        'study_count': len(studies)
+    }), 200
+
+@app.route('/api/patients/<int:patient_id>', methods=['PUT'])
+@token_required
+def update_patient(patient_id):
+    """Update patient (instant local, queued for sync)"""
+    data = request.get_json()
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Check patient exists and belongs to clinic
+    cursor.execute('SELECT * FROM patients WHERE id = ? AND clinic_id = ?',
+                  (patient_id, request.clinic_id))
+    patient = cursor.fetchone()
+    
+    if not patient:
+        conn.close()
+        return jsonify({'error': 'Patient not found'}), 404
+    
+    # Update locally
+    update_fields = []
+    update_values = []
+    for key in ['first_name', 'last_name', 'phone', 'email']:
+        if key in data:
+            update_fields.append(f'{key} = ?')
+            update_values.append(data[key])
+    
+    if update_fields:
+        update_fields.append('updated_at = ?')
+        update_values.append(datetime.now(timezone.utc).isoformat())
+        update_values.append(patient_id)
+        
+        cursor.execute(f"""
+            UPDATE patients 
+            SET {', '.join(update_fields)}
+            WHERE id = ?
+        """, update_values)
+        
+        # Queue for sync
+        OfflineSyncEngine.add_to_sync_queue(
+            conn, 'patient', 'update', patient_id, patient['patient_id'], data, priority=1
+        )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Patient updated'}), 200
+
+# =============================================
+# Worklist Endpoints (Core RIS Feature)
+# =============================================
+
+@app.route('/api/worklist/generate', methods=['POST'])
+@token_required
+def generate_worklist():
+    """Generate daily worklist with filters"""
+    data = request.get_json() or {}
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Build query based on filters
+    query = """
+        SELECT 
+            s.id, s.study_uid, s.accession_number, s.modality, s.description,
+            s.study_date, s.status, s.priority,
+            p.id as patient_id, p.patient_id as patient_code, p.first_name, p.last_name,
+            p.date_of_birth,
+            r.id as report_id, r.report_status
+        FROM studies s
+        JOIN patients p ON s.patient_id = p.id
+        LEFT JOIN reports r ON s.id = r.study_id
+        WHERE s.clinic_id = ?
+    """
+    params = [request.clinic_id]
+    
+    # Apply filters
+    if data.get('modality'):
+        query += ' AND s.modality = ?'
+        params.append(data['modality'])
+    
+    if data.get('status'):
+        query += ' AND s.status = ?'
+        params.append(data['status'])
+    
+    if data.get('priority'):
+        query += ' AND s.priority = ?'
+        params.append(data['priority'])
+    
+    if data.get('date_from'):
+        query += ' AND DATE(s.study_date) >= DATE(?)'
+        params.append(data['date_from'])
+    
+    if data.get('date_to'):
+        query += ' AND DATE(s.study_date) <= DATE(?)'
+        params.append(data['date_to'])
+    
+    # Order by priority and date
+    query += ' ORDER BY CASE WHEN s.priority = "stat" THEN 1 WHEN s.priority = "urgent" THEN 2 ELSE 3 END, s.study_date ASC'
+    
+    cursor.execute(query, params)
+    studies = [dict(row) for row in cursor.fetchall()]
+    
+    # Generate statistics
+    total_studies = len(studies)
+    completed = sum(1 for s in studies if s['report_status'] == 'finalized')
+    pending = sum(1 for s in studies if s['report_status'] is None or s['report_status'] == 'draft')
+    urgent = sum(1 for s in studies if s['priority'] in ('urgent', 'stat'))
+    
+    # Create worklist entry
+    worklist_id = f"WL_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    worklist_data = json.dumps(studies, separators=(',', ':'))
+    
+    cursor.execute("""
+        INSERT INTO worklists 
+        (worklist_id, clinic_id, modality, date_generated, priority_filter, status_filter,
+         total_studies, completed_count, pending_count, urgent_count, worklist_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (worklist_id, request.clinic_id, data.get('modality', 'all'),
+          datetime.now(timezone.utc).isoformat(),
+          data.get('priority', 'all'), data.get('status', 'all'),
+          total_studies, completed, pending, urgent, worklist_data))
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'worklist_id': worklist_id,
+        'studies': studies,
+        'statistics': {
+            'total': total_studies,
+            'completed': completed,
+            'pending': pending,
+            'urgent': urgent
+        }
+    }), 200
+
+@app.route('/api/worklist/list', methods=['GET'])
+@token_required
+def get_worklists():
+    """Get active worklists"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT * FROM worklists 
+        WHERE clinic_id = ? AND is_active = 1
+        ORDER BY date_generated DESC
+        LIMIT 50
+    """, (request.clinic_id,))
+    
+    worklists = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({'worklists': worklists}), 200
+
+@app.route('/api/worklist/<worklist_id>', methods=['GET'])
+@token_required
+def get_worklist_details(worklist_id):
+    """Get detailed worklist"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM worklists WHERE worklist_id = ?', (worklist_id,))
+    worklist = cursor.fetchone()
+    
+    if not worklist:
+        conn.close()
+        return jsonify({'error': 'Worklist not found'}), 404
+    
+    worklist_dict = dict(worklist)
+    # Parse JSON data
+    try:
+        worklist_dict['worklist_data'] = json.loads(worklist_dict['worklist_data'])
+    except:
+        pass
+    
+    conn.close()
+    
+    return jsonify(worklist_dict), 200
+
+# =============================================
+# Appointment Endpoints
+# =============================================
+
+@app.route('/api/appointments', methods=['POST'])
+@token_required
+def create_appointment():
+    """Create new appointment"""
+    data = request.get_json()
+    
+    if not data.get('patient_id') or not data.get('appointment_date'):
+        return jsonify({'error': 'Patient ID and appointment date required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Check for conflicting appointments
+    cursor.execute("""
+        SELECT COUNT(*) as count FROM appointments
+        WHERE patient_id = ? AND appointment_date = ? AND appointment_time = ?
+              AND status NOT IN ('cancelled', 'no_show')
+    """, (data['patient_id'], data['appointment_date'], data.get('appointment_time', '09:00')))
+    
+    if cursor.fetchone()['count'] > 0:
+        conn.close()
+        return jsonify({'error': 'Appointment time conflict'}), 409
+    
+    appointment_id = f"APT_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    cursor.execute("""
+        INSERT INTO appointments
+        (appointment_id, patient_id, study_id, appointment_date, appointment_time,
+         modality, description, slot_duration_minutes, status, priority, clinic_id, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, 'pending')
+    """, (appointment_id, data['patient_id'], data.get('study_id'),
+          data['appointment_date'], data.get('appointment_time', '09:00'),
+          data.get('modality', 'CR'), data.get('description'),
+          data.get('slot_duration_minutes', 30), data.get('priority', 'routine'),
+          request.clinic_id))
+    
+    appointment_row_id = cursor.lastrowid
+    
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'appointment', 'create', appointment_row_id, appointment_id, data, priority=1
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'id': appointment_row_id,
+        'appointment_id': appointment_id,
+        'message': 'Appointment scheduled'
+    }), 201
+
+@app.route('/api/appointments', methods=['GET'])
+@token_required
+def get_appointments():
+    """Get appointments with filters"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = 'SELECT * FROM appointments WHERE clinic_id = ?'
+    params = [request.clinic_id]
+    
+    if request.args.get('date'):
+        query += ' AND DATE(appointment_date) = DATE(?)'
+        params.append(request.args.get('date'))
+    
+    if request.args.get('status'):
+        query += ' AND status = ?'
+        params.append(request.args.get('status'))
+    
+    if request.args.get('patient_id'):
+        query += ' AND patient_id = ?'
+        params.append(request.args.get('patient_id'))
+    
+    query += ' ORDER BY appointment_date ASC, appointment_time ASC LIMIT 500'
+    
+    cursor.execute(query, params)
+    appointments = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({'appointments': appointments}), 200
+
+@app.route('/api/appointments/<int:appointment_id>/status', methods=['PUT'])
+@token_required
+def update_appointment_status(appointment_id):
+    """Update appointment status"""
+    data = request.get_json()
+    new_status = data.get('status')
+    
+    if not new_status or new_status not in ['scheduled', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show']:
+        return jsonify({'error': 'Invalid status'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT appointment_id FROM appointments WHERE id = ?', (appointment_id,))
+    apt = cursor.fetchone()
+    
+    if not apt:
+        conn.close()
+        return jsonify({'error': 'Appointment not found'}), 404
+    
+    cursor.execute("""
+        UPDATE appointments
+        SET status = ?, updated_at = ?, cancellation_reason = ?
+        WHERE id = ?
+    """, (new_status, datetime.now(timezone.utc).isoformat(),
+          data.get('cancellation_reason'), appointment_id))
+    
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'appointment', 'update', appointment_id, apt['appointment_id'],
+        {'status': new_status}, priority=1
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': f'Appointment status updated to {new_status}'}), 200
+
+# =============================================
+# Enhanced Report Endpoints
+# =============================================
+
+@app.route('/api/report-templates', methods=['GET'])
+@token_required
+def get_report_templates():
+    """Get available report templates"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = 'SELECT * FROM report_templates WHERE is_active = 1'
+    params = []
+    
+    if request.args.get('body_part'):
+        query += ' AND body_part = ?'
+        params.append(request.args.get('body_part'))
+    
+    if request.args.get('modality'):
+        query += ' AND modality = ?'
+        params.append(request.args.get('modality'))
+    
+    query += ' ORDER BY body_part ASC'
+    
+    cursor.execute(query, params)
+    templates = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({'templates': templates}), 200
+
+# =============================================
+# Study Endpoints (DICOM Studies)
+# =============================================
+
+@app.route('/api/studies', methods=['GET'])
+@token_required
+def get_studies():
+    """Get studies with optional filters"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Build query with filters
+    query = 'SELECT * FROM studies WHERE clinic_id = ?'
+    params = [request.clinic_id]
+    
+    if request.args.get('patient_id'):
+        query += ' AND patient_id = ?'
+        params.append(request.args.get('patient_id'))
+    
+    if request.args.get('modality'):
+        query += ' AND modality = ?'
+        params.append(request.args.get('modality'))
+    
+    if request.args.get('status'):
+        query += ' AND status = ?'
+        params.append(request.args.get('status'))
+    
+    query += ' ORDER BY study_date DESC LIMIT 500'
+    cursor.execute(query, params)
+    
+    studies = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({
+        'studies': studies,
+        'count': len(studies)
+    }), 200
+
+@app.route('/api/studies', methods=['POST'])
+@token_required
+def create_study():
+    """Create new study (instant local save, queued for sync)"""
+    data = request.get_json()
+    
+    if not data.get('patient_id') or not data.get('modality'):
+        return jsonify({'error': 'Patient ID and modality required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Verify patient exists
+    cursor.execute('SELECT id FROM patients WHERE id = ? AND clinic_id = ?',
+                  (data['patient_id'], request.clinic_id))
+    patient = cursor.fetchone()
+    
+    if not patient:
+        conn.close()
+        return jsonify({'error': 'Patient not found'}), 404
+    
+    # Generate UIDs
+    study_uid = f"1.2.{int(datetime.now().timestamp())}.{request.clinic_id}"
+    accession = f"ACC-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Save study
+    cursor.execute("""
+        INSERT INTO studies 
+        (study_uid, patient_id, accession_number, modality, description,
+         referring_physician, study_date, status, clinic_id, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, 'pending')
+    """, (study_uid, data['patient_id'], accession, data['modality'],
+          data.get('description'), data.get('referring_physician'),
+          datetime.now().isoformat(), request.clinic_id))
+    
+    study_id = cursor.lastrowid
+    
+    # Queue for sync
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'study', 'create', study_id, study_uid, data, priority=2
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'id': study_id,
+        'study_uid': study_uid,
+        'accession_number': accession,
+        'message': 'Study created locally'
+    }), 201
+
+@app.route('/api/studies/<int:study_id>/series', methods=['GET'])
+@token_required
+def get_study_series(study_id):
+    """Get all series in a study"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT s.*, COUNT(di.id) as instance_count
+        FROM series s
+        LEFT JOIN dicom_instances di ON di.series_id = s.id
+        WHERE s.study_id = ?
+        GROUP BY s.id
+    """, (study_id,))
+    
+    series = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({'series': series}), 200
+
+# =============================================
+# Report Endpoints
+# =============================================
+
+@app.route('/api/reports', methods=['POST'])
+@token_required
+def create_report():
+    """Create radiology report (instant local save, queued for sync)"""
+    data = request.get_json()
+    
+    if not data.get('study_id'):
+        return jsonify({'error': 'Study ID required'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Generate report UID
+    report_uid = f"RPT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Save report
+    cursor.execute("""
+        INSERT INTO reports 
+        (report_uid, study_id, template_id, body_part, report_text,
+         findings, impression, recommendations, critical_findings,
+         radiologist_id, radiologist_name, report_status, report_date, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, 'pending')
+    """, (report_uid, data['study_id'], data.get('template_id'), data.get('body_part'),
+          data.get('report_text'), data.get('findings'), data.get('impression'),
+          data.get('recommendations'), data.get('critical_findings'),
+          request.user_id, data.get('radiologist_name'),
+          datetime.now(timezone.utc).isoformat()))
+    
+    report_id = cursor.lastrowid
+    
+    # Log status change
+    cursor.execute("""
+        INSERT INTO study_status_logs (study_id, previous_status, new_status, changed_by_id, changed_by)
+        VALUES (?, 'pending', 'in_progress', ?, 'radiologist')
+    """, (data['study_id'], request.user_id))
+    
+    # Queue for sync
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'report', 'create', report_id, report_uid, data, priority=1
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'id': report_id,
+        'report_uid': report_uid,
+        'message': 'Report saved locally'
+    }), 201
+
+@app.route('/api/reports/<int:report_id>/finalize', methods=['PUT'])
+@token_required
+def finalize_report(report_id):
+    """Finalize report (mark ready for verification)"""
+    data = request.get_json() or {}
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT study_id, report_uid FROM reports WHERE id = ?', (report_id,))
+    report = cursor.fetchone()
+    
+    if not report:
+        conn.close()
+        return jsonify({'error': 'Report not found'}), 404
+    
+    cursor.execute("""
+        UPDATE reports
+        SET report_status = 'finalized', finalized_at = ?, updated_at = ?
+        WHERE id = ?
+    """, (datetime.now(timezone.utc).isoformat(),
+          datetime.now(timezone.utc).isoformat(), report_id))
+    
+    # Update study status
+    cursor.execute("""
+        UPDATE studies SET status = 'reported', updated_at = ?
+        WHERE id = ?
+    """, (datetime.now(timezone.utc).isoformat(), report['study_id']))
+    
+    # Log status change
+    cursor.execute("""
+        INSERT INTO study_status_logs (study_id, previous_status, new_status, changed_by_id, changed_by)
+        VALUES (?, 'in_progress', 'reported', ?, 'radiologist')
+    """, (report['study_id'], request.user_id))
+    
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'report', 'update', report_id, report['report_uid'],
+        {'status': 'finalized'}, priority=2
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Report finalized'}), 200
+
+@app.route('/api/reports/<int:report_id>/verify', methods=['PUT'])
+@token_required
+def verify_report(report_id):
+    """Verify report (supervisor approval)"""
+    data = request.get_json() or {}
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT study_id, report_uid FROM reports WHERE id = ?', (report_id,))
+    report = cursor.fetchone()
+    
+    if not report:
+        conn.close()
+        return jsonify({'error': 'Report not found'}), 404
+    
+    cursor.execute("""
+        UPDATE reports
+        SET report_status = 'verified', verification_date = ?, verified_by_id = ?, 
+            verified_by = ?, verification_notes = ?, updated_at = ?
+        WHERE id = ?
+    """, (datetime.now(timezone.utc).isoformat(), request.user_id,
+          data.get('verified_by_name', 'Unknown'),
+          data.get('verification_notes', ''),
+          datetime.now(timezone.utc).isoformat(), report_id))
+    
+    OfflineSyncEngine.add_to_sync_queue(
+        conn, 'report', 'update', report_id, report['report_uid'],
+        {'status': 'verified'}, priority=2
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Report verified'}), 200
+
+@app.route('/api/reports/<int:report_id>/qa', methods=['PUT'])
+@token_required
+def qa_check_report(report_id):
+    """Quality assurance check on report"""
+    data = request.get_json() or {}
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    qa_status = data.get('qa_status', 'review_needed')  # pending, passed, failed, review_needed
+    qa_issues = data.get('qa_issues', [])
+    
+    cursor.execute("""
+        UPDATE reports
+        SET qa_status = ?, qa_checked_by = ?, qa_check_date = ?, qa_issues = ?, updated_at = ?
+        WHERE id = ?
+    """, (qa_status, data.get('qa_checked_by', 'Unknown'),
+          datetime.now(timezone.utc).isoformat(),
+          json.dumps(qa_issues), 
+          datetime.now(timezone.utc).isoformat(), report_id))
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': f'QA status set to {qa_status}'}), 200
+
+# =============================================
+# Advanced Search & Analytics
+# =============================================
+
+@app.route('/api/search/patients', methods=['GET'])
+@token_required
+def search_patients():
+    """Advanced patient search"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = 'SELECT * FROM patients WHERE clinic_id = ? AND status = "active"'
+    params = [request.clinic_id]
+    
+    search_term = request.args.get('q', '')
+    if search_term:
+        query += ' AND (first_name LIKE ? OR last_name LIKE ? OR patient_id LIKE ? OR id_number LIKE ?)'
+        search_pattern = f'%{search_term}%'
+        params.extend([search_pattern, search_pattern, search_pattern, search_pattern])
+    
+    # Date of birth filter
+    if request.args.get('dob_from'):
+        query += ' AND date_of_birth >= ?'
+        params.append(request.args.get('dob_from'))
+    
+    if request.args.get('dob_to'):
+        query += ' AND date_of_birth <= ?'
+        params.append(request.args.get('dob_to'))
+    
+    query += ' ORDER BY last_name ASC, first_name ASC LIMIT 100'
+    
+    cursor.execute(query, params)
+    patients = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify({'patients': patients}), 200
+
+@app.route('/api/analytics/dashboard', methods=['GET'])
+@token_required
+def get_analytics():
+    """Get dashboard analytics"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    # Patient statistics
+    cursor.execute('SELECT COUNT(*) as count FROM patients WHERE clinic_id = ?', (request.clinic_id,))
+    total_patients = cursor.fetchone()['count']
+    
+    # Studies by status
+    cursor.execute("""
+        SELECT status, COUNT(*) as count FROM studies 
+        WHERE clinic_id = ? 
+        GROUP BY status
+    """, (request.clinic_id,))
+    studies_by_status = {row['status']: row['count'] for row in cursor.fetchall()}
+    
+    # Studies by modality
+    cursor.execute("""
+        SELECT modality, COUNT(*) as count FROM studies 
+        WHERE clinic_id = ? 
+        GROUP BY modality
+    """, (request.clinic_id,))
+    studies_by_modality = {row['modality']: row['count'] for row in cursor.fetchall()}
+    
+    # Today's studies
+    cursor.execute("""
+        SELECT COUNT(*) as count FROM studies 
+        WHERE clinic_id = ? AND DATE(study_date) = DATE(?)
+    """, (request.clinic_id, today))
+    today_studies = cursor.fetchone()['count']
+    
+    # Reports generated
+    cursor.execute("""
+        SELECT COUNT(*) as count FROM reports 
+        WHERE study_id IN (SELECT id FROM studies WHERE clinic_id = ?)
+              AND DATE(created_at) = DATE(?)
+    """, (request.clinic_id, today))
+    today_reports = cursor.fetchone()['count']
+    
+    # Turnaround time average
+    cursor.execute("""
+        SELECT AVG(time_to_report_minutes) as avg_time FROM reports
+        WHERE study_id IN (SELECT id FROM studies WHERE clinic_id = ?)
+              AND time_to_report_minutes IS NOT NULL
+    """, (request.clinic_id,))
+    avg_turnaround = cursor.fetchone()['avg_time'] or 0
+    
+    # Urgent studies
+    cursor.execute("""
+        SELECT COUNT(*) as count FROM studies
+        WHERE clinic_id = ? AND priority IN ('urgent', 'stat') AND status != 'completed'
+    """, (request.clinic_id,))
+    urgent_pending = cursor.fetchone()['count']
+    
+    conn.close()
+    
+    return jsonify({
+        'total_patients': total_patients,
+        'studies_by_status': studies_by_status,
+        'studies_by_modality': studies_by_modality,
+        'today': {
+            'studies': today_studies,
+            'reports': today_reports
+        },
+        'performance': {
+            'avg_turnaround_minutes': round(avg_turnaround, 1),
+            'urgent_pending': urgent_pending
+        }
+    }), 200
+
+# =============================================
+# Study Endpoints (DICOM Studies)
+# =============================================
+
+# =============================================
+# Sync Endpoints
+# =============================================
+
+@app.route('/api/sync/status', methods=['GET'])
+@token_required
+def get_sync_status():
+    """Get current sync status for clinic"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Get sync queue stats
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN sync_status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN sync_status = 'synced' THEN 1 ELSE 0 END) as synced,
+            SUM(CASE WHEN sync_status = 'failed' THEN 1 ELSE 0 END) as failed
+        FROM sync_queue
+    """)
+    
+    stats = dict(cursor.fetchone())
+    
+    # Get pending items by type
+    cursor.execute("""
+        SELECT entity_type, COUNT(*) as count
+        FROM sync_queue
+        WHERE sync_status = 'pending'
+        GROUP BY entity_type
+    """)
+    
+    pending_by_type = {row['entity_type']: row['count'] for row in cursor.fetchall()}
+    
+    # Get clinic's last sync time
+    cursor.execute("""
+        SELECT MAX(sync_timestamp) as last_sync
+        FROM sync_log
+        WHERE entity_type IN (SELECT entity_type FROM sync_queue LIMIT 1)
+    """)
+    
+    last_sync_row = cursor.fetchone()
+    last_sync = last_sync_row['last_sync'] if last_sync_row else None
+    
+    conn.close()
+    
+    return jsonify({
+        'queue_stats': stats,
+        'pending_by_type': pending_by_type,
+        'last_sync': last_sync,
+        'clinic_id': request.clinic_id,
+        'is_online': check_connectivity()
+    }), 200
+
+@app.route('/api/sync/queue', methods=['GET'])
+@token_required
+def get_sync_queue():
+    """Get pending sync items"""
+    conn = get_db()
+    limit = request.args.get('limit', 100, type=int)
+    
+    pending_items = OfflineSyncEngine.get_sync_queue(conn, limit=limit)
+    items = [dict(row) for row in pending_items]
+    
+    conn.close()
+    
+    return jsonify({'pending_items': items, 'count': len(items)}), 200
+
+@app.route('/api/sync/check-conflict', methods=['POST'])
+@token_required
+def check_conflict():
+    """Check for sync conflicts"""
+    data = request.get_json()
+    
+    conn = get_db()
+    result = OfflineSyncEngine.check_conflict(
+        conn, data['entity_type'], data['entity_id'],
+        data['local_version'], data['remote_version']
+    )
+    conn.close()
+    
+    return jsonify(result), 200
+
+# =============================================
+# System Endpoints
+# =============================================
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) as count FROM patients LIMIT 1')
+        cursor.fetchone()
+        conn.close()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'database': 'connected'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/stats', methods=['GET'])
+@token_required
+def get_statistics():
+    """Get system statistics"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT COUNT(*) as count FROM patients WHERE clinic_id = ?',
+                  (request.clinic_id,))
+    patient_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM studies WHERE clinic_id = ?',
+                  (request.clinic_id,))
+    study_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM reports WHERE study_id IN (SELECT id FROM studies WHERE clinic_id = ?)',
+                  (request.clinic_id,))
+    report_count = cursor.fetchone()['count']
+    
+    cursor.execute("""
+        SELECT 
+            SUM(CASE WHEN sync_status = 'pending' THEN 1 ELSE 0 END) as pending_sync
+        FROM sync_queue
+    """)
+    pending_sync = cursor.fetchone()['pending_sync'] or 0
+    
+    conn.close()
+    
+    return jsonify({
+        'patients': patient_count,
+        'studies': study_count,
+        'reports': report_count,
+        'pending_sync': pending_sync,
+        'offline_capable': True
+    }), 200
+
+def check_connectivity() -> bool:
+    """Check if system has internet connectivity"""
+    try:
+        import socket
+        socket.create_connection(("8.8.8.8", 53), timeout=2)
+        return True
+    except (socket.timeout, socket.error):
+        return False
+
+# =============================================
+# Error Handlers
+# =============================================
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({'error': 'Bad request'}), 400
+
+# =============================================
+# PHASE 2: AI/Voice/Streaming Endpoints
+# =============================================
+
+if PHASE2_ENABLED:
+    
+    # --------- GEMINI AI ENDPOINTS ---------
+    
+    @app.route('/api/v2/gemini/auto-populate', methods=['POST'])
+    def gemini_auto_populate():
+        """Auto-populate patient data using Gemini AI from minimal information"""
+        try:
+            data = request.json
+            partial_data = data.get('partial_data', {})
+            
+            if not partial_data:
+                return jsonify({'error': 'partial_data required'}), 400
+            
+            result = gemini_service.auto_populate_patient_data(partial_data)
+            
+            # Save to database if successful
+            if result.get('success'):
+                db = get_db()
+                patient_data = result.get('patient_data', {})
+                
+                cursor = db.cursor()
+                cursor.execute("""
+                    INSERT INTO patients (
+                        name, age, gender, chief_complaint, medical_history,
+                        allergies, current_medications, vital_signs
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    patient_data.get('name'),
+                    patient_data.get('age'),
+                    patient_data.get('gender'),
+                    patient_data.get('chief_complaint'),
+                    patient_data.get('medical_history'),
+                    patient_data.get('allergies'),
+                    patient_data.get('current_medications'),
+                    json.dumps(patient_data.get('vital_signs', {}))
+                ))
+                db.commit()
+                db.close()
+                
+                return jsonify({
+                    'success': True,
+                    'patient_id': cursor.lastrowid,
+                    'patient_data': patient_data,
+                    'confidence': result.get('confidence')
+                }), 201
+            
+            return jsonify(result), 400
+        
+        except Exception as e:
+            logger.error(f"Gemini auto-populate error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/gemini/generate-report', methods=['POST'])
+    def gemini_generate_report():
+        """Generate radiologist report using Gemini AI"""
+        try:
+            data = request.json
+            findings = data.get('findings', '')
+            patient_id = data.get('patient_id')
+            
+            if not findings:
+                return jsonify({'error': 'findings required'}), 400
+            
+            report = gemini_service.generate_radiologist_report(findings)
+            
+            # Save report to database
+            if patient_id:
+                db = get_db()
+                cursor = db.cursor()
+                cursor.execute("""
+                    INSERT INTO reports (patient_id, content, generated_at)
+                    VALUES (?, ?, ?)
+                """, (patient_id, report.get('report_text'), datetime.now().isoformat()))
+                db.commit()
+                db.close()
+            
+            return jsonify({
+                'success': True,
+                'report': report.get('report_text'),
+                'clinical_significance': report.get('clinical_significance'),
+                'recommendations': report.get('recommendations')
+            }), 201
+        
+        except Exception as e:
+            logger.error(f"Gemini report generation error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/gemini/triage', methods=['POST'])
+    def gemini_triage():
+        """AI-powered triage assessment"""
+        try:
+            data = request.json
+            vitals = data.get('vitals', {})
+            complaint = data.get('complaint', '')
+            injuries = data.get('injuries', '')
+            
+            assessment = gemini_service.triage_assessment(vitals, complaint, injuries)
+            
+            return jsonify({
+                'success': True,
+                'priority_level': assessment.get('priority_level'),
+                'triage_category': assessment.get('triage_category'),
+                'reasoning': assessment.get('reasoning'),
+                'recommended_actions': assessment.get('recommended_actions'),
+                'confidence': assessment.get('confidence')
+            }), 200
+        
+        except Exception as e:
+            logger.error(f"Gemini triage error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- ELEVENLABS VOICE ENDPOINTS ---------
+    
+    @app.route('/api/v2/voice/text-to-speech', methods=['POST'])
+    def voice_text_to_speech():
+        """Convert text to speech using ElevenLabs"""
+        try:
+            data = request.json
+            text = data.get('text', '')
+            voice_type = data.get('voice_type', 'default')  # default, emergency, medical
+            
+            if not text:
+                return jsonify({'error': 'text required'}), 400
+            
+            audio_bytes = elevenlabs_service.text_to_speech(text, voice_type)
+            
+            return send_file(
+                io.BytesIO(audio_bytes),
+                mimetype='audio/mpeg',
+                as_attachment=False,
+                download_name='output.mp3'
+            )
+        
+        except Exception as e:
+            logger.error(f"ElevenLabs TTS error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/voice/greeting', methods=['POST'])
+    def voice_greeting():
+        """Generate welcome greeting for patient"""
+        try:
+            data = request.json
+            patient_name = data.get('patient_name', 'patient')
+            
+            audio_bytes = elevenlabs_service.speak_greeting(patient_name)
+            
+            return send_file(
+                io.BytesIO(audio_bytes),
+                mimetype='audio/mpeg',
+                as_attachment=False,
+                download_name='greeting.mp3'
+            )
+        
+        except Exception as e:
+            logger.error(f"Voice greeting error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/voice/instructions', methods=['POST'])
+    def voice_instructions():
+        """Generate medical instructions in audio"""
+        try:
+            data = request.json
+            instruction = data.get('instruction', '')
+            
+            if not instruction:
+                return jsonify({'error': 'instruction required'}), 400
+            
+            audio_bytes = elevenlabs_service.speak_instruction(instruction)
+            
+            return send_file(
+                io.BytesIO(audio_bytes),
+                mimetype='audio/mpeg',
+                as_attachment=False,
+                download_name='instruction.mp3'
+            )
+        
+        except Exception as e:
+            logger.error(f"Voice instructions error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/voice/list-voices', methods=['GET'])
+    def voice_list_voices():
+        """List available ElevenLabs voices"""
+        try:
+            voices = elevenlabs_service.list_voices()
+            return jsonify({
+                'success': True,
+                'voices': voices
+            }), 200
+        
+        except Exception as e:
+            logger.error(f"List voices error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- KAFKA STREAMING ENDPOINTS ---------
+    
+    @app.route('/api/v2/stream/patient-admission', methods=['POST'])
+    def stream_patient_admission():
+        """Stream patient admission event to Kafka"""
+        try:
+            data = request.json
+            clinic_id = data.get('clinic_id')
+            patient_data = data.get('patient_data', {})
+            
+            if not clinic_id or not patient_data:
+                return jsonify({'error': 'clinic_id and patient_data required'}), 400
+            
+            result = kafka_service.produce_patient_admission(clinic_id, patient_data)
+            
+            return jsonify({
+                'success': True,
+                'topic': 'patient-admissions',
+                'message': 'Patient admission streamed successfully',
+                'partition': result
+            }), 202
+        
+        except Exception as e:
+            logger.error(f"Stream patient admission error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/stream/vitals', methods=['POST'])
+    def stream_vitals():
+        """Stream patient vital signs to Kafka"""
+        try:
+            data = request.json
+            patient_id = data.get('patient_id')
+            vitals = data.get('vitals', {})
+            clinic_id = data.get('clinic_id')
+            
+            if not patient_id or not vitals or not clinic_id:
+                return jsonify({'error': 'patient_id, vitals, and clinic_id required'}), 400
+            
+            result = kafka_service.produce_vital_signs(patient_id, vitals, clinic_id)
+            
+            return jsonify({
+                'success': True,
+                'topic': 'patient-vitals',
+                'message': 'Vitals streamed successfully',
+                'partition': result
+            }), 202
+        
+        except Exception as e:
+            logger.error(f"Stream vitals error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v2/stream/critical-alert', methods=['POST'])
+    def stream_critical_alert():
+        """Stream critical patient alert to Kafka"""
+        try:
+            data = request.json
+            patient_id = data.get('patient_id')
+            alert_type = data.get('alert_type')  # cardiac, respiratory, shock, etc.
+            severity = data.get('severity')  # critical, urgent, high
+            clinic_id = data.get('clinic_id')
+            
+            if not all([patient_id, alert_type, severity, clinic_id]):
+                return jsonify({'error': 'patient_id, alert_type, severity, clinic_id required'}), 400
+            
+            alert_data = {
+                'patient_id': patient_id,
+                'alert_type': alert_type,
+                'severity': severity,
+                'clinic_id': clinic_id,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            result = kafka_service.produce_critical_alert(alert_data)
+            
+            return jsonify({
+                'success': True,
+                'topic': 'critical-alerts',
+                'message': 'Critical alert streamed successfully',
+                'partition': result
+            }), 202
+        
+        except Exception as e:
+            logger.error(f"Stream critical alert error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- HEALTH CHECK (Phase 2) ---------
+    
+    @app.route('/api/v2/health', methods=['GET'])
+    def health_v2():
+        """System health check with Phase 2 services"""
+        status = {
+            'status': 'operational',
+            'timestamp': datetime.now().isoformat(),
+            'phase1': True,
+            'phase2': {
+                'gemini': hasattr(gemini_service, 'auto_populate_patient_data'),
+                'elevenlabs': hasattr(elevenlabs_service, 'text_to_speech'),
+                'kafka': hasattr(kafka_service, 'produce_patient_admission'),
+                'config': PHASE2_ENABLED
+            }
+        }
+        return jsonify(status), 200
+
+# =============================================
+# PHASE 3: ML Models (OCR, Voice, Biometric, Web Intelligence, Family Reunification)
+# =============================================
+
+if PHASE3_ENABLED:
+    
+    # --------- OCR ENDPOINTS ---------
+    
+    @app.route('/api/v3/ocr/extract-text', methods=['POST'])
+    def ocr_extract_text():
+        """Extract text from handwritten notes or documents"""
+        try:
+            if 'image' not in request.files:
+                return jsonify({'error': 'image file required'}), 400
+            
+            image_file = request.files['image']
+            image_bytes = image_file.read()
+            
+            result = ocr_service.extract_text_from_image(image_bytes)
+            
+            return jsonify({
+                'success': result['success'],
+                'extracted_text': result.get('text', ''),
+                'lines': result.get('lines', []),
+                'quality_score': result.get('quality_score', 0),
+                'languages_detected': result.get('languages_detected', [])
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"OCR extract text error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/ocr/process-form', methods=['POST'])
+    def ocr_process_form():
+        """Process handwritten medical form end-to-end"""
+        try:
+            if 'image' not in request.files:
+                return jsonify({'error': 'image file required'}), 400
+            
+            image_file = request.files['image']
+            image_bytes = image_file.read()
+            
+            result = ocr_service.process_handwritten_form(image_bytes)
+            
+            return jsonify({
+                'success': result['success'],
+                'raw_text': result.get('raw_text', ''),
+                'extracted_fields': result.get('extracted_fields', {}),
+                'quality_score': result.get('quality_score', 0),
+                'ready_for_gemini': result.get('ready_for_gemini', False)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"OCR process form error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- SPEECH-TO-TEXT ENDPOINTS ---------
+    
+    @app.route('/api/v3/speech/transcribe', methods=['POST'])
+    def speech_transcribe():
+        """Transcribe patient audio to text"""
+        try:
+            if 'audio' not in request.files:
+                return jsonify({'error': 'audio file required'}), 400
+            
+            audio_file = request.files['audio']
+            audio_bytes = audio_file.read()
+            language = request.form.get('language')
+            
+            result = speech_service.transcribe_audio(audio_bytes, language)
+            
+            return jsonify({
+                'success': result['success'],
+                'transcription': result.get('text', ''),
+                'language': result.get('language', ''),
+                'confidence': result.get('confidence', 0),
+                'duration_seconds': result.get('duration_seconds', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Speech transcription error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/speech/patient-intake', methods=['POST'])
+    def speech_patient_intake():
+        """Patient voice intake - transcribe and extract vital information"""
+        try:
+            if 'audio' not in request.files:
+                return jsonify({'error': 'audio file required'}), 400
+            
+            audio_file = request.files['audio']
+            audio_bytes = audio_file.read()
+            language = request.form.get('language')
+            
+            result = speech_service.process_patient_intake_audio(audio_bytes, language)
+            
+            return jsonify({
+                'success': result['success'],
+                'transcription': result.get('transcription', ''),
+                'vital_information': result.get('vital_information', {}),
+                'confidence': result.get('confidence', 0),
+                'ready_for_gemini': result.get('ready_for_gemini', False)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Speech patient intake error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/speech/supported-languages', methods=['GET'])
+    def speech_supported_languages():
+        """Get list of supported languages for speech recognition"""
+        try:
+            languages = speech_service.get_supported_languages()
+            return jsonify({
+                'supported_languages': languages,
+                'count': len(languages)
+            }), 200
+        except Exception as e:
+            logger.error(f"Get supported languages error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- FACE RECOGNITION ENDPOINTS ---------
+    
+    @app.route('/api/v3/biometric/capture', methods=['POST'])
+    def biometric_capture():
+        """Capture patient's face for biometric identification"""
+        try:
+            if 'image' not in request.files:
+                return jsonify({'error': 'image file required'}), 400
+            
+            patient_id = request.form.get('patient_id')
+            clinic_id = request.form.get('clinic_id', 'UNKNOWN')
+            
+            if not patient_id:
+                return jsonify({'error': 'patient_id required'}), 400
+            
+            image_file = request.files['image']
+            image_bytes = image_file.read()
+            
+            result = face_recognition_service.store_patient_face(
+                int(patient_id), image_bytes, clinic_id
+            )
+            
+            return jsonify({
+                'success': result['success'],
+                'stored': result.get('stored', False),
+                'confidence': result.get('confidence', 0)
+            }), 201 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Biometric capture error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/biometric/identify', methods=['POST'])
+    def biometric_identify():
+        """Find patient by facial recognition"""
+        try:
+            if 'image' not in request.files:
+                return jsonify({'error': 'image file required'}), 400
+            
+            image_file = request.files['image']
+            image_bytes = image_file.read()
+            tolerance = float(request.form.get('tolerance', 0.6))
+            
+            result = face_recognition_service.find_patient_by_face(image_bytes, tolerance)
+            
+            return jsonify({
+                'success': result['success'],
+                'matches': result.get('matches', []),
+                'best_match': result.get('best_match'),
+                'best_match_score': result.get('best_match_score', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Biometric identify error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/biometric/find-family', methods=['POST'])
+    def biometric_find_family():
+        """Find potential family members by facial similarity"""
+        try:
+            if 'image' not in request.files:
+                return jsonify({'error': 'image file required'}), 400
+            
+            image_file = request.files['image']
+            image_bytes = image_file.read()
+            clinic_id = request.form.get('clinic_id')
+            
+            result = face_recognition_service.find_family_members(image_bytes, clinic_id=clinic_id)
+            
+            return jsonify({
+                'success': result['success'],
+                'potential_relatives': result.get('potential_relatives', []),
+                'count': result.get('count', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Find family error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- WEB INTELLIGENCE ENDPOINTS ---------
+    
+    @app.route('/api/v3/web-intelligence/search-strategy', methods=['POST'])
+    def web_intelligence_search_strategy():
+        """Generate search strategy for patient information gathering"""
+        try:
+            data = request.json
+            patient_profile = data.get('patient_profile', {})
+            
+            result = web_intelligence_service.generate_search_strategy(patient_profile)
+            
+            return jsonify({
+                'success': True,
+                'search_queries': result.get('search_queries', []),
+                'priority_sources': result.get('priority_sources', []),
+                'estimated_importance': result.get('estimated_importance', 0)
+            }), 200
+        
+        except Exception as e:
+            logger.error(f"Web intelligence search strategy error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/web-intelligence/gather', methods=['POST'])
+    def web_intelligence_gather():
+        """Gather patient information from web sources"""
+        try:
+            data = request.json
+            patient_profile = data.get('patient_profile', {})
+            
+            result = web_intelligence_service.gather_patient_intelligence(patient_profile)
+            
+            return jsonify({
+                'success': result['success'],
+                'enriched_profile': result.get('enriched_profile', {}),
+                'sources': result.get('sources', []),
+                'information_gathered': result.get('information_gathered', False)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Web intelligence gather error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- FAMILY REUNIFICATION ENDPOINTS ---------
+    
+    @app.route('/api/v3/family/search', methods=['POST'])
+    def family_search():
+        """Find potential family members for a patient"""
+        try:
+            data = request.json
+            patient_id = data.get('patient_id')
+            clinic_id = data.get('clinic_id')
+            
+            if not patient_id:
+                return jsonify({'error': 'patient_id required'}), 400
+            
+            result = family_matching_service.search_family_members(patient_id, clinic_id)
+            
+            return jsonify({
+                'success': result['success'],
+                'patient_id': result.get('patient_id'),
+                'patient_name': result.get('patient_name'),
+                'matches': result.get('matches', []),
+                'match_count': result.get('match_count', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Family search error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/family/match', methods=['POST'])
+    def family_match():
+        """Record family relationship between two patients"""
+        try:
+            data = request.json
+            patient_id_1 = data.get('patient_id_1')
+            patient_id_2 = data.get('patient_id_2')
+            confidence = data.get('confidence', 0.85)
+            
+            if not (patient_id_1 and patient_id_2):
+                return jsonify({'error': 'patient_id_1 and patient_id_2 required'}), 400
+            
+            result = family_matching_service.match_family_pair(patient_id_1, patient_id_2, confidence)
+            
+            return jsonify({
+                'success': result['success'],
+                'relationship': result.get('relationship', '')
+            }), 201 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Family match error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/notice-board/post', methods=['POST'])
+    def notice_board_post():
+        """Post patient to notice board for family search"""
+        try:
+            data = request.json
+            patient_id = data.get('patient_id')
+            clinic_id = data.get('clinic_id')
+            status = data.get('status', 'stable')
+            
+            if not (patient_id and clinic_id):
+                return jsonify({'error': 'patient_id and clinic_id required'}), 400
+            
+            result = family_matching_service.post_to_notice_board(patient_id, clinic_id, status)
+            
+            return jsonify({
+                'success': result['success'],
+                'notice_id': result.get('notice_id'),
+                'patient_name': result.get('patient_name')
+            }), 201 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Notice board post error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/notice-board/list', methods=['GET'])
+    def notice_board_list():
+        """Get current notice board listings"""
+        try:
+            clinic_id = request.args.get('clinic_id')
+            limit = int(request.args.get('limit', 50))
+            
+            result = family_matching_service.get_notice_board(clinic_id, limit)
+            
+            return jsonify({
+                'success': result['success'],
+                'postings': result.get('postings', []),
+                'count': result.get('count', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Notice board list error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/v3/notice-board/search', methods=['GET'])
+    def notice_board_search():
+        """Search notice board by patient name"""
+        try:
+            name_search = request.args.get('name')
+            
+            if not name_search:
+                return jsonify({'error': 'name parameter required'}), 400
+            
+            result = family_matching_service.search_notice_board_by_name(name_search)
+            
+            return jsonify({
+                'success': result['success'],
+                'search_term': result.get('search_term'),
+                'results': result.get('results', []),
+                'count': result.get('count', 0)
+            }), 200 if result['success'] else 400
+        
+        except Exception as e:
+            logger.error(f"Notice board search error: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    # --------- HEALTH CHECK (Phase 3) ---------
+    
+    @app.route('/api/v3/health', methods=['GET'])
+    def health_v3():
+        """System health check with Phase 3 services"""
+        status = {
+            'status': 'operational',
+            'timestamp': datetime.now().isoformat(),
+            'phase1': True,
+            'phase2': PHASE2_ENABLED,
+            'phase3': {
+                'ocr': hasattr(ocr_service, 'extract_text_from_image'),
+                'speech': hasattr(speech_service, 'transcribe_audio'),
+                'face_recognition': hasattr(face_recognition_service, 'find_patient_by_face'),
+                'web_intelligence': hasattr(web_intelligence_service, 'gather_patient_intelligence'),
+                'family_matching': hasattr(family_matching_service, 'search_family_members'),
+                'enabled': PHASE3_ENABLED
+            }
+        }
+        return jsonify(status), 200
+
+# =============================================
+# Frontend Routes (HTML/CSS/JS)
+# =============================================
+
+@app.route('/')
+def index():
+    """Serve the main frontend app"""
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files (CSS, JS, etc)"""
+    return send_from_directory(app.static_folder, filename)
+
+# =============================================
+# Error Handlers
+# =============================================
+
+@app.errorhandler(404)
+def not_found(error):
+    # If it's an API call, return JSON
+    if request.path.startswith('/api'):
+        return jsonify({'error': 'Not found'}), 404
+    # Otherwise try to serve the frontend
+    return send_from_directory(app.static_folder, 'app.html')
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
+# =============================================
+# Startup
+# =============================================
+
+if __name__ == '__main__':
+    init_db()
+    app.run(
+        host='0.0.0.0',
+        port=int(os.getenv('FLASK_PORT', 5000)),
+        debug=os.getenv('FLASK_DEBUG', 'False') == 'True'
+    )

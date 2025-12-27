@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "tx_id": "tx-00000001",
+      "resource_id": "patient-001",
+      "practitioner_id": "doc-001",
+      "content_hash": "hash_report_001",
+      "timestamp": "2025-11-06T11:30:45.123456Z"
+    },
+    {
+      "tx_id": "tx-00000002",
+      "resource_id": "patient-002",
+      "practitioner_id": "doc-002",
+      "content_hash": "hash_report_002",
+      "timestamp": "2025-11-06T11:31:12.654321Z"
+    },
+    {
+      "tx_id": "tx-00000003",
+      "resource_id": "patient-001",
+      "practitioner_id": "doc-003",
+      "content_hash": "hash_report_003",
+      "timestamp": "2025-11-06T11:31:45.789012Z"
+    }
+  ],
+  "root_hash": "01aea66258cf84fd2b8c7d5e9a1f6b3c4d8e2f5a9b1c3d5e7f8a0b2c4d6e8f9",
+  "tx_counter": 3,
+  "last_updated": "2025-11-06T11:31:45.789012Z"
+}

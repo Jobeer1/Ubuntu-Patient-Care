@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOTG Emergency RIS - Clinician Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-green: #1a4d2e;
+            --primary-dark: #2d6a4f;
+            --primary-light: #40916c;
+            --gold: #d4a574;
+            --gold-bright: #ffd700;
+            --success: #52b788;
+            --danger: #d62828;
+            --warning: #f77f00;
+            --info: #457b9d;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555;
+            --bg-light: #f9f9f9;
+            --border-light: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary-light));
+            padding: 18px 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border-bottom: 4px solid var(--gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            color: var(--gold-bright);
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--warning);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            padding: 12px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-bottom: 3px solid var(--gold);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            padding: 0 30px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            background: var(--gold);
+            color: white;
+        }
+
+        nav a.active {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+
+        @media (max-width: 1024px) {
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            border-left: 4px solid var(--primary-dark);
+        }
+
+        .card.stat {
+            border-left: 4px solid var(--gold);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card.stat .number {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .card.stat .label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .card h2 {
+            color: var(--primary-dark);
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 12px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+        }
+
+        /* Buttons */
+        button, .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gold);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #c9935a;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: var(--primary-dark);
+            color: white;
+            padding: 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-active { background: #d1e7dd; color: #155724; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-critical { background: #f8d7da; color: #721c24; }
+        .badge-completed { background: #d1e7dd; color: #155724; }
+
+        /* Alerts */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #d1e7dd;
+            border-color: var(--success);
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-color: var(--danger);
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-color: var(--info);
+            color: #0c5460;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-btn:hover {
+            color: var(--danger);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border-light);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--primary-dark);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar input, .search-bar select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            padding: 12px 20px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-dark);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        /* Priority Indicators */
+        .priority-high { color: var(--danger); font-weight: 700; }
+        .priority-medium { color: var(--warning); font-weight: 600; }
+        .priority-low { color: var(--info); font-weight: 600; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 10px; }
+            nav ul { flex-direction: column; gap: 10px; }
+            .search-bar { flex-direction: column; }
+            .search-bar input, .search-bar select { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <h1>🏥 GOTG Emergency RIS</h1>
+        <div class="header-right">
+            <div class="connection-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Online</span>
+            </div>
+            <button class="btn btn-small btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <ul>
+            <li><a onclick="switchTab(event, 'dashboard')" class="nav-link active">Dashboard</a></li>
+            <li><a onclick="switchTab(event, 'patients')" class="nav-link">Patients</a></li>
+            <li><a onclick="switchTab(event, 'worklist')" class="nav-link">Worklist</a></li>
+            <li><a onclick="switchTab(event, 'family')" class="nav-link">Family Search</a></li>
+            <li><a onclick="switchTab(event, 'reports')" class="nav-link">Reports</a></li>
+        </ul>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid-4">
+                <div class="card stat">
+                    <div class="number" id="totalPatients">0</div>
+                    <div class="label">Total Patients</div>
+                </div>
+                <div class="card stat">
+                    <div class="number" id="activeAdmissions">0</div>
+                    <div class="label">Active Admissions</div>
+                </div>
+                <div class="card stat">
+                    <div class="number" id="pendingReports">0</div>
+                    <div class="label">Pending Reports</div>
+                </div>
+                <div class="card stat">
+                    <div class="number" id="criticalCases">0</div>
+                    <div class="label">Critical Cases</div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 25px;">
+                <div class="card">
+                    <h2>Recent Admissions</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentAdmissions">
+                            <tr><td colspan="4" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h2>Worklist Summary</h2>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Pending</span>
+                                <span id="worklistPending">0</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: 35%; background: var(--warning);"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>In Progress</span>
+                                <span id="worklistInProgress">0</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: 50%; background: var(--info);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Completed</span>
+                                <span id="worklistCompleted">0</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: 80%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PATIENTS TAB -->
+        <div id="patients" class="tab-content">
+            <div class="card">
+                <h2>Patient Management</h2>
+                
+                <div class="search-bar">
+                    <input type="text" id="patientSearch" placeholder="Search by name, ID, or contact...">
+                    <button class="btn btn-primary btn-small" onclick="searchPatients()">Search</button>
+                    <button class="btn btn-secondary btn-small" onclick="openPatientModal()">+ Register Patient</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Admission</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsList">
+                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading patients...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- WORKLIST TAB -->
+        <div id="worklist" class="tab-content">
+            <div class="card">
+                <h2>Today's Worklist</h2>
+                
+                <div class="search-bar">
+                    <select id="priorityFilter" onchange="filterWorklist()">
+                        <option value="">All Priorities</option>
+                        <option value="critical">Critical</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="routine">Routine</option>
+                    </select>
+                    <select id="statusFilter" onchange="filterWorklist()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Chief Complaint</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="worklistTable">
+                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading worklist...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- FAMILY SEARCH TAB -->
+        <div id="family" class="tab-content">
+            <div class="grid-2">
+                <div class="card">
+                    <h2>Find Loved One</h2>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchFamilyTab(event, 'byface')">By Photo</button>
+                        <button class="tab-btn" onclick="switchFamilyTab(event, 'byname')">By Name</button>
+                        <button class="tab-btn" onclick="switchFamilyTab(event, 'bycontact')">By Contact</button>
+                    </div>
+
+                    <div id="byface" class="tab-content active">
+                        <div class="form-group">
+                            <label>Upload Photo</label>
+                            <input type="file" id="familyPhoto" accept="image/*">
+                        </div>
+                        <button class="btn btn-primary" onclick="searchByBiometric()">Search by Photo</button>
+                    </div>
+
+                    <div id="byname" class="tab-content">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="familyName" placeholder="First or last name">
+                        </div>
+                        <button class="btn btn-primary" onclick="searchByName()">Search</button>
+                    </div>
+
+                    <div id="bycontact" class="tab-content">
+                        <div class="form-group">
+                            <label>Phone or Email</label>
+                            <input type="text" id="familyContact" placeholder="Phone or email address">
+                        </div>
+                        <button class="btn btn-primary" onclick="searchByContact()">Search</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Search Results</h2>
+                    <div id="familyResults" style="min-height: 300px; padding: 20px; background: var(--bg-light); border-radius: 6px;">
+                        <p style="color: var(--text-secondary); text-align: center;">Results will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORTS TAB -->
+        <div id="reports" class="tab-content">
+            <div class="card">
+                <h2>Reports</h2>
+                
+                <div class="search-bar">
+                    <select id="reportStatus">
+                        <option value="">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="finalized">Finalized</option>
+                        <option value="verified">Verified</option>
+                    </select>
+                    <button class="btn btn-primary btn-small" onclick="loadReports()">Filter</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Patient</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsList">
+                        <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATIENT REGISTRATION MODAL -->
+    <div id="patientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Register New Patient</h2>
+                <button class="close-btn" onclick="closePatientModal()">×</button>
+            </div>
+
+            <form onsubmit="addPatient(event)">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Date of Birth *</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="gender">
+                            <option value="">Select...</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                            <option value="O">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Contact Number</label>
+                        <input type="tel" id="contact">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="address">
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>ID Number / Passport</label>
+                        <input type="text" id="idNumber">
+                    </div>
+                    <div class="form-group">
+                        <label>Chief Complaint</label>
+                        <input type="text" id="chiefComplaint" placeholder="e.g., Chest pain, Fracture">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Medical Conditions</label>
+                        <textarea id="medicalHistory" rows="2" placeholder="e.g., Diabetes, Hypertension"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Allergies</label>
+                        <textarea id="allergies" rows="2" placeholder="e.g., Penicillin, Shellfish"></textarea>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closePatientModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Register Patient</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        🏥 GOTG Emergency RIS v3.0 | Clinician Dashboard | Offline-First Medical Information System
+    </footer>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let isOnline = true;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConnectivity();
+            loadDashboard();
+            setInterval(checkConnectivity, 5000);
+        });
+
+        function checkConnectivity() {
+            fetch(`${API_BASE}/health`)
+                .then(() => {
+                    isOnline = true;
+                    document.getElementById('statusDot').classList.remove('offline');
+                    document.getElementById('statusText').textContent = 'Online';
+                })
+                .catch(() => {
+                    isOnline = false;
+                    document.getElementById('statusDot').classList.add('offline');
+                    document.getElementById('statusText').textContent = 'Offline';
+                });
+        }
+
+        function switchTab(e, tabName) {
+            if (e) e.preventDefault();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'dashboard') loadDashboard();
+            else if (tabName === 'patients') loadPatients();
+            else if (tabName === 'worklist') loadWorklist();
+            else if (tabName === 'reports') loadReports();
+        }
+
+        function switchFamilyTab(e, tabName) {
+            if (e) e.preventDefault();
+            document.querySelectorAll('#family .tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#family .tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function loadDashboard() {
+            fetch(`${API_BASE}/stats`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('totalPatients').textContent = data.patients || 0;
+                    document.getElementById('activeAdmissions').textContent = data.admissions?.active || 0;
+                    document.getElementById('pendingReports').textContent = data.reports?.pending || 0;
+                })
+                .catch(e => console.error('Error loading dashboard:', e));
+        }
+
+        function loadPatients() {
+            fetch(`${API_BASE}/patients`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('patientsList');
+                    if (!data.patients || data.patients.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No patients found</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.patients.map(p => `
+                        <tr>
+                            <td><strong>${p.patient_id || 'N/A'}</strong></td>
+                            <td>${p.first_name || ''} ${p.last_name || ''}</td>
+                            <td>${calculateAge(p.dob) || '-'}</td>
+                            <td>${p.contact_number || p.email || '-'}</td>
+                            <td><span class="badge badge-${(p.status || 'active').toLowerCase()}">${p.status || 'Active'}</span></td>
+                            <td>${p.admission_date ? new Date(p.admission_date).toLocaleDateString() : '-'}</td>
+                            <td><button class="btn btn-small btn-primary" onclick="viewPatientDetails(${p.id})">View</button></td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(e => showAlert('Error loading patients: ' + e.message, 'error'));
+        }
+
+        function loadWorklist() {
+            fetch(`${API_BASE}/worklist/list`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('worklistTable');
+                    if (!data.items || data.items.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No items in worklist</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.items.map(item => `
+                        <tr>
+                            <td><strong>${item.patient_name || 'Unknown'}</strong></td>
+                            <td>${item.chief_complaint || '-'}</td>
+                            <td><span class="priority-${(item.priority || 'low').toLowerCase()}">${item.priority || 'Routine'}</span></td>
+                            <td><span class="badge badge-${(item.status || 'pending').toLowerCase()}">${item.status || 'Pending'}</span></td>
+                            <td>${item.assigned_to || 'Unassigned'}</td>
+                            <td>${item.time_admitted ? new Date(item.time_admitted).toLocaleTimeString() : '-'}</td>
+                            <td><button class="btn btn-small btn-primary" onclick="assignWorklistItem(${item.id})">Assign</button></td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(e => showAlert('Error loading worklist: ' + e.message, 'error'));
+        }
+
+        function loadReports() {
+            fetch(`${API_BASE}/reports`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('reportsList');
+                    if (!data.reports || data.reports.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No reports found</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.reports.map(r => `
+                        <tr>
+                            <td><strong>${r.report_uid || 'N/A'}</strong></td>
+                            <td>${r.patient_name || '-'}</td>
+                            <td>${r.report_type || 'General'}</td>
+                            <td><span class="badge badge-${(r.status || 'draft').toLowerCase()}">${r.status || 'Draft'}</span></td>
+                            <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                            <td><button class="btn btn-small btn-primary" onclick="viewReport(${r.id})">View</button></td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(e => showAlert('Error loading reports: ' + e.message, 'error'));
+        }
+
+        function openPatientModal() {
+            document.getElementById('patientModal').classList.add('active');
+        }
+
+        function closePatientModal() {
+            document.getElementById('patientModal').classList.remove('active');
+            document.querySelector('#patientModal form').reset();
+        }
+
+        function addPatient(event) {
+            event.preventDefault();
+
+            const patient = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                contact_number: document.getElementById('contact').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                id_number: document.getElementById('idNumber').value,
+                chief_complaint: document.getElementById('chiefComplaint').value,
+                medical_history: document.getElementById('medicalHistory').value,
+                allergies: document.getElementById('allergies').value
+            };
+
+            fetch(`${API_BASE}/patients`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(patient)
+            })
+            .then(r => r.json())
+            .then(data => {
+                showAlert('Patient registered successfully!', 'success');
+                closePatientModal();
+                loadPatients();
+            })
+            .catch(e => showAlert('Error: ' + e.message, 'error'));
+        }
+
+        function searchByBiometric() {
+            const file = document.getElementById('familyPhoto').files[0];
+            if (!file) return showAlert('Please select a photo', 'error');
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch(`${API_BASE}/v3/biometric/identify`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                displayFamilyResults(data.matches || []);
+            })
+            .catch(e => showAlert('Search failed: ' + e.message, 'error'));
+        }
+
+        function searchByName() {
+            const name = document.getElementById('familyName').value;
+            if (!name) return showAlert('Please enter a name', 'error');
+
+            fetch(`${API_BASE}/patients?search=${encodeURIComponent(name)}`)
+                .then(r => r.json())
+                .then(data => {
+                    displayFamilyResults(data.patients || []);
+                })
+                .catch(e => showAlert('Search failed: ' + e.message, 'error'));
+        }
+
+        function searchByContact() {
+            const contact = document.getElementById('familyContact').value;
+            if (!contact) return showAlert('Please enter contact info', 'error');
+
+            fetch(`${API_BASE}/patients?search=${encodeURIComponent(contact)}`)
+                .then(r => r.json())
+                .then(data => {
+                    displayFamilyResults(data.patients || []);
+                })
+                .catch(e => showAlert('Search failed: ' + e.message, 'error'));
+        }
+
+        function displayFamilyResults(results) {
+            const resultsDiv = document.getElementById('familyResults');
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No matches found</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = results.map(p => `
+                <div style="padding: 15px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary-dark);">
+                    <strong>${p.first_name} ${p.last_name}</strong><br>
+                    <small>Age: ${calculateAge(p.dob)} | Contact: ${p.contact_number || 'N/A'}</small><br>
+                    <small style="color: var(--text-secondary);">Status: ${p.status || 'Active'}</small><br>
+                    <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="recordFamilyMatch(${p.id})">Record as Family</button>
+                </div>
+            `).join('');
+        }
+
+        function calculateAge(dob) {
+            if (!dob) return '-';
+            const today = new Date();
+            const birthDate = new Date(dob);
+            return today.getFullYear() - birthDate.getFullYear();
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.getElementById('alertContainer').appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/';
+            }
+        }
+
+        function filterWorklist() { loadWorklist(); }
+        function searchPatients() { loadPatients(); }
+        function viewPatientDetails(id) { showAlert('Opening patient details for ID: ' + id, 'info'); }
+        function assignWorklistItem(id) { showAlert('Assigning worklist item ' + id, 'success'); }
+        function viewReport(id) { showAlert('Opening report ' + id, 'info'); }
+        function recordFamilyMatch(id) { showAlert('Family match recorded for patient ' + id, 'success'); }
+    </script>
+</body>
+</html>

@@ -1,11 +1,31 @@
-# 🛡️ SDOH Chat: Gift of the Givers (GOTG) Project
+# GOTG SDOH-Chat: AI-Powered Community Resilience Platform
+
+**Solving the Social Fragility Crisis through Low-Bandwidth, Multi-Agent AI**
 
 > **AI Partner Catalyst Hackathon Submission**  
 > *Integrating Google Cloud Vertex AI, ElevenLabs, Confluent, and Datadog.*
 
 This module is a critical component of the **Gift of the Givers** advanced ecosystem, integrating with **RIS (Radiology Information Systems)**, **PACS**, and **Medical Dictation** to address the **Social Determinants of Health (SDOH)**.
 
----
+## 🎯 Overview
+
+SDOH-Chat is a specialized AI platform built specifically for Gift of the Givers' use case:
+
+- ✅ **100% Offline-Capable** - Works with spotty internet using local fallbacks
+- ✅ **Voice-First Interface** - Accessible to illiterate and elderly populations
+- ✅ **Multi-Agent Orchestration** - 5 specialized AI agents handle complex social tasks
+- ✅ **Real-Time Streaming** - Instant data flow via Confluent Kafka
+- ✅ **Full Observability** - End-to-end monitoring with Datadog
+- ✅ **Low Bandwidth** - Optimized for 2G/3G networks in rural areas
+
+### 🆕 Enhanced with AI & Cloud Features
+
+- 🧠 **Google Vertex AI (Gemini 2.0)** - Advanced reasoning and quest generation
+- 🗣️ **ElevenLabs Voice AI** - Hyper-realistic, empathetic voice interactions
+- 👂 **Whisper Mini STT** - Private, local speech-to-text processing
+- ⚓ **Hybrid Resilience Layer** - Automatic fallback to local Silero TTS
+- 🌊 **Confluent Event Streaming** - Real-time community pulse monitoring
+- 👁️ **Datadog Observability** - Comprehensive system health tracking
 
 ## 🌑 The Problem: The Void
 
@@ -23,8 +43,6 @@ When you have no one to live for, and no one who needs you to stay... death stop
 
 **This is the 'Why' that medicine cannot fix. This is the crisis we ignore while we brag about our algorithms. We are keeping bodies alive in a world that has already buried their souls. We are losing our loved ones—not to disease, but to the Void.**
 
----
-
 ## 🕯️ The Solution: Rebuilding the Tether
 
 But hope is not a clinical outcome. It is a biological force.
@@ -41,8 +59,6 @@ We created a simple, low-bandwidth gateway, powered by a complex orchestration o
 
 **We have built a digital forge where redundancy is burned away and reliability is proven. Where a 'ghost' can earn their way back into the circle of the seen. Where we don't just mend the limb... we ignite the heart.**
 
----
-
 ## ⚡ Technical Architecture & Stack
 
 Our solution leverages the **Google Cloud Partner Ecosystem** to create a resilient, voice-first interface for the most vulnerable.
@@ -50,12 +66,12 @@ Our solution leverages the **Google Cloud Partner Ecosystem** to create a resili
 ### 🧠 The Brain: Google Cloud Vertex AI (Gemini 2.0 Flash)
 The core intelligence of the system. Gemini 2.0 Flash powers our **Agent Forge** and **Quest Master**, analyzing user inputs for emotional context, generating meaningful "Quests" (community tasks), and maintaining the integrity of the social graph.
 
-### � The Ears: Whisper Mini (Local STT)
+### 👂 The Ears: Whisper Mini (Local STT)
 To ensure privacy and functionality in low-bandwidth environments, we use **OpenAI's Whisper Mini** model running locally on the edge.
 - **Privacy-First**: Voice data is transcribed locally; audio files are not sent to the cloud unless necessary.
 - **Offline Capable**: Transcription works even when internet connectivity is spotty.
 
-### �🗣️ The Voice: ElevenLabs + Hybrid Fallback
+### 🗣️ The Voice: ElevenLabs + Hybrid Fallback
 To serve the illiterate and the elderly, the interface is voice-first.
 - **Primary**: **ElevenLabs API** provides hyper-realistic, empathetic voices (Rachel, Emergency, Medical) that build trust.
 - **Resilience Layer**: A custom **Hybrid TTS Engine** that automatically falls back to local neural models (**Silero TTS**) or browser-native synthesis if the internet connection degrades or API quotas are hit. This ensures the "voice" of the community never goes silent.
@@ -68,8 +84,6 @@ End-to-end observability monitors the health of our agents. We track:
 - **AI Latency**: Ensuring Gemini and ElevenLabs respond in real-time.
 - **Community Health**: Custom metrics tracking "Integrity Scores" and "Quest Completion Rates".
 - **System Vitals**: Error rates on the Flask backend and Cloudflare tunnels.
-
----
 
 ## 📊 System Diagrams
 
@@ -180,15 +194,103 @@ flowchart LR
     style BrowserTTS fill:#FBBC05,stroke:#fff,color:#333
 ```
 
+## 🎬 Try It Now
+
+### ✅ Live Demo (Production Ready)
+**[🌐 https://chat.virons.uk](https://chat.virons.uk)**
+
+The application is live on your own domain via Cloudflare Tunnel with:
+- ✅ Instant SSL/TLS encryption
+- ✅ Global CDN access (no startup time)
+- ✅ Production-grade security
+- ✅ Zero port forwarding needed
+
+**Status**: Active when running `start-tunnel-named.bat`
+
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-1.  **Clone the Repository**
-2.  **Install Dependencies**: `pip install -r requirements.txt`
-3.  **Configure Keys**: Update `config.ini` with your Google Cloud, ElevenLabs, and Confluent keys.
-4.  **Run the Server**: `python run.py`
-5.  **Access**: Open `https://localhost:5000` (or your Cloudflare URL).
+### Option 1: Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/Jobeer1/Ubuntu-Patient-Care.git
+cd Ubuntu-Patient-Care/RIS-1/SDOH-chat
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure keys
+cp config.ini.example config.ini
+# Edit config.ini with your API keys
+
+# Run the server
+python run.py
+```
+
+### Option 2: Manual Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python run.py
+```
+
+### Option 3: With Cloudflare Tunnel (Custom Domain - Production)
+
+```powershell
+# Windows - Named Tunnel (chat.virons.uk)
+.\start-tunnel-named.bat
+```
+
+This will:
+1. Start the Flask server on `https://localhost:5001`
+2. Connect to your named Cloudflare Tunnel
+3. Route `chat.virons.uk` to your local server
+4. Make the app live globally with instant SSL
+
+### Option 4: With Temporary Cloudflare Tunnel (Testing)
+
+```powershell
+# Windows - Temporary Tunnel (trycloudflare.com)
+.\start-tunnel-temp.bat
+```
+
+This creates a temporary public URL for quick testing (URL changes on restart).
+
+## 📁 Project Structure
+
+```
+SDOH-chat/
+├── backend/              # Flask API server
+│   ├── app.py           # Main Flask application
+│   ├── local_tts.py     # Silero TTS fallback
+│   └── requirements.txt  # Python dependencies
+├── frontend/            # Web Interface
+│   ├── index.html       # Main dashboard
+│   └── styles.css       # Styles
+├── database/            # Database
+│   └── schema.sql       # SQLite schema
+├── config.ini           # Configuration file
+├── cloudflared-config.yml    # Cloudflare Tunnel config
+├── start-tunnel-named.bat    # Production tunnel (chat.virons.uk)
+├── start-tunnel-temp.bat     # Temporary tunnel (trycloudflare.com)
+├── start-tunnel.sh           # Linux/Mac tunnel startup
+├── CLOUDFLARE_TUNNEL_SETUP.md  # Detailed tunnel guide
+└── README.md            # This file
+```
+
+## 📚 Documentation
+
+- **[CLOUDFLARE_TUNNEL_SETUP.md](CLOUDFLARE_TUNNEL_SETUP.md)** - Complete guide to running with Cloudflare Tunnel
+- **[README.md](README.md)** - Main documentation (this file)
 
 ---
 

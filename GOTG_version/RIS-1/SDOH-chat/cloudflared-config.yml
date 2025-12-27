@@ -1,0 +1,10 @@
+tunnel = 3b788567-25ba-4426-acbb-32229f6bd7e6
+credentials-file = ~/.cloudflared/3b788567-25ba-4426-acbb-32229f6bd7e6.json
+
+[ingress]
+hostname = chat.virons.uk
+service = https://localhost:5001
+tlsSkipVerify = true
+
+[ingress]
+service = http_status:404
