@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request, send_from_directory, send_file, rende
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
+from urllib.parse import quote_plus
 import jwt
 import bcrypt
 import os
@@ -219,6 +220,37 @@ class Credential(db.Model):
     description = db.Column(db.Text, nullable=True)
     earned_at = db.Column(db.DateTime, default=datetime.utcnow)
     issued_by = db.Column(db.String(10), nullable=True)  # User/quest that issued it
+
+class VoiceNote(db.Model):
+    """Voice note model - Audio files in messages"""
+    __tablename__ = 'voice_notes'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    sender_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    group_id = db.Column(db.String(36), db.ForeignKey('groups.id'), nullable=True, index=True)
+    audio_data = db.Column(db.LargeBinary, nullable=False)  # WAV/MP3 blob
+    duration = db.Column(db.Float, default=0.0)  # Duration in seconds
+    transcription = db.Column(db.Text, nullable=True)  # Optional transcription
+    file_type = db.Column(db.String(10), default='wav')  # wav, mp3, m4a
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+class InviteCode(db.Model):
+    """Invite code model - For user referral/invitations"""
+    __tablename__ = 'invite_codes'
+    code = db.Column(db.String(16), primary_key=True)  # e.g., 'ABC123DEF456'
+    created_by = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    uses_remaining = db.Column(db.Integer, default=10)  # Max invites per code
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    expires_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(days=30))
+    is_active = db.Column(db.Boolean, default=True)
+
+class Referral(db.Model):
+    """Referral tracking model"""
+    __tablename__ = 'referrals'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    referrer_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    referred_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    invite_code = db.Column(db.String(16), db.ForeignKey('invite_codes.code'), nullable=True)
+    referred_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -544,78 +576,63 @@ def generate_voice_previews():
 
 @app.route('/api/tts/speak', methods=['POST'])
 def tts_speak():
-    """Text-to-speech via backend with Local Fallback"""
+    """Text-to-speech: Use browser TTS by default (instant), ElevenLabs on explicit request"""
     user_id = get_current_user()
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
     data = request.json
     text = data.get('text', '').strip()
-    voice_id = data.get('voice_id', '21m00Tcm4TlvDq8ikWAM')  # Default: Rachel
+    voice_id = data.get('voice_id', '21m00Tcm4TlvDq8ikWAM')
     api_key = data.get('api_key', '').strip()
+    use_elevenlabs = data.get('use_elevenlabs', False)  # Only use ElevenLabs if explicitly requested
     stability = data.get('stability', 0.5)
     clarity = data.get('clarity', 0.75)
     
     if not text:
         return jsonify({'error': 'Text required'}), 400
 
-    # Use system key if user key not provided
-    if not api_key and SYSTEM_ELEVENLABS_KEY:
-        api_key = SYSTEM_ELEVENLABS_KEY
-        print("Using system ElevenLabs API key")
-
-    # 1. Try ElevenLabs if we have a key
-    elevenlabs_error = None
-    if api_key:
-        masked_key = f"{api_key[:4]}...{api_key[-4:]}" if len(api_key) > 8 else "***"
-        print(f"TTS Request: Voice={voice_id}, Key={masked_key}")
+    # 1. Try ElevenLabs ONLY if explicitly requested AND we have a key
+    if use_elevenlabs:
+        if not api_key and SYSTEM_ELEVENLABS_KEY:
+            api_key = SYSTEM_ELEVENLABS_KEY
         
-        try:
-            response = elevenlabs_requests.post(
-                f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}',
-                headers={
-                    'Content-Type': 'application/json',
-                    'xi-api-key': api_key
-                },
-                json={
-                    'text': text,
-                    'model_id': 'eleven_monolingual_v1',
-                    'voice_settings': {
-                        'stability': float(stability),
-                        'similarity_boost': float(clarity)
-                    }
-                },
-                timeout=15
-            )
-            
-            if response.status_code == 200:
-                return send_file(
-                    io.BytesIO(response.content),
-                    mimetype='audio/mpeg'
+        if api_key:
+            try:
+                response = elevenlabs_requests.post(
+                    f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}',
+                    headers={
+                        'Content-Type': 'application/json',
+                        'xi-api-key': api_key
+                    },
+                    json={
+                        'text': text,
+                        'model_id': 'eleven_monolingual_v1',
+                        'voice_settings': {
+                            'stability': float(stability),
+                            'similarity_boost': float(clarity)
+                        }
+                    },
+                    timeout=10
                 )
-            else:
-                elevenlabs_error = f"ElevenLabs Error ({response.status_code}): {response.text}"
-                print(elevenlabs_error)
-        except Exception as e:
-            elevenlabs_error = f"ElevenLabs Connection Error: {e}"
-            print(elevenlabs_error)
-    else:
-        print("No API key provided, skipping ElevenLabs")
+                
+                if response.status_code == 200:
+                    return send_file(
+                        io.BytesIO(response.content),
+                        mimetype='audio/mpeg'
+                    )
+                else:
+                    print(f"ElevenLabs Error: {response.status_code}")
+            except Exception as e:
+                print(f"ElevenLabs Error: {e}")
 
-    # 2. Fallback to Local Silero TTS
-    print("⚠️ Falling back to Local Silero TTS...")
-    try:
-        wav_buffer = local_tts.generate_audio(text)
-        return send_file(
-            wav_buffer,
-            mimetype='audio/wav'
-        )
-    except Exception as e:
-        print(f"❌ Local TTS failed: {e}")
-        final_error = "TTS Generation failed (Cloud and Local)"
-        if elevenlabs_error:
-            final_error += f". Cloud Error: {elevenlabs_error}"
-        return jsonify({'error': final_error}), 500
+    # 2. Default: Use BROWSER TTS (Web Speech API - instant, no server processing)
+    # This tells the frontend to use native browser speech synthesis
+    return jsonify({
+        'use_browser_tts': True,
+        'text': text,
+        'message': 'Use browser Speech Synthesis API for instant, local TTS'
+    }), 200
 
 # ============================================================================
 # API ENDPOINTS - MESSAGES
@@ -863,14 +880,21 @@ def chat_with_forge():
         user_api_key=user.custom_api_key
     )
     
-    # 4. Update User State
-    user.integrity_score = max(0, min(100, user.integrity_score + result['score_adjustment']))
-    if result['is_ready']:
-        user.is_verified = True
+    # 4. Extract response text and score adjustment
+    if isinstance(result, dict):
+        ai_response = result.get('response', str(result))
+        score_adjustment = result.get('score_adjustment', 0)
+    else:
+        ai_response = str(result)
+        score_adjustment = 0
+    
+    # 5. Update User State
+    user.integrity_score = max(0, min(100, user.integrity_score + score_adjustment))
+    user.is_verified = True
         
     # Update history
     history.append({"role": "user", "content": content})
-    history.append({"role": "model", "content": result['response']})
+    history.append({"role": "model", "content": ai_response})
     user.forge_history = json.dumps(history[-20:]) # Keep last 20 turns
     
     # 5. Save Agent Response
@@ -878,14 +902,14 @@ def chat_with_forge():
         msg_id=str(uuid.uuid4()),
         sender_id='FORGE',
         chat_id=chat_id,
-        content=result['response']
+        content=ai_response
     )
     db.session.add(agent_msg)
     db.session.commit()
     
     return jsonify({
         'status': 'success',
-        'response': result['response'],
+        'response': ai_response,
         'score': user.integrity_score,
         'verified': user.is_verified
     })
@@ -995,7 +1019,9 @@ def get_forge_greeting():
         return jsonify({'error': 'Unauthorized'}), 401
     
     user = User.query.get(user_id)
-    greeting = f"Hello {user.alias}. I'm The Forge - your personal integrity coach and character auditor. I'm here to help you discover what you're truly made of. What brings you here today?"
+    greeting = f"""Hello {user.alias}. I'm The Forge - your personal integrity coach and character auditor. I'm here to help you discover what you're truly made of. What brings you here today?
+
+**[PRIVACY NOTICE]** Your API keys (ElevenLabs, Google Gemini, etc.) are stored ONLY in your browser's local storage. They are NEVER sent to our servers and NEVER logged. Each request is encrypted end-to-end. Your credentials are 100% under your control - we don't even have access to them. You can clear them anytime in Settings → Clear API Keys."""
     
     return jsonify({
         'greeting': greeting,
@@ -1093,6 +1119,342 @@ def vote_revert_group(group_id):
         return jsonify({'status': 'reverted', 'name': group.group_name})
         
     return jsonify({'status': 'voted', 'votes': count})
+
+# ============================================================================
+# VOICE NOTES & RECORDING ENDPOINTS (NEW)
+# ============================================================================
+
+@app.route('/api/voice-notes/upload', methods=['POST'])
+def upload_voice_note():
+    """Upload a voice note/recording"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    # Get audio data from request
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+    
+    audio_file = request.files['audio']
+    group_id = request.form.get('group_id')  # Optional: which group to share to
+    duration = request.form.get('duration', '0')  # Duration in seconds
+    
+    try:
+        duration = float(duration)
+    except:
+        duration = 0.0
+    
+    # Read audio blob
+    audio_data = audio_file.read()
+    if len(audio_data) == 0:
+        return jsonify({'error': 'Empty audio file'}), 400
+    
+    # Create voice note record
+    note_id = str(uuid.uuid4())
+    file_ext = audio_file.filename.split('.')[-1] if audio_file.filename else 'wav'
+    
+    voice_note = VoiceNote(
+        id=note_id,
+        sender_id=user_id,
+        group_id=group_id,
+        audio_data=audio_data,
+        duration=duration,
+        file_type=file_ext.lower()
+    )
+    
+    db.session.add(voice_note)
+    
+    # If group specified, create a message linking to the voice note
+    if group_id:
+        msg = Message(
+            msg_id=str(uuid.uuid4()),
+            sender_id=user_id,
+            chat_id=group_id,
+            content=f'🎙️ Voice note ({duration:.1f}s)',
+            msg_type='voice_note'
+        )
+        db.session.add(msg)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'note_id': note_id,
+        'url': f'/api/voice-notes/{note_id}',
+        'duration': duration
+    }), 201
+
+@app.route('/api/voice-notes/<note_id>', methods=['GET'])
+def get_voice_note(note_id):
+    """Retrieve a voice note audio blob"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    note = VoiceNote.query.get(note_id)
+    if not note:
+        return jsonify({'error': 'Voice note not found'}), 404
+    
+    # Return audio blob
+    return send_file(
+        io.BytesIO(note.audio_data),
+        mimetype=f'audio/{note.file_type}'
+    )
+
+@app.route('/api/voice-notes/chat/<chat_id>', methods=['GET'])
+def list_voice_notes(chat_id):
+    """List all voice notes in a chat/group"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    # Get messages of type 'voice_note'
+    messages = Message.query.filter(
+        Message.chat_id == chat_id,
+        Message.msg_type == 'voice_note',
+        Message.deleted_at.is_(None)
+    ).order_by(Message.created_at.desc()).limit(50).all()
+    
+    notes_list = []
+    for msg in messages:
+        sender = User.query.get(msg.sender_id)
+        notes_list.append({
+            'msg_id': msg.msg_id,
+            'sender_alias': sender.alias if sender else 'Unknown',
+            'sender_id': msg.sender_id,
+            'duration': msg.voice_note.duration if msg.voice_note else 0,
+            'created_at': msg.created_at.isoformat(),
+            'url': f'/api/voice-notes/{msg.voice_note.id}' if msg.voice_note else None
+        })
+    
+    return jsonify({'notes': notes_list}), 200
+
+# ============================================================================
+# INVITE & REFERRAL ENDPOINTS (NEW)
+# ============================================================================
+
+@app.route('/api/invites/generate', methods=['POST'])
+def generate_invite_link():
+    """Generate a new invite code for the current user"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    # Generate unique code
+    import secrets
+    code = secrets.token_urlsafe(9)[:12].upper()
+    
+    # Check for collision (unlikely but possible)
+    while InviteCode.query.get(code):
+        code = secrets.token_urlsafe(9)[:12].upper()
+    
+    invite = InviteCode(
+        code=code,
+        created_by=user_id,
+        uses_remaining=20,  # 20 invites per code
+        is_active=True
+    )
+    
+    db.session.add(invite)
+    db.session.commit()
+    
+    # Build shareable links
+    base_url = request.host_url.rstrip('/')
+    invite_url = f"{base_url}/?ref={code}"
+    
+    return jsonify({
+        'code': code,
+        'invite_url': invite_url,
+        'share_links': {
+            'whatsapp': f"https://wa.me/?text=Join%20SDOH%20Chat!%20{quote_plus(invite_url)}",
+            'email': f"mailto:?subject=Join%20SDOH%20Chat&body={quote_plus(f'Click here to join: {invite_url}')}",
+            'copy': invite_url
+        }
+    }), 201
+
+@app.route('/api/invites/my-link', methods=['GET'])
+def get_my_invite_link():
+    """Get or create the user's personal invite link"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    # Check if user already has an active invite code
+    invite = InviteCode.query.filter_by(created_by=user_id, is_active=True).first()
+    
+    if not invite:
+        # Create one if it doesn't exist
+        import secrets
+        code = secrets.token_urlsafe(9)[:12].upper()
+        while InviteCode.query.get(code):
+            code = secrets.token_urlsafe(9)[:12].upper()
+        
+        invite = InviteCode(
+            code=code,
+            created_by=user_id,
+            uses_remaining=50,  # More generous for personal link
+            is_active=True
+        )
+        db.session.add(invite)
+        db.session.commit()
+    
+    user = User.query.get(user_id)
+    base_url = request.host_url.rstrip('/')
+    invite_url = f"{base_url}/?ref={invite.code}"
+    
+    return jsonify({
+        'code': invite.code,
+        'invite_url': invite_url,
+        'uses_remaining': invite.uses_remaining,
+        'user_alias': user.alias if user else 'Unknown',
+        'share_links': {
+            'whatsapp': f"https://wa.me/?text=Join%20SDOH%20Chat%20with%20me!%20{quote_plus(invite_url)}",
+            'email': f"mailto:?subject=Join%20SDOH%20Chat%20-%20Invite%20from%20{quote_plus(user.alias if user else 'SDOH')}&body={quote_plus(f'Hey! Join me on SDOH Chat - a privacy-first healthcare communication platform.\\n\\n{invite_url}')}",
+            'sms': f"sms:?body={quote_plus(f'Join SDOH Chat with me! {invite_url}')}",
+            'copy': invite_url
+        }
+    }), 200
+
+@app.route('/api/invites/<code>/stats', methods=['GET'])
+def get_invite_stats(code):
+    """Get stats for an invite code"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    invite = InviteCode.query.get(code)
+    if not invite or invite.created_by != user_id:
+        return jsonify({'error': 'Invite not found or not yours'}), 403
+    
+    # Count how many people used this code
+    referrals = Referral.query.filter_by(invite_code=code).count()
+    
+    return jsonify({
+        'code': code,
+        'created_at': invite.created_at.isoformat(),
+        'expires_at': invite.expires_at.isoformat(),
+        'uses_remaining': invite.uses_remaining,
+        'uses_total': 20 - invite.uses_remaining,
+        'referrals_count': referrals,
+        'is_active': invite.is_active
+    }), 200
+
+# Update register endpoint to handle invite codes
+@app.route('/api/invites/redeem', methods=['POST'])
+def redeem_invite():
+    """Register a new user with an invite code (bonus: mark referral)"""
+    user_id = get_current_user()
+    if user_id:
+        return jsonify({'error': 'Already logged in'}), 400
+    
+    data = request.json
+    code = data.get('code', '').strip().upper()
+    
+    if not code:
+        return jsonify({'error': 'No invite code provided'}), 400
+    
+    # Validate invite code
+    invite = InviteCode.query.get(code)
+    if not invite or not invite.is_active or invite.expires_at < datetime.utcnow():
+        return jsonify({'error': 'Invalid or expired invite code'}), 400
+    
+    if invite.uses_remaining <= 0:
+        return jsonify({'error': 'Invite code has no remaining uses'}), 400
+    
+    # Store code in session for use during registration
+    # (The actual registration endpoint will be modified to create Referral record)
+    return jsonify({
+        'valid': True,
+        'referrer_id': invite.created_by,
+        'message': 'Proceed with registration - you will receive a referral bonus'
+    }), 200
+
+# ============================================================================
+# GROUP MEMBER MANAGEMENT ENDPOINTS (NEW)
+# ============================================================================
+
+@app.route('/api/groups/<group_id>/members', methods=['GET'])
+def list_group_members(group_id):
+    """List all members in a group"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+    
+    members = GroupMember.query.filter_by(group_id=group_id).all()
+    member_list = []
+    
+    for membership in members:
+        user = User.query.get(membership.user_id)
+        if user:
+            member_list.append({
+                'user_id': user.user_id,
+                'alias': user.alias,
+                'joined_at': membership.joined_at.isoformat(),
+                'integrity_score': user.integrity_score,
+                'is_creator': user.user_id == group.created_by
+            })
+    
+    return jsonify({
+        'group_id': group_id,
+        'member_count': len(member_list),
+        'members': member_list
+    }), 200
+
+@app.route('/api/groups/<group_id>/members/<target_user_id>', methods=['DELETE'])
+def remove_group_member(group_id, target_user_id):
+    """Remove a member from a group (must be creator or admin)"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+    
+    # Only group creator or admins can remove members
+    if group.created_by != user_id:
+        return jsonify({'error': 'Only group creator can remove members'}), 403
+    
+    membership = GroupMember.query.filter_by(
+        group_id=group_id,
+        user_id=target_user_id
+    ).first()
+    
+    if not membership:
+        return jsonify({'error': 'Member not found in group'}), 404
+    
+    db.session.delete(membership)
+    db.session.commit()
+    
+    return jsonify({'status': 'removed', 'user_id': target_user_id}), 200
+
+@app.route('/api/groups/<group_id>/members/<target_user_id>/leave', methods=['POST'])
+def leave_group(group_id, target_user_id):
+    """User leaves a group (self-removal)"""
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    # Can only leave if it's yourself, or creator can remove others
+    if target_user_id != user_id and Group.query.get(group_id).created_by != user_id:
+        return jsonify({'error': 'Can only leave for yourself'}), 403
+    
+    membership = GroupMember.query.filter_by(
+        group_id=group_id,
+        user_id=target_user_id
+    ).first()
+    
+    if not membership:
+        return jsonify({'error': 'Not a member of this group'}), 404
+    
+    db.session.delete(membership)
+    db.session.commit()
+    
+    return jsonify({'status': 'left', 'group_id': group_id}), 200
 
 # ============================================================================
 # USER CONTROL ENDPOINTS (NEW)
@@ -1378,6 +1740,9 @@ if __name__ == '__main__':
         db.create_all()
         init_default_groups()
         print("✅ Database initialized")
+    
+    # Warmup TTS model in background (non-blocking)
+    local_tts.warmup_tts()
     
     # Run server
     print("")

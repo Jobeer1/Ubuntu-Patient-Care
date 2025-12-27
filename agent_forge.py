@@ -102,76 +102,68 @@ REMEMBER: If they finish reading your response and think "I want to say more," y
                 "is_ready": False
             }
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={api_key}"
-        
-        # Construct prompt with history
-        contents = []
-        
-        # Add system instruction as the first part of the context (simulated)
-        contents.append({
-            "role": "user",
-            "parts": [{"text": f"SYSTEM INSTRUCTION: {self.system_prompt}\n\nCURRENT SCORE: {current_score}\n\nStart/Continue the session."}]
-        })
-        contents.append({
-            "role": "model",
-            "parts": [{"text": "Understood. I am The Forge. I am ready to audit."}]
-        })
-        
-        # Add conversation history
-        for msg in history:
-            role = "user" if msg['role'] == 'user' else "model"
-            contents.append({
-                "role": role,
-                "parts": [{"text": msg['content']}]
-            })
-            
-        # Add current input
-        contents.append({
-            "role": "user",
-            "parts": [{"text": user_input}]
-        })
-
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 500,
-                "responseMimeType": "application/json"
-            }
-        }
-
         try:
-            response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
-            response.raise_for_status()
-            data = response.json()
+            import google.generativeai as genai
+            from google.api_core import exceptions as google_exceptions
+            import time
+
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(self.model)
             
-            # Parse Gemini response
-            if 'candidates' in data and data['candidates']:
-                text_response = data['candidates'][0]['content']['parts'][0]['text']
+            # Build conversation with system prompt
+            conversation = self.system_prompt + "\n\nCURRENT INTEGRITY SCORE: " + str(current_score) + "\n\n"
+            for msg in history[-10:]:  # Last 10 messages for context
+                if msg.get("role") == "user":
+                    conversation += "User: " + "".join([p.get("text", "") for p in msg.get("parts", [])]) + "\n"
+                else:
+                    conversation += "The Forge: " + "".join([p.get("text", "") for p in msg.get("parts", [])]) + "\n"
+            
+            conversation += f"User: {user_input}\nThe Forge:"
+            
+            # Retry logic for 429 errors
+            max_retries = 3
+            for attempt in range(max_retries):
                 try:
+                    response = model.generate_content(conversation)
+                    ai_response = response.text if response else "[Error: No response]"
+                    
                     # Clean up markdown code blocks if present
-                    if text_response.startswith('```json'):
-                        text_response = text_response[7:-3]
-                    elif text_response.startswith('```'):
-                        text_response = text_response[3:-3]
-                        
-                    result = json.loads(text_response)
-                    return result
-                except json.JSONDecodeError:
-                    # Fallback if model didn't output JSON
-                    return {
-                        "response": text_response,
-                        "score_adjustment": 0,
-                        "is_ready": False
-                    }
-            else:
-                return {
-                    "response": "[The Forge is silent. The connection flickers.]",
-                    "score_adjustment": 0,
-                    "is_ready": False
-                }
-                
+                    if ai_response.startswith('```json'):
+                        ai_response = ai_response[7:]  # Remove ```json
+                    if ai_response.startswith('```'):
+                        ai_response = ai_response[3:]  # Remove ```
+                    if ai_response.endswith('```'):
+                        ai_response = ai_response[:-3]  # Remove trailing ```
+                    
+                    ai_response = ai_response.strip()
+                    
+                    # Try to parse as JSON, otherwise return as plain text
+                    try:
+                        import json
+                        result = json.loads(ai_response)
+                        return result
+                    except json.JSONDecodeError:
+                        # If not valid JSON, return as plain text response
+                        return {
+                            "response": ai_response,
+                            "score_adjustment": 0,
+                            "is_ready": True
+                        }
+                except google_exceptions.ResourceExhausted:
+                    if attempt < max_retries - 1:
+                        sleep_time = 2 * (attempt + 1)
+                        print(f"Gemini Rate Limit (429). Retrying in {sleep_time}s...")
+                        time.sleep(sleep_time)
+                    else:
+                        raise
+            
         except Exception as e:
+            print(f"Gemini Error: {e}")
+            return {
+                "response": "[The Forge is temporarily unavailable. Please try again.]",
+                "score_adjustment": 0,
+                "is_ready": False
+            }
             print(f"Gemini Error: {e}")
             return {
                 "response": f"[Connection to The Forge failed: {str(e)}]",

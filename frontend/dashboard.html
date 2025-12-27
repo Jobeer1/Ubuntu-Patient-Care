@@ -328,7 +328,10 @@
                 <span class="c-s">S</span><span class="c-d">D</span><span class="c-o">O</span><span class="c-h">H</span>
                 <span class="c-c">C</span><span class="c-h2">H</span><span class="c-at">AT</span>
             </div>
-            <div class="settings-btn" onclick="openSettings()">[⚙]</div>
+            <div style="display: flex; gap: 10px;">
+                <div class="settings-btn" onclick="showInviteLink()" title="Get invite link">📧</div>
+                <div class="settings-btn" onclick="openSettings()">[⚙]</div>
+            </div>
         </div>
 
         <!-- CHANNEL LIST -->
@@ -696,6 +699,171 @@
             const pitch = localStorage.getItem('tts-pitch') || '0';
             document.getElementById('tts-pitch').value = pitch;
             document.getElementById('pitch-value').textContent = pitch + ' semitones';
+        }
+        
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+        
+        // Invite Link Logic
+        async function showInviteLink() {
+            const token = localStorage.getItem('auth-token');
+            if (!token) {
+                alert('Not logged in');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/invites/my-link', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.status === 401) {
+                    localStorage.removeItem('auth-token');
+                    window.location.reload();
+                    return;
+                }
+                
+                if (!response.ok) {
+                    alert('Error getting invite link');
+                    return;
+                }
+                
+                const data = await response.json();
+                showInviteModal(data);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function showInviteModal(inviteData) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: #000;
+                border: 2px solid #00ff00;
+                padding: 20px;
+                max-width: 400px;
+                width: 90%;
+                border-radius: 5px;
+                color: #00ff00;
+                font-family: 'Courier New', Courier, monospace;
+            `;
+            
+            content.innerHTML = `
+                <h3 style="text-align: center; margin-top: 0;">📧 INVITE FRIENDS</h3>
+                <p style="text-align: center; font-size: 12px;">Share this link to invite users to SDOH Chat</p>
+                
+                <div style="
+                    background: #001100;
+                    border: 1px solid #00ff00;
+                    padding: 10px;
+                    margin: 15px 0;
+                    border-radius: 3px;
+                    word-break: break-all;
+                    font-size: 12px;
+                ">
+                    ${inviteData.invite_url}
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button onclick="
+                        navigator.clipboard.writeText('${inviteData.invite_url}');
+                        alert('✓ Link copied to clipboard!');
+                    " style="
+                        background: #00ff00;
+                        color: #000;
+                        border: none;
+                        padding: 8px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        border-radius: 3px;
+                    ">📋 COPY LINK</button>
+                    
+                    <a href="${inviteData.share_links.whatsapp}" target="_blank" style="
+                        background: #25D366;
+                        color: #fff;
+                        border: none;
+                        padding: 8px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        border-radius: 3px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: block;
+                    ">💬 WHATSAPP</a>
+                    
+                    <a href="${inviteData.share_links.email}" target="_blank" style="
+                        background: #EA4335;
+                        color: #fff;
+                        border: none;
+                        padding: 8px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        border-radius: 3px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: block;
+                    ">📧 EMAIL</a>
+                    
+                    <a href="${inviteData.share_links.sms}" style="
+                        background: #1f2937;
+                        color: #fff;
+                        border: 1px solid #4b5563;
+                        padding: 8px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        border-radius: 3px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: block;
+                    ">📱 SMS</a>
+                </div>
+                
+                <p style="
+                    font-size: 11px;
+                    margin-top: 15px;
+                    padding-top: 15px;
+                    border-top: 1px solid #333;
+                    text-align: center;
+                    color: #00aa00;
+                ">
+                    Uses remaining: <strong>${inviteData.uses_remaining}</strong>
+                </p>
+                
+                <button onclick="this.closest('div').parentElement.remove()" style="
+                    width: 100%;
+                    background: #333;
+                    color: #00ff00;
+                    border: 1px solid #00ff00;
+                    padding: 8px;
+                    margin-top: 10px;
+                    cursor: pointer;
+                    border-radius: 3px;
+                ">CLOSE</button>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
         }
         
         function closeSettings() {
@@ -1168,88 +1336,114 @@
             }
         }
 
-        // Text-to-Speech with ElevenLabs
+        // Text-to-Speech: Default to Browser TTS (instant), ElevenLabs on request
         async function speakMessage(msgText, msgElement) {
+            const cleanText = msgText.replace(/<[^>]*>/g, ''); // Strip HTML
+            
+            // Check if user wants ElevenLabs (optional, not default)
+            const useElevenLabs = localStorage.getItem('use-elevenlabs-tts') === 'true';
             const apiKey = localStorage.getItem('elevenlabs-api-key');
-            if (!apiKey) {
-                alert('ElevenLabs API key not set. Go to Settings to add it.');
-                return;
+            
+            // 1. Try ElevenLabs ONLY if explicitly enabled AND API key exists
+            if (useElevenLabs && apiKey) {
+                const voiceId = localStorage.getItem('tts-voice') || '21m00Tcm4TlvDq8ikWAM';
+                const stability = parseFloat(localStorage.getItem('tts-stability')) || 0.5;
+                const clarity = parseFloat(localStorage.getItem('tts-clarity')) || 0.75;
+                
+                try {
+                    const ttsBtn = msgElement.querySelector('.tts-btn');
+                    if (ttsBtn) {
+                        ttsBtn.textContent = '[LOADING...]';
+                        ttsBtn.disabled = true;
+                    }
+
+                    const response = await fetch(`/api/tts/speak`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            text: cleanText,
+                            voice_id: voiceId,
+                            api_key: apiKey,
+                            stability: stability,
+                            clarity: clarity,
+                            use_elevenlabs: true
+                        })
+                    });
+
+                    if (response.ok) {
+                        const audioBuffer = await response.arrayBuffer();
+                        const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+
+                        // Play audio
+                        const audio = new Audio(audioUrl);
+                        if (ttsBtn) {
+                            ttsBtn.classList.add('playing');
+                            ttsBtn.textContent = '[PLAYING...]';
+                            
+                            audio.onended = () => {
+                                ttsBtn.classList.remove('playing');
+                                ttsBtn.textContent = '[LISTEN]';
+                                ttsBtn.disabled = false;
+                            };
+                        }
+
+                        audio.play();
+                        return; // Success, exit
+                    }
+                } catch (e) {
+                    console.log('ElevenLabs failed, falling back to browser TTS:', e);
+                }
             }
-
-            // Get TTS settings from localStorage
-            const voiceId = localStorage.getItem('tts-voice') || '21m00Tcm4TlvDq8ikWAM'; // Default: Rachel
-            const stability = parseFloat(localStorage.getItem('tts-stability')) || 0.5;
-            const clarity = parseFloat(localStorage.getItem('tts-clarity')) || 0.75;
-
+            
+            // 2. DEFAULT: Use Browser TTS (instant, no API calls)
             try {
                 const ttsBtn = msgElement.querySelector('.tts-btn');
                 if (ttsBtn) {
-                    ttsBtn.textContent = '[LOADING...]';
-                    ttsBtn.disabled = true;
-                }
-
-                const response = await fetch(`/api/tts/speak`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        text: msgText.replace(/<[^>]*>/g, ''), // Strip HTML
-                        voice_id: voiceId,
-                        api_key: apiKey,
-                        stability: stability,
-                        clarity: clarity
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'TTS failed: ' + response.status);
-                }
-
-                const audioBuffer = await response.arrayBuffer();
-                const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-
-                // Play audio
-                const audio = new Audio(audioUrl);
-                if (ttsBtn) {
-                    ttsBtn.classList.add('playing');
                     ttsBtn.textContent = '[PLAYING...]';
-                    
-                    audio.onended = () => {
+                    ttsBtn.disabled = true;
+                    ttsBtn.classList.add('playing');
+                }
+                
+                // Get voice settings from localStorage
+                const rate = parseFloat(localStorage.getItem('tts-rate')) || 1.0;
+                const pitch = parseFloat(localStorage.getItem('tts-pitch')) || 0;
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.rate = rate;
+                utterance.pitch = 1 + (pitch / 12); // Convert semitones to pitch multiplier
+                
+                utterance.onend = () => {
+                    if (ttsBtn) {
                         ttsBtn.classList.remove('playing');
                         ttsBtn.textContent = '[LISTEN]';
                         ttsBtn.disabled = false;
-                    };
-                }
-
-                audio.play();
+                    }
+                };
+                
+                utterance.onerror = (e) => {
+                    console.error('Browser TTS error:', e);
+                    if (ttsBtn) {
+                        ttsBtn.classList.remove('playing');
+                        ttsBtn.textContent = '[LISTEN]';
+                        ttsBtn.disabled = false;
+                    }
+                };
+                
+                window.speechSynthesis.speak(utterance);
             } catch (e) {
                 console.error('TTS Error:', e);
-                
-                // Fallback to browser TTS
-                if (e.message.includes('ElevenLabs') || e.message.includes('401') || e.message.includes('403')) {
-                    console.log('Falling back to browser TTS');
-                    const utterance = new SpeechSynthesisUtterance(msgText.replace(/<[^>]*>/g, ''));
-                    window.speechSynthesis.speak(utterance);
-                    
-                    // Reset button state immediately since browser TTS is fire-and-forget
-                    if (msgElement.querySelector('.tts-btn')) {
-                        const btn = msgElement.querySelector('.tts-btn');
-                        btn.textContent = '[LISTEN]';
-                        btn.disabled = false;
-                        btn.classList.remove('playing');
-                    }
-                } else {
-                    alert('Text-to-speech failed: ' + e.message);
-                    if (msgElement.querySelector('.tts-btn')) {
-                        const btn = msgElement.querySelector('.tts-btn');
-                        btn.textContent = '[LISTEN]';
-                        btn.disabled = false;
-                    }
+                alert('Text-to-speech failed: ' + e.message);
+                const ttsBtn = msgElement.querySelector('.tts-btn');
+                if (ttsBtn) {
+                    ttsBtn.classList.remove('playing');
+                    ttsBtn.textContent = '[LISTEN]';
+                    ttsBtn.disabled = false;
                 }
+            }
             }
         }
 

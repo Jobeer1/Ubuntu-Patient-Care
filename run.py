@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # Check for SSL certificates
     cert_file = 'cert.pem'
     key_file = 'key.pem'
-    use_https = os.path.exists(cert_file) and os.path.exists(key_file)
+    use_https = False  # Disable HTTPS to allow cloudflared to connect via HTTP without cert errors
     
     protocol = 'HTTPS' if use_https else 'HTTP'
     port = 5001
