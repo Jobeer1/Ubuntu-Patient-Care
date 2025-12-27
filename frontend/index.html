@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDOH CHAT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #00ff00;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            border: 3px solid #00ff00;
+            background: #0a0a0a;
+            padding: 0;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        
+        .header {
+            background: #000000;
+            border-bottom: 3px solid #00ff00;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .title span {
+            font-weight: bold;
+            font-size: 48px;
+            text-shadow: 0 0 10px currentColor;
+            margin: 0 2px;
+        }
+        
+        .letter-s { color: #00ff00; }
+        .letter-d { color: #ffff00; }
+        .letter-o { color: #ff00ff; }
+        .letter-h { color: #00ffff; }
+        .letter-c { color: #ff0080; }
+        .letter-a { color: #ff6600; }
+        .letter-t { color: #00ff99; }
+        
+        .subtitle {
+            color: #00ff00;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #00ff00;
+            background: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .tab-btn:hover {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .tab-btn.active {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #00ff00;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00ff00;
+            background: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .form-group input::placeholder {
+            color: #006600;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 15px #ffff00;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #000000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .submit-btn:hover {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 12px;
+            border: 2px solid;
+            margin-bottom: 20px;
+            font-size: 11px;
+            background: #000000;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+        
+        .message.success {
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .message.error {
+            border-color: #ff0000;
+            color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+        .message.info {
+            border-color: #00ffff;
+            color: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        
+        .step-info {
+            background: #000000;
+            padding: 10px;
+            border: 1px solid #ffff00;
+            margin-bottom: 20px;
+            font-size: 10px;
+            color: #ffff00;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .code-display {
+            background: #000000;
+            padding: 20px;
+            border: 2px solid #ffff00;
+            text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffff00;
+            word-break: break-all;
+            box-shadow: 0 0 15px #ffff00;
+            letter-spacing: 2px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        p {
+            color: #00ff00;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">
+                <span class="letter-s">S</span><span class="letter-d">D</span><span class="letter-o">O</span><span class="letter-h">H</span>
+                <span style="margin: 0 5px;"></span>
+                <span class="letter-c">C</span><span class="letter-a">H</span><span class="letter-t">AT</span>
+            </div>
+            <div class="subtitle">[ PRIVACY-FIRST MESSAGING ]</div>
+        </div>
+        
+        <div class="content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('signin')">SIGN IN</button>
+                <button class="tab-btn" onclick="switchTab('signup')">SIGN UP</button>
+            </div>
+            
+            <!-- SIGN IN TAB -->
+            <div id="signin" class="tab-content active">
+                <div class="message info">
+                    [!] Your code stays PRIVATE - only you see it
+                </div>
+                
+                <div id="signin-message"></div>
+                
+                <div class="form-group">
+                    <label>> Enter your 10-digit code:</label>
+                    <input type="text" id="signin-code" placeholder="5847291634" maxlength="10">
+                </div>
+                
+                <div class="form-group">
+                    <label>> Enter your PIN (4-8 digits):</label>
+                    <input type="password" id="signin-pin" placeholder="1234" maxlength="8">
+                </div>
+                
+                <button class="submit-btn" onclick="signin()">LOGIN</button>
+            </div>
+            
+            <!-- SIGN UP TAB -->
+            <div id="signup" class="tab-content">
+                <div class="message info">
+                    [!] Your ALIAS shows in chats, CODE stays HIDDEN
+                </div>
+                
+                <div id="signup-message"></div>
+                
+                <div id="signup-step-1">
+                    <div class="step-info">:: STEP 1 OF 4 :: GENERATE CODE ::</div>
+                    <p>Click to create your account and get a unique code.</p>
+                    <button class="submit-btn" onclick="signupStep1()">CREATE ACCOUNT</button>
+                </div>
+                
+                <div id="signup-step-2" class="hidden">
+                    <div class="step-info">:: STEP 2 OF 4 :: CHOOSE CODE ::</div>
+                    <p>Here's a suggested code (or enter your own 10-digit number):</p>
+                    <div class="form-group">
+                        <label>> Your 10-digit code:</label>
+                        <input type="text" id="signup-code" placeholder="Enter 10 digits" maxlength="10">
+                    </div>
+                    <button class="submit-btn" onclick="signupStep2Save()">CONTINUE</button>
+                </div>
+                
+                <div id="signup-step-3" class="hidden">
+                    <div class="step-info">:: STEP 3 OF 4 :: CHOOSE ALIAS ::</div>
+                    <p>Pick a unique name that shows in chats (3-50 chars):</p>
+                    <div class="form-group">
+                        <input type="text" id="signup-alias" placeholder="DrSmith" maxlength="50">
+                    </div>
+                    <button class="submit-btn" onclick="signupStep3Save()">CONTINUE</button>
+                </div>
+                
+                <div id="signup-step-4" class="hidden">
+                    <div class="step-info">:: STEP 4 OF 4 :: SET PIN ::</div>
+                    <p>Create a 4-8 digit PIN (use code + PIN to login):</p>
+                    <div class="form-group">
+                        <input type="password" id="signup-pin" placeholder="1234" maxlength="8">
+                    </div>
+                    <button class="submit-btn" onclick="signupStep4()">FINISH</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api/sdoh';
+        let signupData = {};
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showMessage(elementId, text, type) {
+            const el = document.getElementById(elementId);
+            if (text) {
+                el.innerHTML = `<div class="message ${type}">${text}</div>`;
+            } else {
+                el.innerHTML = '';
+            }
+        }
+        
+        async function signin() {
+            const code = document.getElementById('signin-code').value.trim();
+            const pin = document.getElementById('signin-pin').value.trim();
+            
+            if (!code || !pin) {
+                showMessage('signin-message', '[!] ENTER CODE AND PIN', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: code, pin: pin })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showMessage('signin-message', '[!] ' + (data.error || 'LOGIN FAILED'), 'error');
+                    return;
+                }
+                
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user_id', data.user_id);
+                localStorage.setItem('alias', data.alias);
+                
+                showMessage('signin-message', '[+] LOGGING IN...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/sdoh/dashboard.html';
+                }, 1000);
+            } catch (error) {
+                showMessage('signin-message', '[!] ERROR: ' + error.message, 'error');
+            }
+        }
+        
+        async function signupStep1() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showMessage('signup-message', '[!] ' + (data.error || 'FAILED'), 'error');
+                    return;
+                }
+                
+                signupData.generated_code = data.user_id;
+                document.getElementById('signup-code').placeholder = '>> Suggested: ' + data.user_id;
+                document.getElementById('signup-code').value = data.user_id;
+                
+                document.getElementById('signup-step-1').classList.add('hidden');
+                document.getElementById('signup-step-2').classList.remove('hidden');
+                document.getElementById('signup-code').focus();
+                showMessage('signup-message', '');
+            } catch (error) {
+                showMessage('signup-message', '[!] ERROR: ' + error.message, 'error');
+            }
+        }
+        
+        async function signupStep2Save() {
+            const codeInput = document.getElementById('signup-code').value.trim();
+            
+            if (!codeInput) {
+                showMessage('signup-message', '[!] PLEASE ENTER A CODE', 'error');
+                return;
+            }
+            
+            if (codeInput.length !== 10 || !/^\d{10}$/.test(codeInput)) {
+                showMessage('signup-message', '[!] CODE MUST BE EXACTLY 10 DIGITS', 'error');
+                return;
+            }
+            
+            signupData.user_id = codeInput;
+            document.getElementById('signup-step-2').classList.add('hidden');
+            document.getElementById('signup-step-3').classList.remove('hidden');
+            document.getElementById('signup-alias').value = '';
+            document.getElementById('signup-alias').focus();
+            showMessage('signup-message', '');
+        }
+        
+        async function signupStep3Save() {
+            const alias = document.getElementById('signup-alias').value.trim();
+            
+            if (!alias || alias.length < 3 || alias.length > 50) {
+                showMessage('signup-message', '[!] ALIAS MUST BE 3-50 CHARS', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/set-alias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: signupData.user_id, alias: alias })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showMessage('signup-message', '[!] ' + (data.error || 'ALIAS TAKEN, CHOOSE ANOTHER'), 'error');
+                    return;
+                }
+                
+                signupData.alias = alias;
+                document.getElementById('signup-step-3').classList.add('hidden');
+                document.getElementById('signup-step-4').classList.remove('hidden');
+                document.getElementById('signup-pin').value = '';
+                document.getElementById('signup-pin').focus();
+                showMessage('signup-message', '');
+            } catch (error) {
+                showMessage('signup-message', '[!] ERROR: ' + error.message, 'error');
+            }
+        }
+        
+        async function signupStep4() {
+            const pin = document.getElementById('signup-pin').value.trim();
+            
+            if (!pin || pin.length < 4 || pin.length > 8 || !/^\d+$/.test(pin)) {
+                showMessage('signup-message', '[!] PIN MUST BE 4-8 DIGITS', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/set-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: signupData.user_id, pin: pin })
+                });
+                
+                if (!response.ok) {
+                    showMessage('signup-message', '[!] PIN SETUP FAILED', 'error');
+                    return;
+                }
+                
+                const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: signupData.user_id, pin: pin })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                localStorage.setItem('token', loginData.token);
+                localStorage.setItem('user_id', loginData.user_id);
+                localStorage.setItem('alias', loginData.alias);
+                
+                showMessage('signup-message', '[+] ACCOUNT CREATED! REDIRECTING...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/sdoh/dashboard.html';
+                }, 1000);
+            } catch (error) {
+                showMessage('signup-message', '[!] ERROR: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

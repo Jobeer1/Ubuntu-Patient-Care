@@ -1,53 +1,64 @@
-# Ignore large model weights globally (but allow base.pt - required for Whisper speech-to-text)
-**/*.pt
-!**/models/whisper/base.pt
-**/cache/
-**/models/whisper/cache/
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Ignore large log files
+# Virtual Env
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database (PI Protection)
+*.db
+*.sqlite3
+*.sqlite
+*.db-shm
+*.db-wal
+
+# Secrets & Config
+config.ini
+*.pem
+*.key
+*.crt
+*.p12
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets.json
+auth_utils.py
+
+# Logs
+logs/
+*.log
 **/robocopy_log.txt
 **/robocopy_verbose_log.txt
 
-# Ignore all markdown documentation files (moved to separate folder for Google Drive)
-*.md
-!README.md
-!LICENSE
-# Exception: Allow FarmerConnect documentation in UCIC folder
-!"Ubuntu Code Integrity Crucible (UCIC)/farmerconnect/*.md"
-
-# Environment & secrets - handled in separate Complete-Package folder
-.env
-.env.local
-.env.*.local
-.env.template
-secrets/
-**/.env*
-
-# Python caches and virtualenvs
-__pycache__/
-*.pyc
-**/__pycache__/
-venv/
-*.egg-info/
-
-# Node modules and build artifacts
-**/node_modules/
-**/dist/
-**/build/
-
-# OS files
+# OS
 .DS_Store
 Thumbs.db
-
-# Temporary files
-*.log
-*.tmp
-
-# Documentation files with secrets (stored in Complete-Package)
-docs/ONEDRIVE_COMPLETE.md
-docs/ONEDRIVE_VISUAL_GUIDE.md
-docs/CLOUD_STORAGE_READY.md
-docs/ALL_INTEGRATIONS_COMPLETE.md
 
 # IDE
 .vscode/
@@ -61,27 +72,19 @@ docs/ALL_INTEGRATIONS_COMPLETE.md
 *.dmg
 *.pkg
 *.deb
+**/*.pt
+!**/models/whisper/base.pt
+**/cache/
+**/models/whisper/cache/
 
-# Database files (may contain patient data)
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-*.sqlite3
+# Node modules
+**/node_modules/
+**/dist/
+**/build/
 
 # Patient/medical data
 **/instance/
 **/temp/
-**/certs/*.key
-**/certs/*.pem
 discovered_devices.json
 device_database.json
 indexing_progress.json
-
-# Authentication & secrets
-auth_utils.py
-*.env
-.env.*
-secrets.json
-config/secrets.py
-
