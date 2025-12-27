@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDOH Chat - Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #00ff00;
+            --border-color: #00ff00;
+            --highlight: #ffff00;
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --red: #ff0080;
+            --orange: #ff6600;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            border: 2px solid var(--border-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 15px var(--border-color);
+        }
+        
+        /* HEADER */
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #001100;
+        }
+        
+        .logo span { font-weight: bold; font-size: 20px; text-shadow: 0 0 5px currentColor; }
+        .c-s { color: #00ff00; } .c-d { color: #ffff00; } .c-o { color: #ff00ff; }
+        .c-h { color: #00ffff; } .c-c { color: #ff0080; } .c-h2 { color: #ff6600; }
+        .c-at { color: #00ff99; }
+        
+        .settings-btn {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--highlight);
+        }
+        
+        /* SCREENS */
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* CHANNEL LIST */
+        .list-header {
+            background: var(--text-color);
+            color: var(--bg-color);
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .group-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .group-item:hover { background: #111; color: var(--highlight); }
+        
+        /* CATEGORIES */
+        .category-header {
+            background: #111;
+            color: var(--text-color);
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .category-header:hover { background: #222; }
+        
+        .category-content {
+            display: none; /* Collapsed by default */
+            border-bottom: 1px solid #333;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .category-content.expanded {
+            display: block;
+        }
+
+        .category-arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .category-arrow.expanded {
+            transform: rotate(90deg);
+        }
+
+        .online-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        
+        /* CHAT SCREEN */
+        .chat-header {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chat-title { flex: 1; font-weight: bold; text-transform: uppercase; }
+        
+        .btn-icon {
+            background: none;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 2px 8px;
+            font-family: inherit;
+        }
+        
+        .btn-icon:hover { background: var(--text-color); color: black; }
+        
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .msg {
+            padding: 5px;
+            border-left: 2px solid #333;
+            word-wrap: break-word;
+        }
+        
+        .msg-sender { font-weight: bold; margin-right: 5px; }
+        .msg-time { font-size: 0.8em; color: #666; float: right; }
+        
+        .input-area {
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+        
+        input {
+            flex: 1;
+            background: black;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 8px;
+            font-family: inherit;
+        }
+
+        /* Voice & TTS Controls */
+        .voice-btn {
+            background: none;
+            border: 1px solid #ff6600;
+            color: #ff6600;
+            cursor: pointer;
+            padding: 2px 8px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .voice-btn:hover { background: #ff6600; color: black; }
+        .voice-btn.recording { animation: pulse 0.6s infinite; background: #ff0080; color: black; border-color: #ff0080; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        .tts-btn {
+            background: none;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-family: inherit;
+        }
+
+        .tts-btn:hover { background: #00ffff; color: black; }
+        .tts-btn.playing { background: #00ffff; color: black; }
+
+        .msg-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        /* ElevenLabs Settings Modal */
+        .tts-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tts-settings label {
+            display: block;
+            font-size: 12px;
+            color: var(--highlight);
+        }
+
+        .tts-settings select,
+        .tts-settings input {
+            background: black;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 5px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .tts-settings input[type="range"] {
+            width: 100%;
+        }
+
+        .tts-value {
+            color: #00ffff;
+            font-size: 11px;
+        }
+        
+        /* MODAL */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            border: 2px solid var(--highlight);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            background: black;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .color-swatch {
+            width: 25px; height: 25px;
+            border: 1px solid white;
+            cursor: pointer;
+        }
+        
+        .alias-preview {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+        
+        .letter-select {
+            display: inline-block;
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #333;
+        }
+        
+        .letter-select.selected { border-color: white; }
+        
+        .vote-banner {
+            background: var(--red);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <span class="c-s">S</span><span class="c-d">D</span><span class="c-o">O</span><span class="c-h">H</span>
+                <span class="c-c">C</span><span class="c-h2">H</span><span class="c-at">AT</span>
+            </div>
+            <div class="settings-btn" onclick="openSettings()">[⚙]</div>
+        </div>
+
+        <!-- CHANNEL LIST -->
+        <div id="channel-screen" class="screen">
+            <div class="list-header" style="margin-bottom:10px">:: YOUR ZONES ::</div>
+            <div id="groups-list">
+                <div style="padding:20px; text-align:center">Loading...</div>
+            </div>
+        </div>
+
+        <!-- CHAT SCREEN -->
+        <div id="chat-screen" class="screen hidden">
+            <div class="chat-header">
+                <button class="btn-icon" onclick="closeChat()">[<] BACK</button>
+                <div class="chat-title" id="current-chat-title">General</div>
+                <button class="btn-icon" onclick="promptRename()">[✎] RENAME</button>
+            </div>
+            <div id="vote-banner" class="vote-banner hidden">
+                NAME CHANGED! <button class="btn-icon" style="border-color:white; color:white" onclick="voteRevert()">VOTE REVERT</button>
+            </div>
+            <div id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="msg-input" placeholder="Type message..." onkeypress="handleEnter(event)">
+                <button class="voice-btn" id="record-btn" onclick="toggleRecording()" title="Record voice with microphone">🎙️ REC</button>
+                <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()" title="Upload audio file">📁 VOICE</button>
+                <button class="btn-icon" onclick="sendMessage()">SEND</button>
+            </div>
+            <div id="recording-timer" style="display:none; text-align:center; color:#ff0080; padding:5px; font-size:12px">
+                🔴 Recording... <span id="timer">0:00</span>
+            </div>
+            <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFile(event)">
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 style="color:var(--highlight); text-align:center; border-bottom:1px solid var(--highlight); padding-bottom:10px">ACCOUNT SETTINGS</h3>
+            
+            <p style="margin-top:15px">CUSTOMIZE ALIAS COLORS:</p>
+            <div style="text-align:center; font-size:12px; color:#666">(Click a letter, then pick a color)</div>
+            
+            <div id="alias-editor" class="alias-preview"></div>
+            
+            <div class="color-picker">
+                <div class="color-swatch" style="background:#00ff00" onclick="applyColor('#00ff00')"></div>
+                <div class="color-swatch" style="background:#ffff00" onclick="applyColor('#ffff00')"></div>
+                <div class="color-swatch" style="background:#ff00ff" onclick="applyColor('#ff00ff')"></div>
+                <div class="color-swatch" style="background:#00ffff" onclick="applyColor('#00ffff')"></div>
+                <div class="color-swatch" style="background:#ff0080" onclick="applyColor('#ff0080')"></div>
+                <div class="color-swatch" style="background:#ff6600" onclick="applyColor('#ff6600')"></div>
+                <div class="color-swatch" style="background:#ffffff" onclick="applyColor('#ffffff')"></div>
+                <div class="color-swatch" style="background:#9900ff" onclick="applyColor('#9900ff')"></div>
+            </div>
+            
+            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px">
+                <p>CUSTOM AI API KEY (Optional):</p>
+                <input type="password" id="custom-api-key" placeholder="Paste Gemini API Key here" style="width:100%">
+                <div style="font-size:10px; color:#666; margin-top:5px">Leave empty to use system default</div>
+            </div>
+
+            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px">
+                <p style="color:var(--highlight)">TEXT-TO-SPEECH SETTINGS (ElevenLabs):</p>
+                
+                <div class="tts-settings">
+                    <div>
+                        <label>ElevenLabs API Key:</label>
+                        <input type="password" id="elevenlabs-api-key" placeholder="Paste your ElevenLabs API key">
+                        <div style="font-size:10px; color:#666; margin-top:5px">Get it from elevenlabs.io/app/account</div>
+                    </div>
+
+                    <div>
+                        <label>Voice:</label>
+                        <div style="display:flex; gap:8px; align-items:center">
+                            <select id="tts-voice" style="flex:1">
+                                <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Warm)</option>
+                                <option value="EXAVITQu4vr4xnSDxMaL">Bella (Calm)</option>
+                                <option value="EXAVITQu4vr4xnSDxMaL">Premitheus (Balanced)</option>
+                                <option value="TX3LPaxmHKniDCm1u8gQ">Charlotte (Friendly)</option>
+                                <option value="pMsXgVXv3BLzUgSXRplE">Adam (Serious)</option>
+                                <option value="IX5yDUzCrqLEV5QZ7nXo">Chris (Dynamic)</option>
+                            </select>
+                            <button class="tts-btn" id="preview-btn" onclick="previewVoice()" style="min-width:80px">🔊 PREVIEW</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label>Stability: <span class="tts-value" id="stability-value">0.5</span></label>
+                        <input type="range" id="tts-stability" min="0" max="1" step="0.1" value="0.5" onchange="updateValue('stability')">
+                    </div>
+
+                    <div>
+                        <label>Clarity: <span class="tts-value" id="clarity-value">0.75</span></label>
+                        <input type="range" id="tts-clarity" min="0" max="1" step="0.1" value="0.75" onchange="updateValue('clarity')">
+                    </div>
+
+                    <div>
+                        <label>Speaking Rate: <span class="tts-value" id="rate-value">1.0x</span></label>
+                        <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1.0" onchange="updateValue('rate')">
+                    </div>
+
+                    <div>
+                        <label>Pitch: <span class="tts-value" id="pitch-value">0.0</span></label>
+                        <input type="range" id="tts-pitch" min="-20" max="20" step="1" value="0" onchange="updateValue('pitch')">
+                    </div>
+
+                    <div style="margin-top:10px; padding:8px; background:#111; border:1px solid #333; border-radius:3px; font-size:11px; color:#999">
+                        ℹ️ <strong>Stability:</strong> Lower = more variation. Higher = more consistent.<br>
+                        <strong>Clarity:</strong> Lower = more artistic. Higher = clearer speech.
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px; display:flex; justify-content:space-between">
+                <button class="btn-icon" onclick="closeSettings()">CANCEL</button>
+                <button class="btn-icon" style="border-color:var(--highlight); color:var(--highlight)" onclick="saveSettings()">SAVE CHANGES</button>
+            </div>
+            
+            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px; text-align:center">
+                <button class="btn-icon" style="color:var(--red); border-color:var(--red)" onclick="logout()">LOGOUT</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/sdoh';
+        let currentUser = null;
+        let currentGroup = null;
+        let selectedLetterIdx = -1;
+        let aliasColors = {}; // {index: color}
+        
+        // Check auth
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/sdoh/index.html';
+        
+        // Load Dashboard
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                
+                const data = await res.json();
+                currentUser = data.user;
+                aliasColors = data.user.alias_colors || {};
+                
+                renderGroups(data.groups);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        function renderGroups(groups) {
+            const container = document.getElementById('groups-list');
+            container.innerHTML = '';
+            
+            // 1. Public Chatrooms Category
+            const catHeader = document.createElement('div');
+            catHeader.className = 'category-header';
+            catHeader.innerHTML = `<span><span class="category-arrow expanded">></span> Chat Rooms</span> <span>(${groups.length})</span>`;
+            catHeader.onclick = () => {
+                toggleCategory('public-chats');
+                catHeader.querySelector('.category-arrow').classList.toggle('expanded');
+            };
+            
+            const catContent = document.createElement('div');
+            catContent.id = 'public-chats';
+            catContent.className = 'category-content'; 
+            // Auto-expand if it's the main one
+            catContent.classList.add('expanded');
+            
+            groups.forEach(g => {
+                const div = document.createElement('div');
+                div.className = 'group-item';
+                const memberStatus = `${g.member_count}/${g.max_members}`;
+                const isFull = g.member_count >= g.max_members;
+                const statusColor = isFull ? 'var(--red)' : '#666';
+                
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center">
+                        <span class="online-dot"></span>
+                        <span>${g.name}</span>
+                    </div>
+                    <span style="font-size:12px; color:${statusColor}">(${memberStatus})</span>
+                `;
+                div.onclick = () => openChat(g);
+                catContent.appendChild(div);
+            });
+            
+            container.appendChild(catHeader);
+            container.appendChild(catContent);
+            
+            // 2. Private Chats (Personal Forge)
+            const privHeader = document.createElement('div');
+            privHeader.className = 'category-header';
+            privHeader.innerHTML = `<span><span class="category-arrow expanded">></span> Private Chats</span> <span>(1)</span>`;
+            privHeader.onclick = () => {
+                toggleCategory('private-chats');
+                privHeader.querySelector('.category-arrow').classList.toggle('expanded');
+            };
+            
+            const privContent = document.createElement('div');
+            privContent.id = 'private-chats';
+            privContent.className = 'category-content expanded';
+            
+            // Add Personal Forge
+            const forgeDiv = document.createElement('div');
+            forgeDiv.className = 'group-item';
+            forgeDiv.innerHTML = `
+                <div style="display:flex; align-items:center">
+                    <span class="online-dot" style="background:var(--red); box-shadow:0 0 5px var(--red)"></span>
+                    <span style="color:var(--red); font-weight:bold">THE FORGE</span>
+                </div>
+                <span style="font-size:12px; color:#666">[AUDITOR]</span>
+            `;
+            forgeDiv.onclick = () => openForgeChat();
+            privContent.appendChild(forgeDiv);
+            
+            // Add The Quest
+            const questDiv = document.createElement('div');
+            questDiv.className = 'group-item';
+            questDiv.innerHTML = `
+                <div style="display:flex; align-items:center">
+                    <span class="online-dot" style="background:#ffaa00; box-shadow:0 0 5px #ffaa00"></span>
+                    <span style="color:#ffaa00; font-weight:bold">THE QUEST</span>
+                </div>
+                <span style="font-size:12px; color:#666">[MASTER]</span>
+            `;
+            questDiv.onclick = () => openQuestChat();
+            privContent.appendChild(questDiv);
+            
+            container.appendChild(privHeader);
+            container.appendChild(privContent);
+            
+            // 3. Mock Categories
+            addMockCategory(container, 'Contacts', 0);
+            addMockCategory(container, 'Apps & Games', 0);
+        }
+        
+        function openForgeChat() {
+            currentGroup = { id: 'forge', name: 'THE FORGE' };
+            document.getElementById('channel-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('current-chat-title').textContent = 'THE FORGE [INTEGRITY AUDIT]';
+            document.getElementById('current-chat-title').style.color = 'var(--red)';
+            document.getElementById('vote-banner').classList.add('hidden');
+            
+            loadMessages(`forge_${currentUser.user_id}`);
+            
+            // Load greeting if no messages
+            const messagesContainer = document.getElementById('messages');
+            if (messagesContainer.children.length === 0 || messagesContainer.innerText === 'No messages yet...') {
+                loadForgeGreeting();
+            }
+        }
+        
+        function openQuestChat() {
+            currentGroup = { id: 'quest', name: 'THE QUEST' };
+            document.getElementById('channel-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('current-chat-title').textContent = 'THE QUEST [CHALLENGE MASTER]';
+            document.getElementById('current-chat-title').style.color = '#ffaa00';
+            document.getElementById('vote-banner').classList.add('hidden');
+            
+            loadMessages(`quest_${currentUser.user_id}`);
+        }
+        
+        async function loadForgeGreeting() {
+            try {
+                const res = await fetch(`${API_BASE}/forge/greeting`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                // Display greeting as agent message
+                const container = document.getElementById('messages');
+                container.innerHTML = '';
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.innerHTML = `
+                    <span class="msg-sender" style="color:var(--red)">THE FORGE:</span>
+                    ${data.greeting}
+                    <span class="msg-time">Now</span>
+                `;
+                container.appendChild(div);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        function toggleCategory(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('expanded');
+        }
+        
+        function addMockCategory(container, name, count) {
+            const header = document.createElement('div');
+            header.className = 'category-header';
+            header.innerHTML = `<span><span class="category-arrow">></span> ${name}</span> <span>(${count})</span>`;
+            header.style.opacity = "0.7"; // Dim empty categories
+            header.onclick = () => {
+                header.querySelector('.category-arrow').classList.toggle('expanded');
+            };
+            container.appendChild(header);
+        }
+        
+        function openChat(group) {
+            currentGroup = group;
+            document.getElementById('channel-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('current-chat-title').textContent = group.name;
+            
+            // Check if renamed recently (mock logic for banner)
+            if (group.last_renamed_at) {
+                document.getElementById('vote-banner').classList.remove('hidden');
+            } else {
+                document.getElementById('vote-banner').classList.add('hidden');
+            }
+            
+            loadMessages(group.id);
+        }
+        
+        function closeChat() {
+            currentGroup = null;
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('channel-screen').classList.remove('hidden');
+            loadDashboard(); // Refresh list
+        }
+        
+        // Settings Logic
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            renderAliasEditor();
+            // Pre-fill API Key
+            if (currentUser.custom_api_key) {
+                document.getElementById('custom-api-key').value = currentUser.custom_api_key;
+            } else {
+                document.getElementById('custom-api-key').value = '';
+            }
+            
+            // Pre-fill TTS settings from localStorage
+            const elevenlabsKey = localStorage.getItem('elevenlabs-api-key') || '';
+            document.getElementById('elevenlabs-api-key').value = elevenlabsKey;
+            
+            const ttsVoice = localStorage.getItem('tts-voice') || '21m00Tcm4TlvDq8ikWAM';
+            document.getElementById('tts-voice').value = ttsVoice;
+            
+            const stability = localStorage.getItem('tts-stability') || '0.5';
+            document.getElementById('tts-stability').value = stability;
+            document.getElementById('stability-value').textContent = stability;
+            
+            const clarity = localStorage.getItem('tts-clarity') || '0.75';
+            document.getElementById('tts-clarity').value = clarity;
+            document.getElementById('clarity-value').textContent = clarity;
+            
+            const rate = localStorage.getItem('tts-rate') || '1.0';
+            document.getElementById('tts-rate').value = rate;
+            document.getElementById('rate-value').textContent = rate + 'x';
+            
+            const pitch = localStorage.getItem('tts-pitch') || '0';
+            document.getElementById('tts-pitch').value = pitch;
+            document.getElementById('pitch-value').textContent = pitch + ' semitones';
+        }
+        
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+        
+        function renderAliasEditor() {
+            const container = document.getElementById('alias-editor');
+            container.innerHTML = '';
+            const alias = currentUser.alias || 'USER';
+            
+            for (let i = 0; i < alias.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = alias[i];
+                span.className = 'letter-select';
+                span.style.color = aliasColors[i] || '#00ff00';
+                span.onclick = () => selectLetter(i);
+                if (i === selectedLetterIdx) span.classList.add('selected');
+                container.appendChild(span);
+            }
+        }
+        
+        function selectLetter(idx) {
+            selectedLetterIdx = idx;
+            renderAliasEditor();
+        }
+        
+        function applyColor(color) {
+            if (selectedLetterIdx === -1) return;
+            aliasColors[selectedLetterIdx] = color;
+            renderAliasEditor();
+        }
+        
+        async function saveSettings() {
+            const customKey = document.getElementById('custom-api-key').value.trim();
+            
+            // Save TTS settings to localStorage
+            const elevenLabsKey = document.getElementById('elevenlabs-api-key').value.trim();
+            const ttsVoice = document.getElementById('tts-voice').value;
+            const ttsStability = document.getElementById('tts-stability').value;
+            const ttsClarity = document.getElementById('tts-clarity').value;
+            const ttsRate = document.getElementById('tts-rate').value;
+            const ttsPitch = document.getElementById('tts-pitch').value;
+
+            localStorage.setItem('elevenlabs-api-key', elevenLabsKey);
+            localStorage.setItem('tts-voice', ttsVoice);
+            localStorage.setItem('tts-stability', ttsStability);
+            localStorage.setItem('tts-clarity', ttsClarity);
+            localStorage.setItem('tts-rate', ttsRate);
+            localStorage.setItem('tts-pitch', ttsPitch);
+
+            try {
+                await fetch(`${API_BASE}/user/settings`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        alias_colors: aliasColors,
+                        custom_api_key: customKey
+                    })
+                });
+                currentUser.alias_colors = aliasColors;
+                currentUser.custom_api_key = customKey;
+                closeSettings();
+                alert('Settings saved! TTS settings stored locally.');
+            } catch (e) {
+                alert('Error saving settings');
+            }
+        }
+        
+        // Rename Logic
+        async function promptRename() {
+            const newName = prompt("Enter new group name:");
+            if (!newName) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/groups/${currentGroup.id}/rename`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('current-chat-title').textContent = data.name;
+                    alert('Group renamed!');
+                }
+            } catch (e) {
+                alert('Error renaming group');
+            }
+        }
+        
+        async function voteRevert() {
+            try {
+                const res = await fetch(`${API_BASE}/groups/${currentGroup.id}/vote-revert`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.status === 'reverted') {
+                    alert('Vote passed! Name reverted to: ' + data.name);
+                    document.getElementById('current-chat-title').textContent = data.name;
+                    document.getElementById('vote-banner').classList.add('hidden');
+                } else if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(`Vote cast! Total votes: ${data.votes}/3`);
+                }
+            } catch (e) {
+                alert('Error voting');
+            }
+        }
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/sdoh/index.html';
+        }
+        
+        // Mock Message Loading
+        function loadMessages(groupId) {
+            const container = document.getElementById('messages');
+            container.innerHTML = '<div style="text-align:center; color:#666">No messages yet...</div>';
+        }
+        
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            // Optimistic UI update
+            const container = document.getElementById('messages');
+            if (container.children[0]?.innerText === 'No messages yet...') container.innerHTML = '';
+            
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `
+                <span class="msg-sender" style="color:#00ff00">${currentUser.alias}:</span>
+                ${text}
+                <span class="msg-time">Now</span>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+            
+            // Route to correct agent
+            if (currentGroup.id === 'forge') {
+                sendToForge(text);
+            } else if (currentGroup.id === 'quest') {
+                sendToQuest(text);
+            } else {
+                // Normal group chat (future)
+            }
+        }
+        
+        async function sendToForge(text) {
+            try {
+                const res = await fetch(`${API_BASE}/forge/chat`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content: text })
+                });
+                
+                const data = await res.json();
+                
+                // Append Agent Response
+                const container = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.style.borderLeftColor = 'var(--red)';
+                div.innerHTML = `
+                    <span class="msg-sender" style="color:var(--red)">THE FORGE:</span>
+                    ${data.response}
+                    <span class="msg-time">Now</span>
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        async function sendToQuest(text) {
+            try {
+                const res = await fetch(`${API_BASE}/quest/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content: text })
+                });
+                
+                const data = await res.json();
+                
+                // Display response
+                const container = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.style.borderLeftColor = '#ffaa00';
+                div.innerHTML = `
+                    <span class="msg-sender" style="color:#ffaa00">THE QUEST:</span>
+                    ${data.response}
+                    ${data.quest_posted ? '<br><br><strong style="color:#ffaa00">[Quest Posted to Board!]</strong>' : ''}
+                    <span class="msg-time">Now</span>
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ============================================================================
+        // VOICE & TTS FUNCTIONS
+        // ============================================================================
+
+        // TTS Settings Management
+        function updateValue(type) {
+            if (type === 'stability') {
+                const val = document.getElementById('tts-stability').value;
+                document.getElementById('stability-value').textContent = val;
+            } else if (type === 'clarity') {
+                const val = document.getElementById('tts-clarity').value;
+                document.getElementById('clarity-value').textContent = val;
+            } else if (type === 'rate') {
+                const val = document.getElementById('tts-rate').value;
+                document.getElementById('rate-value').textContent = val + 'x';
+            } else if (type === 'pitch') {
+                const val = document.getElementById('tts-pitch').value;
+                document.getElementById('pitch-value').textContent = val + ' semitones';
+            }
+        }
+
+        // Preview Voice with Local Server Previews
+        async function previewVoice() {
+            const voiceSelectElement = document.getElementById('tts-voice');
+            const voiceId = voiceSelectElement.value;
+            const voiceName = voiceSelectElement.options[voiceSelectElement.selectedIndex].text.split(' ')[0].toLowerCase();
+            const previewBtn = document.getElementById('preview-btn');
+            const apiKey = localStorage.getItem('elevenlabs-api-key');
+            
+            try {
+                previewBtn.textContent = '[LOADING...]';
+                previewBtn.disabled = true;
+
+                let audioBlob = null;
+
+                // First, try to fetch from local server (admin-generated previews)
+                try {
+                    const response = await fetch(`/api/tts/preview/${voiceName}.mp3`);
+                    if (response.ok) {
+                        const audioBuffer = await response.arrayBuffer();
+                        audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+                    }
+                } catch (e) {
+                    console.log('Server preview not available, will try backend TTS');
+                }
+
+                // If server preview not available, use backend TTS endpoint
+                if (!audioBlob) {
+                    if (!apiKey) {
+                        throw new Error('ElevenLabs API key not set. Enter it in Settings and click SAVE CHANGES.');
+                    }
+
+                    const stability = localStorage.getItem('tts-stability') || '0.5';
+                    const clarity = localStorage.getItem('tts-clarity') || '0.75';
+
+                    const response = await fetch('/api/tts/speak', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            text: 'Hello, how can I help you today?',
+                            voice_id: voiceId,
+                            api_key: apiKey,
+                            stability: parseFloat(stability),
+                            clarity: parseFloat(clarity)
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || 'TTS failed: ' + response.status);
+                    }
+
+                    audioBlob = await response.blob();
+                }
+
+                if (audioBlob) {
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    previewBtn.textContent = '[PLAYING...]';
+
+                    audio.onended = () => {
+                        previewBtn.textContent = '[PREVIEW]';
+                        previewBtn.disabled = false;
+                    };
+
+                    audio.onerror = () => {
+                        previewBtn.textContent = '[PREVIEW]';
+                        previewBtn.disabled = false;
+                        alert('Error playing audio');
+                    };
+
+                    audio.play();
+                } else {
+                    throw new Error('Could not load audio preview');
+                }
+            } catch (e) {
+                console.error('Preview error:', e);
+                
+                // Fallback to browser TTS if ElevenLabs fails
+                if (e.message.includes('ElevenLabs') || e.message.includes('401') || e.message.includes('403')) {
+                    if (confirm(`ElevenLabs Error: ${e.message}\n\nWould you like to hear a basic preview using your browser's built-in voice instead?`)) {
+                        const utterance = new SpeechSynthesisUtterance('Hello, how can I help you today?');
+                        window.speechSynthesis.speak(utterance);
+                    }
+                } else {
+                    alert('Preview failed: ' + e.message);
+                }
+                
+                previewBtn.textContent = '[PREVIEW]';
+                previewBtn.disabled = false;
+            }
+        }
+
+        // Voice Input Toggle
+        function toggleVoiceInput() {
+            document.getElementById('voice-file-input').click();
+        }
+
+        // Voice Recording Variables
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingStartTime = null;
+        let recordingInterval = null;
+
+        // Toggle Voice Recording
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('record-btn');
+            
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // Stop recording
+                mediaRecorder.stop();
+                recordBtn.textContent = '🎙️ REC';
+                recordBtn.classList.remove('recording');
+                clearInterval(recordingInterval);
+                document.getElementById('recording-timer').style.display = 'none';
+            } else {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    recordedChunks = [];
+                    recordingStartTime = Date.now();
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+                        // Send recorded audio to transcription
+                        const formData = new FormData();
+                        formData.append('file', audioBlob, 'recording.wav');
+                        
+                        recordBtn.textContent = '🎙️ TRANSCRI…';
+                        recordBtn.disabled = true;
+                        
+                        try {
+                            const response = await fetch('/api/dictation/transcribe', {
+                                method: 'POST',
+                                body: formData,
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            const result = await response.json();
+                            if (result.text) {
+                                document.getElementById('msg-input').value = result.text;
+                                document.getElementById('msg-input').focus();
+                            } else {
+                                alert('Transcription failed: ' + (result.error || 'Unknown error'));
+                            }
+                        } catch (e) {
+                            alert('Error transcribing: ' + e.message);
+                        } finally {
+                            recordBtn.textContent = '🎙️ REC';
+                            recordBtn.disabled = false;
+                            // Stop all audio tracks
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    };
+                    
+                    mediaRecorder.start();
+                    recordBtn.textContent = '⏹️ STOP';
+                    recordBtn.classList.add('recording');
+                    
+                    // Show timer
+                    document.getElementById('recording-timer').style.display = 'block';
+                    recordingInterval = setInterval(() => {
+                        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                        const mins = Math.floor(elapsed / 60);
+                        const secs = elapsed % 60;
+                        document.getElementById('timer').textContent = 
+                            `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }, 100);
+                    
+                } catch (e) {
+                    alert('Microphone access denied: ' + e.message + '\n\nNote: Your browser must use HTTPS to access the microphone.');
+                }
+            }
+        }
+
+        // Handle Voice File Upload
+        async function handleVoiceFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                // Show loading state
+                const voiceBtn = document.getElementById('voice-btn');
+                voiceBtn.textContent = '🎤 TRANSCRIBING...';
+                voiceBtn.disabled = true;
+
+                // Transcribe using Whisper Mini from Dictation module
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/dictation/transcribe', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const result = await response.json();
+
+                if (result.text) {
+                    // Put transcribed text in input
+                    document.getElementById('msg-input').value = result.text;
+                    document.getElementById('msg-input').focus();
+                } else {
+                    alert('Transcription failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Error transcribing voice: ' + e.message);
+            } finally {
+                voiceBtn.textContent = '🎤 VOICE';
+                voiceBtn.disabled = false;
+                event.target.value = ''; // Reset input
+            }
+        }
+
+        // Text-to-Speech with ElevenLabs
+        async function speakMessage(msgText, msgElement) {
+            const apiKey = localStorage.getItem('elevenlabs-api-key');
+            if (!apiKey) {
+                alert('ElevenLabs API key not set. Go to Settings to add it.');
+                return;
+            }
+
+            // Get TTS settings from localStorage
+            const voiceId = localStorage.getItem('tts-voice') || '21m00Tcm4TlvDq8ikWAM'; // Default: Rachel
+            const stability = parseFloat(localStorage.getItem('tts-stability')) || 0.5;
+            const clarity = parseFloat(localStorage.getItem('tts-clarity')) || 0.75;
+
+            try {
+                const ttsBtn = msgElement.querySelector('.tts-btn');
+                if (ttsBtn) {
+                    ttsBtn.textContent = '[LOADING...]';
+                    ttsBtn.disabled = true;
+                }
+
+                const response = await fetch(`/api/tts/speak`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        text: msgText.replace(/<[^>]*>/g, ''), // Strip HTML
+                        voice_id: voiceId,
+                        api_key: apiKey,
+                        stability: stability,
+                        clarity: clarity
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'TTS failed: ' + response.status);
+                }
+
+                const audioBuffer = await response.arrayBuffer();
+                const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // Play audio
+                const audio = new Audio(audioUrl);
+                if (ttsBtn) {
+                    ttsBtn.classList.add('playing');
+                    ttsBtn.textContent = '[PLAYING...]';
+                    
+                    audio.onended = () => {
+                        ttsBtn.classList.remove('playing');
+                        ttsBtn.textContent = '[LISTEN]';
+                        ttsBtn.disabled = false;
+                    };
+                }
+
+                audio.play();
+            } catch (e) {
+                console.error('TTS Error:', e);
+                
+                // Fallback to browser TTS
+                if (e.message.includes('ElevenLabs') || e.message.includes('401') || e.message.includes('403')) {
+                    console.log('Falling back to browser TTS');
+                    const utterance = new SpeechSynthesisUtterance(msgText.replace(/<[^>]*>/g, ''));
+                    window.speechSynthesis.speak(utterance);
+                    
+                    // Reset button state immediately since browser TTS is fire-and-forget
+                    if (msgElement.querySelector('.tts-btn')) {
+                        const btn = msgElement.querySelector('.tts-btn');
+                        btn.textContent = '[LISTEN]';
+                        btn.disabled = false;
+                        btn.classList.remove('playing');
+                    }
+                } else {
+                    alert('Text-to-speech failed: ' + e.message);
+                    if (msgElement.querySelector('.tts-btn')) {
+                        const btn = msgElement.querySelector('.tts-btn');
+                        btn.textContent = '[LISTEN]';
+                        btn.disabled = false;
+                    }
+                }
+            }
+        }
+
+        // Update sendToForge to add TTS button
+        async function sendToForgeWithTTS(text) {
+            try {
+                const res = await fetch(`${API_BASE}/forge/chat`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content: text })
+                });
+                
+                const data = await res.json();
+                
+                // Append Agent Response with TTS button
+                const container = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.style.borderLeftColor = 'var(--red)';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'column';
+                div.innerHTML = `
+                    <div>
+                        <span class="msg-sender" style="color:var(--red)">THE FORGE:</span>
+                        ${data.response}
+                        <span class="msg-time">Now</span>
+                    </div>
+                    <div class="msg-controls">
+                        <button class="tts-btn" onclick="speakMessage(\`${data.response.replace(/`/g, '\\`')}\`, this.parentElement.parentElement)">🔊 LISTEN</button>
+                    </div>
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Override sendToForge with TTS version
+        const originalSendToForge = sendToForge;
+        sendToForge = sendToForgeWithTTS;
+
+        // Init
+        loadDashboard();
+    </script>
+</body>
+</html>
