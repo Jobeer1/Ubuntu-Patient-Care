@@ -15,10 +15,11 @@ def generate_certificate():
     cert_file = 'cert.pem'
     key_file = 'key.pem'
     
-    # Check if certificates already exist
-    if os.path.exists(cert_file) and os.path.exists(key_file):
-        print(f"✅ Certificates already exist ({cert_file}, {key_file})")
-        return True
+    # Remove existing certificates to ensure regeneration with correct IP
+    if os.path.exists(cert_file):
+        os.remove(cert_file)
+    if os.path.exists(key_file):
+        os.remove(key_file)
     
     print("🔐 Generating self-signed SSL certificate...")
     
@@ -63,6 +64,9 @@ def generate_certificate():
             x509.SubjectAlternativeName([
                 x509.DNSName(u"localhost"),
                 x509.DNSName(u"127.0.0.1"),
+                x509.DNSName(u"155.235.81.67"),
+                x509.IPAddress(import_ip_address("127.0.0.1")),
+                x509.IPAddress(import_ip_address("155.235.81.67")),
             ]),
             critical=False,
         ).sign(private_key, hashes.SHA256(), default_backend())
@@ -97,3 +101,11 @@ def generate_certificate():
         print(f"❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
+        return False
+
+def import_ip_address(ip_str):
+    import ipaddress
+    return ipaddress.ip_address(ip_str)
+
+if __name__ == "__main__":
+    generate_certificate()

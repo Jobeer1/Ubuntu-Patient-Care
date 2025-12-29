@@ -8,9 +8,9 @@ try:
     import torch
     import torchaudio
     AVAILABLE = True
-except ImportError:
+except (ImportError, OSError) as e:
     AVAILABLE = False
-    print("⚠️ Local TTS unavailable: torch or torchaudio not found")
+    print(f"Local TTS unavailable: {type(e).__name__}")
 
 # Global model cache
 _model = None

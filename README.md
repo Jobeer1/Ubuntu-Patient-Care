@@ -47,8 +47,10 @@ We created a simple, low-bandwidth gateway, powered by a complex orchestration o
 
 Our solution leverages the **Google Cloud Partner Ecosystem** to create a resilient, voice-first interface for the most vulnerable.
 
-### 🧠 The Brain: Google Cloud Vertex AI (Gemini 2.0 Flash)
-The core intelligence of the system. Gemini 2.0 Flash powers our **Agent Forge** and **Quest Master**, analyzing user inputs for emotional context, generating meaningful "Quests" (community tasks), and maintaining the integrity of the social graph.
+### 🧠 The Brain: Google Cloud Vertex AI (Gemini 2.5 Flash-Lite)
+The core intelligence of the system. **Gemini 2.5 Flash-Lite** powers our **Agent Forge** and **Quest Master**, analyzing user inputs for emotional context, generating meaningful "Quests" (community tasks), and maintaining the integrity of the social graph.
+*   **Why 2.5 Flash-Lite?** It offers the perfect balance of speed and reasoning for real-time chat, ensuring low latency even on slower connections.
+*   **Local Fallback:** If the cloud is unreachable or quotas are hit, the system seamlessly switches to a local **Ollama (Gemma 2B)** instance, ensuring the "Forge" never goes silent.
 
 ### � The Ears: Whisper Mini (Local STT)
 To ensure privacy and functionality in low-bandwidth environments, we use **OpenAI's Whisper Mini** model running locally on the edge.
@@ -68,6 +70,15 @@ End-to-end observability monitors the health of our agents. We track:
 - **AI Latency**: Ensuring Gemini and ElevenLabs respond in real-time.
 - **Community Health**: Custom metrics tracking "Integrity Scores" and "Quest Completion Rates".
 - **System Vitals**: Error rates on the Flask backend and Cloudflare tunnels.
+
+---
+
+## 🎮 Gamification: The Forge & Integrity XP
+
+We gamify the healing process using "The Forge," an AI persona that acts as a mentor.
+*   **Integrity XP:** Users earn Experience Points (XP) for demonstrating vulnerability, insight, and resilience in their conversations.
+*   **Insights Profile:** A dedicated UI tracks the user's "Level" and stores a history of profound insights extracted from their conversations.
+*   **Visual Feedback:** Users see their XP grow in real-time, reinforcing positive mental health habits.
 
 ---
 
@@ -95,7 +106,7 @@ graph TD
     end
 
     subgraph AI_Cloud["☁️ AI INTELLIGENCE LAYER"]
-        Gemini["🧠 Google Gemini 2.0<br/>Advanced Reasoning<br/>Context Understanding"]
+        Gemini["🧠 Google Gemini 2.5 Flash-Lite<br/>Advanced Reasoning<br/>Context Understanding"]
         Eleven["🎙️ ElevenLabs API<br/>Premium Voice Synthesis<br/>Multi-Language Support"]
     end
 

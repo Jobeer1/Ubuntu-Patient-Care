@@ -1,186 +1,168 @@
-"""
-SDOH Chat - Database Models
-SQLAlchemy models for users, messages, groups, contacts, voice notes, invites
-"""
-
 from datetime import datetime, timedelta
-from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, ForeignKey, Table, Index, LargeBinary, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 import uuid
-import secrets
+from .extensions import db
 
-Base = declarative_base()
-
-# Association table for group members (many-to-many)
-group_members = Table(
-    'group_members',
-    Base.metadata,
-    Column('group_id', String(36), ForeignKey('groups.id'), primary_key=True),
-    Column('user_id', String(10), ForeignKey('users.user_id'), primary_key=True),
-    Column('joined_at', DateTime, default=datetime.utcnow)
-)
-
-
-class User(Base):
-    """User model - Privacy first (code hidden, alias visible)"""
+class User(db.Model):
     __tablename__ = 'users'
+    user_id = db.Column(db.String(10), primary_key=True)
+    alias = db.Column(db.String(50), unique=True, nullable=True)
+    pin_hash = db.Column(db.String(255), nullable=True)
+    code_visible = db.Column(db.Boolean, default=False)
+    alias_colors = db.Column(db.Text, nullable=True)
     
-    user_id = Column(String(10), primary_key=True)  # 10-digit code (HIDDEN by default)
-    alias = Column(String(50), unique=True, nullable=False, index=True)  # Display name (VISIBLE)
-    pin_hash = Column(String(255), nullable=False)  # bcrypt hash
-    sso_id = Column(String(255), unique=True, nullable=True)  # MCP OAuth link
-    code_visible = Column(Boolean, default=False)  # User controls code visibility
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    last_login = Column(DateTime, nullable=True)
-    device_fingerprint = Column(String(255), nullable=True)
-    referred_by = Column(String(10), ForeignKey('users.user_id'), nullable=True)  # Referral tracking
+    # Forge / Agent Fields
+    integrity_score = db.Column(db.Integer, default=10)
+    forge_history = db.Column(db.Text, default='[]') # JSON list of messages
+    insights = db.Column(db.Text, default='[]') # JSON list of extracted insights
+    custom_api_key = db.Column(db.String(255), nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)
     
-    # Relationships
-    messages = relationship('Message', back_populates='sender', foreign_keys='Message.sender_id')
-    groups = relationship('Group', secondary=group_members, back_populates='members')
-    contacts = relationship('Contact', back_populates='user', foreign_keys='Contact.user_id')
-    voice_notes = relationship('VoiceNote', back_populates='sender', foreign_keys='VoiceNote.sender_id')
+    # Role & Moderation Fields (NEW)
+    user_role = db.Column(db.String(20), default='user')  # admin, moderator, user
+    credentials = db.Column(db.Text, default='[]')  # JSON list of earned badges/credentials
+    is_reported = db.Column(db.Boolean, default=False)
+    is_banned = db.Column(db.Boolean, default=False)
     
-    def __repr__(self):
-        return f'<User {self.alias}>'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
 
-
-class Message(Base):
-    """Message model - Minimal payload, linked to sender"""
+class Message(db.Model):
     __tablename__ = 'messages'
+    msg_id = db.Column(db.String(36), primary_key=True)
+    sender_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    chat_id = db.Column(db.String(36), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    msg_type = db.Column(db.String(20), default='text')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    edited_at = db.Column(db.DateTime)
+    deleted_at = db.Column(db.DateTime)
     
-    msg_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    sender_id = Column(String(10), ForeignKey('users.user_id'), nullable=False, index=True)
-    chat_id = Column(String(36), nullable=False, index=True)  # user_id or group_id
-    content = Column(Text, nullable=False)  # Max 500 chars
-    msg_type = Column(String(20), default='text')  # text, status, notice, voice, voice_note
-    voice_note_id = Column(String(36), ForeignKey('voice_notes.id'), nullable=True)  # Link to voice note if type='voice_note'
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    edited_at = Column(DateTime, nullable=True)
-    deleted_at = Column(DateTime, nullable=True)  # Soft delete
-    
-    # Relationships
-    sender = relationship('User', back_populates='messages', foreign_keys=[sender_id])
-    voice_note = relationship('VoiceNote', back_populates='message')
-    
-    # Composite index for chat history queries
-    __table_args__ = (
-        Index('ix_messages_chat_ts', 'chat_id', 'created_at'),
-    )
-    
-    def __repr__(self):
-        return f'<Message {self.msg_id}>'
+    __table_args__ = (db.Index('idx_chat_created', 'chat_id', 'created_at'),)
 
-
-class Group(Base):
-    """Group chat model"""
+class Group(db.Model):
     __tablename__ = 'groups'
+    id = db.Column(db.String(36), primary_key=True)
+    group_name = db.Column(db.String(100))
+    created_by = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    is_private = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_renamed_at = db.Column(db.DateTime)
+    previous_name = db.Column(db.String(100))
+    renamed_by = db.Column(db.String(10))
     
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    group_name = Column(String(100), nullable=True)
-    created_by = Column(String(10), ForeignKey('users.user_id'), nullable=False)
-    is_private = Column(Boolean, default=True)  # Private by default
-    member_limit = Column(Integer, default=50)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    description = Column(Text, nullable=True)  # Optional group description
-    
-    # Relationships
-    members = relationship('User', secondary=group_members, back_populates='groups')
-    
-    def __repr__(self):
-        return f'<Group {self.group_name or self.id}>'
+    # Moderation Fields (NEW)
+    moderator_ids = db.Column(db.Text, default='[]')  # JSON list of appointed moderator user_ids
+    moderation_type = db.Column(db.String(20), default='human')  # human, ai, hybrid
+    ai_moderator_key = db.Column(db.String(255), nullable=True)  # Optional LLM API key for AI moderation
+    ai_moderator_enabled = db.Column(db.Boolean, default=False)
 
+class GroupVote(db.Model):
+    __tablename__ = 'group_votes'
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.String(36), db.ForeignKey('groups.id'), nullable=False)
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    vote_type = db.Column(db.String(20))  # 'revert_name'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Contact(Base):
-    """Contact model - User's saved contacts (for quick access)"""
+class GroupMember(db.Model):
+    __tablename__ = 'group_members'
+    group_id = db.Column(db.String(36), db.ForeignKey('groups.id'), primary_key=True)
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), primary_key=True)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Contact(db.Model):
     __tablename__ = 'contacts'
-    
-    user_id = Column(String(10), ForeignKey('users.user_id'), primary_key=True)
-    contact_id = Column(String(10), ForeignKey('users.user_id'), primary_key=True)  # Other user's code
-    contact_alias = Column(String(50), nullable=False)  # Their alias (user-set display name)
-    added_at = Column(DateTime, default=datetime.utcnow, index=True)
-    
-    # Relationships
-    user = relationship('User', back_populates='contacts', foreign_keys=[user_id])
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), primary_key=True)
+    contact_id = db.Column(db.String(10), primary_key=True)
+    contact_alias = db.Column(db.String(50))
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Quest(db.Model):
+    __tablename__ = 'quests'
+    id = db.Column(db.String(36), primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    requirements = db.Column(db.Text, nullable=True)  # JSON
+    difficulty = db.Column(db.String(20), default='solo')  # solo, small-group, community
+    created_by = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    status = db.Column(db.String(20), default='active')  # active, completed, cancelled
+    reward = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
 
-class VoiceNote(Base):
+class BlockList(db.Model):
+    __tablename__ = 'block_list'
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), primary_key=True)
+    blocked_id = db.Column(db.String(10), primary_key=True)  # Blocked user's code
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class MuteList(db.Model):
+    __tablename__ = 'mute_list'
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), primary_key=True)
+    muted_id = db.Column(db.String(10), primary_key=True)  # Muted user's code
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+    id = db.Column(db.String(36), primary_key=True)
+    reporter_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    reportee_id = db.Column(db.String(10), nullable=False)  # User being reported
+    report_reason = db.Column(db.Text, nullable=False)
+    report_context = db.Column(db.Text, nullable=True)  # Group ID or chat context
+    status = db.Column(db.String(20), default='pending')  # pending, investigating, resolved, dismissed
+    assigned_moderator = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=True)
+    investigation_notes = db.Column(db.Text, nullable=True)
+    resolution = db.Column(db.String(20), nullable=True)  # warning, mute, ban, dismiss
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class ModeratorLog(db.Model):
+    __tablename__ = 'moderator_logs'
+    id = db.Column(db.String(36), primary_key=True)
+    moderator_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    action_type = db.Column(db.String(50), nullable=False)  # appoint, remove, warn, mute, investigate
+    target_user = db.Column(db.String(10), nullable=True)
+    group_id = db.Column(db.String(36), nullable=True)
+    details = db.Column(db.Text, nullable=True)  # JSON details
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Credential(db.Model):
+    __tablename__ = 'credentials'
+    id = db.Column(db.String(36), primary_key=True)
+    user_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    credential_type = db.Column(db.String(50), nullable=False)  # quest-completed, peer-validated, community-vote
+    credential_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    issued_by = db.Column(db.String(10), nullable=True)  # User/quest that issued it
+
+class VoiceNote(db.Model):
     """Voice note model - Audio files in messages"""
     __tablename__ = 'voice_notes'
-    
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    sender_id = Column(String(10), ForeignKey('users.user_id'), nullable=False, index=True)
-    group_id = Column(String(36), ForeignKey('groups.id'), nullable=True, index=True)  # Group where shared
-    audio_data = Column(LargeBinary, nullable=False)  # WAV/MP3 blob
-    duration = Column(Float, default=0.0)  # Duration in seconds
-    transcription = Column(Text, nullable=True)  # Optional transcription (via Whisper)
-    file_type = Column(String(10), default='wav')  # wav, mp3, m4a, etc
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    
-    # Relationships
-    sender = relationship('User', back_populates='voice_notes', foreign_keys=[sender_id])
-    message = relationship('Message', back_populates='voice_note', uselist=False)
-    
-    def __repr__(self):
-        return f'<VoiceNote {self.id}>'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    sender_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    group_id = db.Column(db.String(36), db.ForeignKey('groups.id'), nullable=True, index=True)
+    audio_data = db.Column(db.LargeBinary, nullable=False)  # WAV/MP3 blob
+    duration = db.Column(db.Float, default=0.0)  # Duration in seconds
+    transcription = db.Column(db.Text, nullable=True)  # Optional transcription
+    file_type = db.Column(db.String(10), default='wav')  # wav, mp3, m4a
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
-
-class InviteCode(Base):
-    """Invite code model - For user referral"""
+class InviteCode(db.Model):
+    """Invite code model - For user referral/invitations"""
     __tablename__ = 'invite_codes'
-    
-    code = Column(String(16), primary_key=True)  # Random alphanumeric: e.g., 'ABC123DEF456'
-    created_by = Column(String(10), ForeignKey('users.user_id'), nullable=False, index=True)
-    uses_remaining = Column(Integer, default=10)  # Max invites per code
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=30))  # 30 day expiry
-    is_active = Column(Boolean, default=True)
-    
-    # Relationships
-    creator = relationship('User')
-    
-    @staticmethod
-    def generate_code():
-        """Generate a unique 12-char invite code"""
-        return secrets.token_urlsafe(9)[:12].upper()
-    
-    def __repr__(self):
-        return f'<InviteCode {self.code}>'
+    code = db.Column(db.String(16), primary_key=True)  # e.g., 'ABC123DEF456'
+    created_by = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    uses_remaining = db.Column(db.Integer, default=10)  # Max invites per code
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    expires_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(days=30))
+    is_active = db.Column(db.Boolean, default=True)
 
-
-class Referral(Base):
+class Referral(db.Model):
     """Referral tracking model"""
     __tablename__ = 'referrals'
-    
-    referrer_id = Column(String(10), ForeignKey('users.user_id'), primary_key=True)
-    referred_id = Column(String(10), ForeignKey('users.user_id'), primary_key=True)
-    invite_code = Column(String(16), ForeignKey('invite_codes.code'), nullable=True)
-    referred_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    referrer = relationship('User', foreign_keys=[referrer_id])
-    referred_user = relationship('User', foreign_keys=[referred_id])
-    
-    __table_args__ = (
-        Index('ix_referrals_referrer', 'referrer_id'),
-    )
-    
-    def __repr__(self):
-        return f'<Referral {self.referrer_id} → {self.referred_id}>'
-    
-    def __repr__(self):
-        return f'<Contact {self.contact_alias}>'
-
-
-class Status(Base):
-    """User status updates (presence)"""
-    __tablename__ = 'statuses'
-    
-    user_id = Column(String(10), ForeignKey('users.user_id'), primary_key=True)
-    status = Column(String(20), default='available')  # available, busy, away, offline
-    expires_at = Column(DateTime, nullable=True)  # Auto-clear after 8 hours
-    updated_at = Column(DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Status {self.user_id}: {self.status}>'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    referrer_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    referred_id = db.Column(db.String(10), db.ForeignKey('users.user_id'), nullable=False)
+    invite_code = db.Column(db.String(16), db.ForeignKey('invite_codes.code'), nullable=True)
+    referred_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # Check for SSL certificates
     cert_file = 'cert.pem'
     key_file = 'key.pem'
-    use_https = False  # Disable HTTPS to allow cloudflared to connect via HTTP without cert errors
+    use_https = True  # Enable HTTPS for voice recording (browser requirement)
     
     protocol = 'HTTPS' if use_https else 'HTTP'
     port = 5001
@@ -41,8 +41,8 @@ if __name__ == '__main__':
         print("[!] To enable HTTPS, run: python generate_cert.py")
         print("")
     else:
-        print("[✓] HTTPS enabled - microphone access available")
-        print("[✓] TTS Endpoint: Enabled")
+        print("[*] HTTPS enabled - microphone access available")
+        print("[*] TTS Endpoint: Enabled")
         print("[!] Browser may show 'insecure' warning (normal for self-signed certs)")
         print("")
     

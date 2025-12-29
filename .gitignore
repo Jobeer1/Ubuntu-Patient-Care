@@ -97,3 +97,7 @@ Thumbs.db
 discovered_devices.json
 device_database.json
 indexing_progress.json
+
+venv312/
+
+bin/

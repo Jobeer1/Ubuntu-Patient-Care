@@ -41,7 +41,7 @@ This opens **two windows**:
 - ✅ **Offline Fallbacks** - Works even if ElevenLabs fails
 
 ### Technical Features
-- 🧠 **Gemini 2.0 Flash** - Advanced reasoning and quest generation
+- 🧠 **Gemini 2.5 Flash-Lite** - Advanced reasoning and quest generation
 - 👂 **Whisper Mini** - Local speech-to-text (privacy-first)
 - 🗣️ **ElevenLabs + Silero** - Hybrid TTS with automatic fallback
 - 🌊 **Confluent Kafka** - Real-time event streaming
@@ -81,7 +81,7 @@ All files are in the `/SDOH-chat` folder:
 - Detection rules for failed API calls
 
 ### ✅ Google Cloud Challenge
-- Vertex AI (Gemini 2.0 Flash) as core intelligence
+- Vertex AI (Gemini 2.5 Flash-Lite) as core intelligence
 - Low-bandwidth, privacy-first design
 - Whisper Mini for local transcription
 - Multi-agent orchestration framework
