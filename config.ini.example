@@ -1,34 +1,98 @@
-# SDOH Chat Configuration Template
-# IMPORTANT: Never commit your actual config.ini with API keys!
-# Copy this file to config.ini and fill in your own API keys
+# ============================================================
+# SDOH-Chat Configuration Template
+# Copy this file to config.ini and fill in your own values.
+# NEVER commit config.ini — it contains real secrets.
+# ============================================================
 
 [GEMINI]
-# Google Generative AI (Gemini 2.5 Flash Lite)
-# Get your API key from: https://aistudio.google.com/app/apikey
+# Google Generative AI (Gemini) — https://aistudio.google.com/app/apikey
 api_key = YOUR_GEMINI_API_KEY_HERE
 project_id = YOUR_GCP_PROJECT_ID
 model = gemini-2.5-flash-lite
 
 [ELEVENLABS]
-# ElevenLabs Voice API for realistic speech synthesis
-# Get your API key from: https://elevenlabs.io/app/speech-synthesis/keys
+# ElevenLabs Voice API — https://elevenlabs.io/app/settings/api-keys
 api_key = YOUR_ELEVENLABS_API_KEY_HERE
-# Voice IDs for different use cases (optional - for premium voices)
+# Voice IDs — find yours at https://elevenlabs.io/voice-lab
 default_voice_id = 21m00Tcm4TlvDq8ikWAM
 emergency_voice_id = 29vD33N1CtxCmqQRPOHJ
 medical_voice_id = EXAVITQu4vr4xnSDxMaL
 
 [KAFKA]
-# Confluent Cloud Kafka for event streaming (optional)
-# Get credentials from: https://confluent.cloud
-bootstrap_servers = pkc-XXXXX.REGION.provider.confluent.cloud:9092
+# Confluent Kafka — https://confluent.cloud/
+bootstrap_servers = YOUR_CLUSTER.confluent.cloud:9092
 api_key = YOUR_KAFKA_API_KEY
 api_secret = YOUR_KAFKA_API_SECRET
 security_protocol = SASL_SSL
+sasl_mechanism = PLAIN
 
-[DATADOG]
-# Datadog observability and monitoring (optional)
-# Get credentials from: https://datadog.com
-api_key = YOUR_DATADOG_API_KEY
-app_key = YOUR_DATADOG_APP_KEY
-site = us5.datadoghq.com
+[DATABASE]
+# SQLite Database
+database_path = database/ris_emergency.db
+backup_path = database/backups/
+
+[FLASK]
+# Flask Configuration
+debug = false
+port = 5000
+host = 0.0.0.0
+# Generate a strong secret: python -c "import secrets; print(secrets.token_hex(32))"
+secret_key = CHANGE_THIS_TO_A_RANDOM_SECRET_KEY
+
+[LOGGING]
+# Logging Configuration
+log_level = INFO
+log_file = logs/ris.log
+
+[VOICE]
+# Whisper transcription settings
+# base is a good balance of accuracy and speed; switch to small for higher accuracy.
+model = base
+beam_size = 5
+best_of = 5
+temperature = 0.0
+
+[PACS_VM]
+# Comma, semicolon, or newline separated hostnames/IPs for read-only VM ping checks.
+# hosts = vm01, vm02, 10.10.10.5
+# hostnames = hyperv01; esxi01
+
+[PACS_NETWORK]
+# Optional non-VM devices to include in LAN inventory summaries.
+# hosts = router01, switch01
+# equipment = core-switch=10.10.10.2; edge-router=10.10.10.1
+
+[PACS_DISCOVERY]
+# Optional interface name for the passive ARP discovery route.
+# interface = Ethernet
+
+[PACS_SECURITY]
+# Shared secret for the OpenClaw / WhatsApp bridge endpoint.
+# Generate: python -c "import secrets; print(secrets.token_hex(32))"
+owner_token = YOUR_PACS_OWNER_TOKEN_HERE
+
+[SDOH]
+# SDOH continuity defaults.
+# Gemma 2B is the primary local model; Gemini is the fallback.
+local_model = gemma:2b
+local_model_timeout_sec = 90
+local_model_num_predict = 160
+local_model_history_chars = 1800
+local_model_input_chars = 1000
+fallback_model = gemini-2.5-flash-lite
+# Index file path (defaults to ~/.sdoh_patient_index.json if not set)
+index_file = ~/.openclaw/vault/index/master_health_graph.json
+vault_root = ~/.openclaw/vault
+
+[SIIM_HACKATHON]
+# SIIM 2026 Hackathon API — https://imaginginformatics.github.io/hackathon-docs/
+fhir_base_url = https://hackathon.siim.org/fhir
+dicomweb_base_url = https://hackathon.siim.org/dicomweb
+api_key_header = apikey
+api_key = YOUR_SIIM_API_KEY_HERE
+fhir_resources = Patient,Condition,Observation,Encounter,DiagnosticReport,ImagingStudy,MedicationRequest,Procedure,AllergyIntolerance
+dicom_vault_path =
+dicom_max_instances = 200
+ssl_verify = false
+# Your WhatsApp number in E.164 format e.g. +27XXXXXXXXX
+whatsapp_number = +27XXXXXXXXXX

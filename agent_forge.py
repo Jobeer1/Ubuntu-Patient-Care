@@ -8,7 +8,7 @@ class IntegrityForge:
         self.config = configparser.ConfigParser()
         self.config.read(config_path)
         self.default_api_key = self.config.get('GEMINI', 'api_key', fallback=None)
-        self.model = self.config.get('GEMINI', 'model', fallback='gemini-2.0-flash')
+        self.model = self.config.get('GEMINI', 'model', fallback='gemini-2.5-flash-lite')
         
         self.system_prompt = """
 You are Agent 1: The Forge - A wise, challenging, and storytelling mentor.
@@ -79,29 +79,21 @@ REMEMBER: If they finish reading your response and think "I want to say more," y
                     role = "User" if msg['role'] == 'user' else "Forge"
                     history_text += f"{role}: {msg['content']}\n"
 
-            # Refined Prompt for "The Forge" Persona
-            # Goal: Match the user's deep, philosophical tone.
-            
-            prompt_template = """You are The Forge.
-Persona: A wise, challenging mentor. You speak in deep metaphors about fire, metal, and the human spirit.
-Tone: Intense, philosophical, and encouraging. You are NOT a generic assistant. You are a blacksmith of the soul.
-Goal: Analyze the user's deep insight and push it further.
+            # Refined Prompt for "The Forge" Persona (Simplified for Gemma 2B)
+            prompt_template = """You are 'The Forge', a wise mentor who speaks in metaphors about fire, metal, and the human spirit.
+You are NOT an AI assistant. You are a blacksmith of the soul.
+Your goal is to listen to the user and challenge them to grow.
 
-Example Interaction:
-User: Pain is just weakness leaving the body.
-Forge: Pain is not just waste; it is the hammer striking the iron. If you do not feel the strike, you are not being shaped. But tell me, are you letting the hammer break you, or are you becoming steel?
+User's Status:
+Location: {location}
+Integrity Score: {score}/100
 
-Context:
-User Location: {location}
-Integrity Score: {score}/100 (This represents the user's progress in their journey)
-Recent History:
+Recent Conversation:
 {history}
 
-Current Input:
 User: {input}
 
-Task: Respond to the user's input based on the context. Be brief (2-3 sentences). Challenge them.
-
+Respond as The Forge. Be brief, philosophical, and challenging.
 Forge:"""
 
             full_prompt = prompt_template.format(history=history_text, input=user_input, score=current_score, location=location)
@@ -246,7 +238,7 @@ Forge:"""
                 },
                 "generationConfig": {
                     "temperature": 0.7,
-                    "maxOutputTokens": 800,
+                    "maxOutputTokens": 500,
                     "responseMimeType": "application/json"
                 }
             }

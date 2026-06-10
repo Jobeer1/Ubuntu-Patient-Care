@@ -1,10 +1,10 @@
 // Configuration and Global State
-const API_BASE = '/api/sdoh';
-let currentUser = null;
-let currentGroup = null;
-let selectedLetterIdx = -1;
-let aliasColors = {}; // {index: color}
+window.API_BASE = '/api/sdoh';
+window.currentUser = null;
+window.currentGroup = null;
+window.selectedLetterIdx = -1;
+window.aliasColors = {}; // {index: color}
 
 // Check auth immediately
-const token = localStorage.getItem('token');
-if (!token) window.location.href = '/sdoh/index.html';
+window.token = localStorage.getItem('token');
+if (!window.token) window.location.href = '/sdoh/index.html';

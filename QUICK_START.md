@@ -8,7 +8,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-Open browser: **http://localhost:5001**
+Open browser: **http://localhost:5002**
 
 ---
 
@@ -98,7 +98,7 @@ POST   /api/sdoh/user/settings       → Save API key
 
 | Problem | Solution |
 |---------|----------|
-| Port 5001 in use | `taskkill /PID <PID> /F` (Windows) |
+| Port 5002 in use | `taskkill /PID <PID> /F` (Windows) |
 | Missing dependencies | `pip install -r requirements.txt` |
 | Agent not responding | Check Gemini API key in config.ini |
 | Settings not saving | Clear localStorage: `localStorage.clear()` |

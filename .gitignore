@@ -1,6 +1,13 @@
-# Python
+# ============================================================
+# SDOH-Chat .gitignore
+# Protects: API keys, databases, personal info, certs, temp files
+# ============================================================
+
+# ── Python ──────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.class
 *.so
 .Python
@@ -20,63 +27,150 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Virtual Env
+# ── Virtual Environments ─────────────────────────────────────
 .env
 .venv
 env/
 venv/
 ENV/
 env.bak/
-
-# Configuration & Secrets (NEVER commit API keys!)
-config.ini
-.env.local
-.env.*.local
-*.key
-*.pem
-cert.pem
-key.pem
 venv.bak/
+venv312/
+bin/
 
-# Database (PI Protection)
-*.db
-*.sqlite3
-*.sqlite
-*.db-shm
-*.db-wal
-
-# Secrets & Config
+# ── Secrets & API Keys (NEVER commit!) ──────────────────────
 config.ini
-*.pem
 *.key
+*.pem
 *.crt
 *.p12
+*.pfx
+cert.pem
+key.pem
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 secrets.json
-auth_utils.py
+*secret*
+*password*
+*credentials*
+cloudflared_config.yml
+cloudflared-config.yml
+cloudflared-windows-amd64.msi
+*.msi
 
-# Logs
+# ── Databases & Patient Data (PI/PHI Protection) ─────────────
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+instance/
+**/instance/
+data/nas_dicom_files.txt
+data/*.txt
+data/*.json
+indexing_progress.json
+discovered_devices.json
+device_database.json
+pacs_audit_log.jsonl
+nas_dicom_files.txt
+
+# ── Personal / Sensitive Documents ──────────────────────────
+Romance*.txt
+*_Interactions.md
+Elon_Interactions.md
+James_Interactions.md
+Johann_Interactions.md
+Silas_Anya_Interactions.md
+Quest_Master_Interactions*.md
+Radiology_System_Discussion*.docx
+Radiology_System_Discussion*.md
+google_startup_accelerator_application.html
+
+# ── Certificates & Network Configs ──────────────────────────
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# ── Logs ────────────────────────────────────────────────────
 logs/
 *.log
 **/robocopy_log.txt
 **/robocopy_verbose_log.txt
+pacs_audit_log.jsonl
 
-# OS
+# ── Temporary / Debug / Scratch Scripts ─────────────────────
+_tmp_*.py
+__tmp_*.py
+_fix_*.py
+temp_*.py
+temp_*.bat
+_tmp_cleanup.bat
+*.bak
+scratch_*.py
+check_*.py
+debug_*.py
+probe_*.py
+fast_find.py
+diag_*.py
+diag_path.py
+inspect_*.py
+list_files_in_dir.py
+save_*.py
+sync_*.py
+merge_*.py
+migrate_*.py
+create_tables.py
+validate_patient_index.py
+RUN_MERGE_TO_VAULT_SQLITE.py
+merge_json_to_vault_sqlite.py
+migrate_json_to_sqlite.py
+sync_interactions.py
+sync_json_to_sqlite.py
+bootstrap_summaries.py
+convert_to_word.py
+setup_admin_user.py
+__do_index*.py
+cons
+check
+c
+
+# ── OS Files ─────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*.swo
 
-# IDE
+# ── IDE / Editor ─────────────────────────────────────────────
 .vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.clinerules/
 
-# Large files
+# ── Node / Frontend Build ────────────────────────────────────
+**/node_modules/
+**/dist/
+**/build/
+
+# ── Large / Binary Files ─────────────────────────────────────
 *.gz
 *.zip
 *.tar
+*.tar.gz
 *.exe
 *.dmg
 *.pkg
@@ -86,18 +180,23 @@ Thumbs.db
 **/cache/
 **/models/whisper/cache/
 
-# Node modules
-**/node_modules/
-**/dist/
-**/build/
+# ── Pytest & Test Artifacts ───────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
+test_audit.ledger/
+test_ledger_temp.json/
+test_output/
+test_merkle_demo.json
 
-# Patient/medical data
-**/instance/
-**/temp/
-discovered_devices.json
-device_database.json
+# ── Backup / Index / Progress Tracking ───────────────────────
+agent_sdoh_BACKUP.py
+*.bak
 indexing_progress.json
 
-venv312/
-
-bin/
+# ── OpenClaw Local Runtime ───────────────────────────────────
+openclaw/node_modules/
+openclaw/dist/
+openclaw/.artifacts/

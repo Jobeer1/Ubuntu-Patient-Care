@@ -85,6 +85,7 @@
         .tts-btn { background: none; border: 1px solid var(--cyan); color: var(--cyan); cursor: pointer; padding: 2px 6px; font-size: 10px; font-family: inherit; }
         .tts-btn:hover { background: var(--cyan); color: black; }
         .tts-btn.playing { background: var(--cyan); color: black; }
+        .story-block:hover { border-color: var(--cyan) !important; background: #111 !important; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-bg); z-index: 100; display: flex; justify-content: center; align-items: center; }
         .modal-content { border: 2px solid var(--highlight); padding: 20px; width: 90%; max-width: 400px; background: black; overflow-y: auto; max-height: 90vh; }
@@ -98,6 +99,99 @@
         .tts-settings select, .tts-settings input { background: black; border: 1px solid var(--text-color); color: var(--text-color); padding: 5px; font-family: inherit; font-size: 12px; }
         .tts-settings input[type="range"] { width: 100%; }
         .tts-value { color: var(--cyan); font-size: 11px; }
+        .sdoh-panel { background: #081316; border-bottom: 1px solid var(--cyan); padding: 10px; }
+        .sdoh-timeline { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; }
+        .sdoh-item { border: 1px solid #0f4f57; background: rgba(0, 255, 255, 0.04); padding: 8px; font-size: 11px; }
+        .sdoh-item strong { color: var(--cyan); }
+        .sdoh-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .sdoh-action-btn { border: 1px solid var(--cyan); color: var(--cyan); background: rgba(0, 255, 255, 0.04); cursor: pointer; padding: 5px 8px; font-family: inherit; font-size: 11px; }
+        .sdoh-action-btn:hover { background: var(--cyan); color: black; }
+        .sdoh-note { font-size: 11px; color: #8adfe2; line-height: 1.5; }
+        
+        /* HELPER CLASSES TO REPLACE INLINE STYLES */
+        .flex { display: flex; }
+        .flex-col { display: flex; flex-direction: column; }
+        .flex-between { justify-content: space-between; }
+        .flex-center { align-items: center; }
+        .gap-5 { gap: 5px; }
+        .gap-10 { gap: 10px; }
+        .m-b-5 { margin-bottom: 5px; }
+        .m-b-8 { margin-bottom: 8px; }
+        .m-b-10 { margin-bottom: 10px; }
+        .m-t-10 { margin-top: 10px; }
+        .p-5 { padding: 5px; }
+        .p-10 { padding: 10px; }
+        .p-20 { padding: 20px; }
+        .p-t-5 { padding-top: 5px; }
+        .text-center { text-align: center; }
+        .text-italic { font-style: italic; }
+        .text-bold { font-weight: bold; }
+        .text-white { color: white; }
+        .text-dim { color: #666; }
+        .text-ccc { color: #ccc; }
+        .text-456 { color: #456; }
+        .text-8adfe2 { color: #8adfe2; }
+        .font-10 { font-size: 10px; }
+        .font-11 { font-size: 11px; }
+        .font-12 { font-size: 12px; }
+        .cursor-pointer { cursor: pointer; }
+        .bg-none { background: none; }
+        .border-none { border: none; }
+        .border-333 { border: 1px solid #333; }
+        .border-t-333 { border-top: 1px solid #333; }
+        .border-t-16373d { border-top: 1px solid #16373d; }
+        .underline { text-decoration: underline; }
+        .upper { text-transform: uppercase; }
+        .tracking-1 { letter-spacing: 1px; }
+        .prog-bg { width: 100%; background: #333; height: 10px; border-radius: 5px; overflow: hidden; }
+        .h-40 { max-height: 40px; overflow-y: auto; }
+        .h-60 { max-height: 60px; overflow-y: auto; }
+        .h-80vh { max-height: 80vh; }
+        .h-90vh { max-height: 90vh; }
+        .h-200 { height: 200px; }
+        .min-h-36 { min-height: 36px; }
+        .min-h-40 { min-height: 40px; }
+        
+        .w-full { width: 100%; }
+        .w-95 { width: 95%; }
+        .max-w-400 { max-width: 400px; }
+        .max-w-600 { max-width: 600px; }
+        .max-w-800 { max-width: 800px; }
+        
+        .bg-111 { background: #111; }
+        .bg-233 { background: #233; }
+        .bg-black { background: black; }
+        .bg-cyan-10 { background: rgba(0, 255, 255, 0.1); }
+        .bg-cyan-03 { background: rgba(0, 255, 255, 0.03); }
+        
+        .border-red { border: 1px solid var(--red); }
+        .border-cyan { border: 1px solid var(--cyan); }
+        .border-00ffff { border: 1px solid #00ffff; }
+        .border-ffaa00 { border: 1px solid #ffaa00; }
+        .border-333 { border: 1px solid #333; }
+        .border-888 { border: 1px solid #888; }
+        .border-white { border: 1px solid white; }
+        
+        .border-b-red { border-bottom: 1px solid var(--red); }
+        .border-b-cyan { border-bottom: 1px solid var(--cyan); }
+        .border-b-00ffff { border-bottom: 1px solid #00ffff; }
+        .border-b-ffaa00 { border-bottom: 1px solid #ffaa00; }
+        .border-b-333 { border-bottom: 1px solid #333; }
+        .border-b-1px { border-bottom: 1px solid var(--border-color); }
+        
+        .c-red { color: var(--red); }
+        .c-cyan { color: var(--cyan); }
+        .c-00ffff { color: #00ffff; }
+        .c-ffaa00 { color: #ffaa00; }
+        .c-highlight { color: var(--highlight); }
+        .c-white { color: white; }
+        .c-888 { color: #888; }
+        .c-666 { color: #666; }
+        .c-ff0080 { color: #ff0080; }
+        
+        .radius-5 { border-radius: 5px; }
+        .hidden { display: none !important; }
+
         @media (max-width: 480px) {
             .input-area { padding: 5px; gap: 5px; flex-wrap: wrap; }
             .input-area input { width: 100%; order: 1; flex-basis: 100%; margin-bottom: 5px; }
@@ -114,7 +208,7 @@
                 <span class="c-s">S</span><span class="c-d">D</span><span class="c-o">O</span><span class="c-h">H</span>
                 <span class="c-c">C</span><span class="c-h2">H</span><span class="c-at">AT</span>
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div class="flex gap-10">
                 <div class="settings-btn" onclick="showInviteLink()" title="Get invite link">📧</div>
                 <div class="settings-btn" onclick="openSettings()">[⚙]</div>
             </div>
@@ -122,9 +216,9 @@
 
         <!-- CHANNEL LIST -->
         <div id="channel-screen" class="screen">
-            <div class="list-header" style="margin-bottom:10px">:: YOUR ZONES ::</div>
+            <div class="list-header m-b-10">:: YOUR ZONES ::</div>
             <div id="groups-list">
-                <div style="padding:20px; text-align:center">Loading...</div>
+                <div class="p-20 text-center">Loading...</div>
             </div>
         </div>
 
@@ -133,35 +227,159 @@
             <div class="chat-header">
                 <button class="btn-icon" onclick="closeChat()">[<] BACK</button>
                 <div class="chat-title" id="current-chat-title">General</div>
-                <div style="display:flex; gap:5px">
+                <div class="flex gap-5">
                     <button class="btn-icon" onclick="clearChatHistory()" title="Clear Chat History">🗑️ ALL</button>
                     <button class="btn-icon" onclick="promptRename()">[✎] RENAME</button>
                 </div>
             </div>
             
             <!-- FORGE PANEL (Integrity & Insights) -->
-            <div id="forge-panel" class="hidden" style="background:#111; border-bottom:1px solid var(--border-color); padding:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
-                    <span style="color:var(--red); font-weight:bold">INTEGRITY SCORE</span>
-                    <span id="integrity-score-text" style="color:white">0%</span>
+            <div id="forge-panel" class="hidden p-10" style="background:#111; border-bottom:1px solid var(--border-color);">
+                <div onclick="togglePanelContent('forge-content')" class="flex flex-between flex-center m-b-5 cursor-pointer" title="Click to toggle details">
+                    <span class="text-bold" style="color:var(--red);">INTEGRITY SCORE [▼]</span>
+                    <span id="integrity-score-text" class="text-white">0%</span>
                 </div>
-                <div style="width:100%; background:#333; height:10px; border-radius:5px; overflow:hidden">
+                <div class="prog-bg">
                     <div id="integrity-bar" style="width:0%; height:100%; background:var(--red); transition:width 0.5s"></div>
                 </div>
                 
-                <div style="margin-top:10px">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
-                        <div style="color:var(--highlight); font-size:12px;">LATEST INSIGHTS:</div>
-                        <button onclick="openInsightsModal()" style="background:none; border:none; color:var(--highlight); font-size:10px; cursor:pointer; text-decoration:underline;">VIEW ALL</button>
+                <div id="forge-content" class="m-t-10">
+                    <div class="flex flex-between flex-center m-b-5">
+                        <div class="font-12" style="color:var(--highlight);">LATEST INSIGHTS:</div>
+                        <button onclick="openInsightsModal()" class="bg-none border-none font-10 cursor-pointer underline" style="color:var(--highlight);">VIEW ALL</button>
                     </div>
-                    <div id="insights-list" style="font-size:11px; color:#ccc; max-height:60px; overflow-y:auto">
-                        <div style="font-style:italic; color:#666">No insights yet...</div>
+                    <div id="insights-list" class="font-11 text-ccc h-60">
+                        <div class="text-italic text-dim">No insights yet...</div>
                     </div>
                 </div>
             </div>
 
+            <!-- QUEST PANEL (XP & Progress) -->
+            <div id="quest-panel" class="hidden p-10 bg-111 border-b-ffaa00">
+                <div onclick="togglePanelContent('quest-content')" class="flex flex-between flex-center m-b-5 cursor-pointer" title="Click to toggle details">
+                    <span class="text-bold c-ffaa00">HERO LEVEL <span id="quest-level">1</span> [▼]</span>
+                    <span id="quest-xp-text" class="text-white">0 XP</span>
+                </div>
+                <div class="prog-bg">
+                    <div id="quest-bar" style="width:0%; height:100%; background:#ffaa00; transition:width 0.5s"></div>
+                </div>
+                
+                <div id="quest-content" class="m-t-10">
+                    <div class="flex flex-between flex-center m-b-5">
+                        <div class="font-12 c-ffaa00">ACTIVE QUEST:</div>
+                        <div class="flex gap-5">
+                            <button id="publish-story-btn" class="hidden font-10 cursor-pointer p-5 text-bold" onclick="publishCurrentStory()" style="background:#00ffff; border:1px solid #00ffff; color:black;">PUBLISH STORY</button>
+                            <button id="end-quest-btn" class="hidden font-10 cursor-pointer p-5 text-bold" onclick="endCurrentQuest()" style="background:#ff0000; border:1px solid #ff0000; color:white;">END QUEST</button>
+                            <button onclick="openHallOfHeroes()" class="bg-none font-10 cursor-pointer p-5 border-00ffff c-00ffff">HALL OF HEROES</button>
+                            <button onclick="openQuestBoard()" class="bg-none font-10 cursor-pointer p-5 border-ffaa00 c-ffaa00">GO TO BOARD</button>
+                        </div>
+                    </div>
+                    <div id="active-quest-info" class="font-11 text-ccc h-40 m-b-10">
+                        <div class="text-italic text-dim">No active quest...</div>
+                    </div>
+
+                    <div class="flex flex-between flex-center m-b-5 border-t-333 p-t-5">
+                        <div class="font-12 c-ffaa00">INVENTORY:</div>
+                    </div>
+                    <div id="quest-inventory-list" class="font-11 text-ccc h-60 m-b-10">
+                        <div class="text-italic text-dim">Empty...</div>
+                    </div>
+
+                    <div class="flex flex-between flex-center m-b-5 border-t-333 p-t-5">
+                        <div class="font-12 c-ffaa00">QUEST LOG (INSIGHTS):</div>
+                        <button onclick="openInsightsModal()" class="bg-none border-none font-10 cursor-pointer underline c-ffaa00">VIEW ALL</button>
+                    </div>
+                    <div id="quest-insights-list" class="font-11 text-ccc h-60">
+                        <div class="text-italic text-dim">No quest logs yet...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SDOH PANEL (Continuity & Export) -->
+            <div id="sdoh-panel" class="hidden sdoh-panel">
+                <div onclick="togglePanelContent('sdoh-content')" class="flex flex-between flex-center m-b-5 cursor-pointer" title="Click to toggle details">
+                    <span class="text-bold c-cyan">CONTINUITY VIEW [▼]</span>
+                    <span id="sdoh-status-text" class="text-white">READY</span>
+                </div>
+                <div class="prog-bg bg-233">
+                    <div id="sdoh-bar" style="width:0%; height:100%; background:var(--cyan); transition:width 0.5s"></div>
+                </div>
+
+                <div id="sdoh-content" class="m-t-10">
+                    <div class="flex flex-between flex-center m-b-5">
+                        <div class="font-12 c-cyan">CARE SNAPSHOT:</div>
+                        <div class="font-10 upper tracking-1 text-8adfe2">local-first export</div>
+                    </div>
+                    <div id="sdoh-summary" class="sdoh-note m-b-10 min-h-36">No continuity snapshot yet...</div>
+
+                    <div class="flex flex-between flex-center m-b-5 border-t-16373d p-t-5">
+                        <div class="font-12 c-cyan">TIMELINE:</div>
+                        <span id="sdoh-export-flag" class="font-10 text-8adfe2">awaiting approved items</span>
+                    </div>
+                    <div id="sdoh-timeline-list" class="sdoh-timeline m-b-10">
+                        <div class="text-italic text-456">No active recovery items...</div>
+                    </div>
+
+                    <div class="flex flex-between flex-center m-b-5 border-t-16373d p-t-5">
+                        <div class="font-12 c-cyan">ANALYTICS:</div>
+                        <span id="sdoh-analytics-note" class="font-10 text-8adfe2">live counters</span>
+                    </div>
+                    <div id="sdoh-analytics" class="sdoh-note m-b-10 min-h-40">No analytics yet...</div>
+
+                    <div class="flex flex-between flex-center m-b-5 border-t-16373d p-t-5">
+                        <div class="font-12 c-cyan">EXPORTS:</div>
+                    </div>
+                    <div class="sdoh-actions m-b-8">
+                        <button id="sdoh-download-ics" class="sdoh-action-btn" onclick="downloadSdohICS()">DOWNLOAD .ICS</button>
+                        <button id="sdoh-download-passport" class="sdoh-action-btn" onclick="downloadSdohPassport()">DOWNLOAD PASSPORT</button>
+                        <button id="sdoh-copy-summary" class="sdoh-action-btn" onclick="copySdohSummary()">COPY SUMMARY</button>
+                    </div>
+                    <div id="sdoh-guardrail" class="sdoh-note p-10 bg-cyan-03 border-cyan">
+                        Exports stay draft-only until the confidence gate is satisfied.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PACS PANEL (Recovery & Network) -->
+            <div id="pacs-panel" class="hidden p-10" style="background:#051105; border-bottom:1px solid #00ff44;">
+                <div onclick="togglePanelContent('pacs-content')" class="flex flex-between flex-center m-b-5 cursor-pointer" title="Click to toggle details">
+                    <span class="text-bold" style="color:#00ff44;">RECOVERY STATUS [▼]</span>
+                    <span id="pacs-status-text" class="text-white">GENERAL SUPPORT</span>
+                </div>
+                <div class="prog-bg" style="background:#1a2a1a;">
+                    <div id="pacs-bar" style="width:0%; height:100%; background:#00ff44; transition:width 0.5s"></div>
+                </div>
+                
+                <div id="pacs-content" class="m-t-10">
+                    <div class="font-11 text-dim m-b-5" style="font-family:monospace; color:#9fb99f;">
+                        General PACS mentorship is available now. Break-glass actions stay locked until the directive is verified.
+                    </div>
+                    <div class="flex flex-between flex-center m-b-5">
+                        <div class="font-12" style="color:#00ff44;">NETWORK DISCOVERY:</div>
+                    </div>
+                    <div id="pacs-discovery-list" class="font-11 text-ccc h-60" style="background:#000; border:1px solid #1a2a1a; padding:5px; overflow-y:auto; font-family:monospace;">
+                        <div class="text-italic text-dim">No devices discovered...</div>
+                    </div>
+
+                    <div class="flex flex-between flex-center m-b-5 m-t-10">
+                        <div class="font-12" style="color:#00ff44;">ACTIVE RECOVERY STEP:</div>
+                    </div>
+                    <div id="pacs-recovery-step" class="font-11 text-ccc" style="background:#000; border:1px solid #1a2a1a; padding:5px; min-height:40px; font-family:monospace;">
+                        <div class="text-italic text-dim">General PACS mentorship is online...</div>
+                    </div>
+
+                    <div class="flex flex-between flex-center m-b-5 m-t-10">
+                        <button onclick="window.triggerPacsEmergency()" class="bg-none p-5 border-none underline font-10 cursor-pointer" style="color:#00ff44;">BREAK-GLASS EMERGENCY</button>
+                        <button onclick="window.runPacsDiscovery()" class="bg-none p-5 border-none underline font-10 cursor-pointer" style="color:#00ff44;">RUN SCAN</button>
+                        <button onclick="window.generatePacsReport()" class="bg-none p-5 border-none underline font-10 cursor-pointer" style="color:#00ff44;">GENERATE REPORT</button>
+                    </div>
+                </div>
+            </div>
+
+            <input type="file" id="pacs-auth-file" accept="image/*" class="hidden" onchange="window.handlePacsAuth(event)">
+
             <div id="vote-banner" class="vote-banner hidden">
-                NAME CHANGED! <button class="btn-icon" style="border-color:white; color:white" onclick="voteRevert()">VOTE REVERT</button>
+                NAME CHANGED! <button class="btn-icon border-white c-white" onclick="voteRevert()">VOTE REVERT</button>
             </div>
             <div id="messages"></div>
             <div class="input-area">
@@ -170,10 +388,51 @@
                 <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()" title="Upload audio file">📁 VOICE</button>
                 <button class="btn-icon" onclick="sendMessage()">SEND</button>
             </div>
-            <div id="recording-timer" style="display:none; text-align:center; color:#ff0080; padding:5px; font-size:12px">
+            <div id="recording-timer" class="hidden text-center c-ff0080 p-5 font-12">
                 🔴 Recording... <span id="timer">0:00</span>
             </div>
-            <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFile(event)">
+            <input type="file" id="voice-file-input" accept="audio/*" class="hidden" onchange="handleVoiceFile(event)">
+        </div>
+    </div>
+
+    <!-- HALL OF HEROES MODAL -->
+    <div id="hall-of-heroes-modal" class="modal hidden">
+        <div class="modal-content max-w-800 w-95 h-90vh flex flex-col border-00ffff">
+            <h3 class="c-00ffff text-center border-b-00ffff p-b-10">🏛️ HALL OF HEROES</h3>
+            <p class="font-12 c-888 text-center m-b-15">Read and listen to the epic journeys of other Heroes.</p>
+            
+            <div id="stories-list" class="flex-1 overflow-y-auto p-10 bg-111 border-333 radius-5">
+                <div class="text-center c-666 p-20">Loading stories...</div>
+            </div>
+            
+            <div class="m-t-20 text-center flex gap-10 justify-center">
+                <button class="btn-icon border-00ffff c-00ffff bg-cyan-10" onclick="document.getElementById('publish-story-modal').classList.remove('hidden')">📜 SHARE YOUR STORY</button>
+                <button class="btn-icon border-888 c-888" onclick="closeHallOfHeroes()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUBLISH STORY MODAL -->
+    <div id="publish-story-modal" class="modal hidden">
+        <div class="modal-content max-w-600 border-00ffff">
+            <h3 class="c-00ffff text-center border-b-00ffff p-b-10">📜 PUBLISH YOUR TALE</h3>
+            <div class="m-b-15">
+                <label class="block c-00ffff font-12 m-b-5">STORY TITLE:</label>
+                <input type="text" id="publish-story-title" class="w-full border-00ffff" placeholder="Enter an epic title...">
+            </div>
+            <div class="m-b-15">
+                <label class="block c-00ffff font-12 m-b-5">SHORT DESCRIPTION (BLURB):</label>
+                <input type="text" id="publish-story-description" class="w-full border-00ffff min-h-40 bg-black text-white p-5" placeholder="A brief hook for your readers...">
+            </div>
+            <div class="m-b-15">
+                <label class="block c-00ffff font-12 m-b-5">YOUR STORY (EDIT/PASTE):</label>
+                <textarea id="publish-story-content" class="w-full h-200 bg-black border-00ffff p-10 font-12" style="color:var(--text-color); font-family:inherit;" placeholder="Tell your story..."></textarea>
+                <p class="font-10 c-666 m-t-5">Tip: You can paste your full narrative here. It will be broken into sections for better reading and listening.</p>
+            </div>
+            <div class="flex gap-10 justify-center">
+                <button class="btn-icon border-00ffff c-00ffff" onclick="submitStory()">PUBLISH TO HALL</button>
+                <button class="btn-icon" onclick="document.getElementById('publish-story-modal').classList.add('hidden')">CANCEL</button>
+            </div>
         </div>
     </div>
 
@@ -248,6 +507,7 @@
                         <label>Voice:</label>
                         <div style="display:flex; gap:8px; align-items:center">
                             <select id="tts-voice" style="flex:1">
+                                <option value="browser">🌐 Browser (Native) - FASTEST</option>
                                 <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Warm)</option>
                                 <option value="EXAVITQu4vr4xnSDxMaL">Bella (Calm)</option>
                                 <option value="EXAVITQu4vr4xnSDxMaL">Premitheus (Balanced)</option>
@@ -293,6 +553,34 @@
             
             <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px; text-align:center">
                 <button class="btn-icon" style="color:var(--red); border-color:var(--red)" onclick="logout()">LOGOUT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLASS SELECTION MODAL -->
+    <div id="class-selection-modal" class="modal hidden">
+        <div class="modal-content" style="text-align:center">
+            <h3 style="color:#ffaa00; border-bottom:1px solid #ffaa00; padding-bottom:10px">CHOOSE YOUR PATH</h3>
+            <p>Every hero must start somewhere. Select your starting gear:</p>
+            
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px">
+                <button class="btn-icon" style="border-color:#00ffff; color:#00ffff; padding:15px" onclick="selectClass('mage')">
+                    <div style="font-size:18px; font-weight:bold">MAGE</div>
+                    <div style="font-size:12px; color:#ccc">Staff + Robes</div>
+                    <button class="tts-btn" style="margin-top:5px" data-text="Mage. Starts with a Staff and Robes. Focuses on intellect and wisdom." onclick="event.stopPropagation(); startTTS(this)">🔊 LISTEN</button>
+                </button>
+                
+                <button class="btn-icon" style="border-color:#00ff00; color:#00ff00; padding:15px" onclick="selectClass('ranger')">
+                    <div style="font-size:18px; font-weight:bold">RANGER</div>
+                    <div style="font-size:12px; color:#ccc">Bow + Leather Armor</div>
+                    <button class="tts-btn" style="margin-top:5px" data-text="Ranger. Starts with a Bow and Leather Armor. Focuses on agility and perception." onclick="event.stopPropagation(); startTTS(this)">🔊 LISTEN</button>
+                </button>
+                
+                <button class="btn-icon" style="border-color:#ff0000; color:#ff0000; padding:15px" onclick="selectClass('warrior')">
+                    <div style="font-size:18px; font-weight:bold">WARRIOR</div>
+                    <div style="font-size:12px; color:#ccc">Sword + Shield</div>
+                    <button class="tts-btn" style="margin-top:5px" data-text="Warrior. Starts with a Sword and Shield. Focuses on strength and defense." onclick="event.stopPropagation(); startTTS(this)">🔊 LISTEN</button>
+                </button>
             </div>
         </div>
     </div>

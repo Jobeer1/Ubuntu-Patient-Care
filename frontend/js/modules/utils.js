@@ -83,3 +83,9 @@ function getLevelAtXP(xp) {
     }
     return 99;
 }
+
+// Global Exports
+window.escapeHtml = escapeHtml;
+window.getLocation = getLocation;
+window.getXPForLevel = getXPForLevel;
+window.getLevelAtXP = getLevelAtXP;

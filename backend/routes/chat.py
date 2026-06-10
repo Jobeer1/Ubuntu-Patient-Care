@@ -39,6 +39,7 @@ def get_dashboard_data():
     
     # Ensure Personal Forge chat exists
     forge_chat_id = f"forge_{user_id}"
+    sdoh_chat_id = f"sdoh_{user_id}"
     
     return jsonify({
         'user': {
@@ -48,10 +49,14 @@ def get_dashboard_data():
             'integrity_score': user.integrity_score,
             'insights': json.loads(user.insights) if user.insights else [],
             'is_verified': user.is_verified,
-            'custom_api_key': user.custom_api_key
+            'custom_api_key': user.custom_api_key,
+            'inventory': json.loads(user.inventory) if user.inventory else [],
+            'active_quest_id': user.active_quest_id,
+            'quest_progress': json.loads(user.quest_progress) if user.quest_progress else {}
         },
         'groups': groups_data,
-        'forge_chat_id': forge_chat_id
+        'forge_chat_id': forge_chat_id,
+        'sdoh_chat_id': sdoh_chat_id
     })
 
 @chat_bp.route('/groups/<group_id>/join', methods=['POST'])
@@ -78,6 +83,36 @@ def join_group(current_user, group_id):
     db.session.commit()
     
     return jsonify({'status': 'joined', 'member_count': member_count + 1})
+
+@chat_bp.route('/notifications', methods=['GET'])
+@require_auth
+def get_notifications(current_user):
+    """Get latest message timestamps for all user's chats to show 'new' pings"""
+    # 1. Get all public groups
+    public_groups = Group.query.filter_by(is_private=False).all()
+    chat_ids = [g.id for g in public_groups]
+    
+    # 2. Get all private agent chat IDs
+    chat_ids.append(f"forge_{current_user.user_id}")
+    chat_ids.append(f"quest_{current_user.user_id}")
+    chat_ids.append(f"sdoh_{current_user.user_id}")
+    
+    # 3. Get all contacts (DMs)
+    from ..models import Contact
+    contacts = Contact.query.filter_by(user_id=current_user.user_id).all()
+    chat_ids.extend([c.contact_id for c in contacts])
+    
+    # Get last message for each chat
+    results = {}
+    for cid in chat_ids:
+        last_msg = Message.query.filter_by(chat_id=cid).order_by(Message.created_at.desc()).first()
+        if last_msg:
+            results[cid] = {
+                'last_msg_at': last_msg.created_at.isoformat(),
+                'sender_alias': User.query.get(last_msg.sender_id).alias if last_msg.sender_id != 'SYSTEM' else 'SYSTEM'
+            }
+            
+    return jsonify(results)
 
 @chat_bp.route('/messages/send', methods=['POST'])
 @require_auth
@@ -117,17 +152,27 @@ def delete_message(current_user):
     # Allow deletion if:
     # 1. User is the sender
     # 2. Message is from Forge/Quest AND it is in the user's private chat
+    # 3. Message is in the user's private PACS chat (mentor replies are stored as SYSTEM)
     
     is_sender = (msg.sender_id == current_user.user_id)
     
     # Check if it's a private agent chat belonging to this user
     is_my_agent_chat = False
-    if msg.chat_id and (f"forge_{current_user.user_id}" in msg.chat_id or f"quest_{current_user.user_id}" in msg.chat_id):
+    if msg.chat_id and (
+        f"forge_{current_user.user_id}" in msg.chat_id or
+        f"quest_{current_user.user_id}" in msg.chat_id or
+        f"sdoh_{current_user.user_id}" in msg.chat_id or
+        f"pacs_{current_user.user_id}" in msg.chat_id
+    ):
         is_my_agent_chat = True
         
     if not (is_sender or is_my_agent_chat):
         return jsonify({'error': 'Unauthorized'}), 403
         
+    # Sync with Hall of Heroes: Delete any story fragments linked to this message
+    from ..models import QuestStory
+    QuestStory.query.filter_by(message_id=msg_id).delete()
+    
     db.session.delete(msg)
     db.session.commit()
     
@@ -144,8 +189,8 @@ def clear_history(current_user):
         return jsonify({'error': 'Chat ID required'}), 400
         
     # Only allow clearing if user is part of the chat (simple check for now)
-    # For Forge/Quest chats, chat_id contains user_id
-    if 'forge' in chat_id or 'quest' in chat_id:
+    # For Forge/Quest/SDOH/PACS private chats, chat_id contains user_id
+    if any(prefix in chat_id for prefix in ['forge', 'quest', 'sdoh', 'pacs']):
         if str(current_user.user_id) not in chat_id:
              return jsonify({'error': 'Unauthorized'}), 403
     
@@ -162,14 +207,48 @@ def get_messages(current_user, chat_id):
     limit = request.args.get('limit', 50, type=int)
     offset = request.args.get('offset', 0, type=int)
     
+    # Special case for Forge: Load from User history instead of Message table (user preference)
+    if chat_id.startswith('forge_'):
+        try:
+            history = json.loads(current_user.forge_history) if current_user.forge_history else []
+            result = []
+            for i, msg in enumerate(history):
+                result.append({
+                    'msg_id': f"forge_local_{i}",
+                    'sender_id': 'FORGE' if msg['role'] == 'model' else current_user.user_id,
+                    'sender_alias': 'THE FORGE' if msg['role'] == 'model' else current_user.alias,
+                    'content': msg['content'],
+                    'created_at': datetime.utcnow().isoformat() # Local history lacks timestamps
+                })
+            return jsonify(result), 200
+        except Exception as e:
+            print(f"Error loading forge JSON history: {e}")
+            return jsonify([]), 200
+
+    if chat_id.startswith('pacs_'):
+        # Only return the Message objects for PACS
+        # The frontend will trigger loadPacsGreeting if history is empty
+        pass
+
     messages = Message.query.filter_by(chat_id=chat_id).filter(Message.deleted_at.is_(None)).order_by(Message.created_at.desc()).limit(limit).offset(offset).all()
     
     result = []
     for msg in reversed(messages):
-        sender = User.query.get(msg.sender_id)
+        # Handle 'SYSTEM' or other special senders first
+        if msg.sender_id == 'SYSTEM':
+            alias = 'SYSTEM'
+        elif msg.sender_id == 'QUEST':
+            alias = 'QUEST MASTER'
+        elif msg.sender_id == 'FORGE':
+            alias = 'THE FORGE'
+        else:
+            sender = User.query.get(msg.sender_id)
+            alias = sender.alias if sender else 'Unknown'
+            
         result.append({
             'msg_id': msg.msg_id,
-            'sender_alias': sender.alias if sender else 'Unknown',
+            'sender_id': msg.sender_id,
+            'sender_alias': alias,
             'content': msg.content,
             'created_at': msg.created_at.isoformat()
         })

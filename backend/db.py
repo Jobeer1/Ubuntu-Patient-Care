@@ -6,7 +6,10 @@ Initialize SQLite database with schema
 import os
 import sqlite3
 from datetime import datetime
-from RIS-1.SDOH-chat.backend.models import Base, User
+try:
+    from .models import User
+except (ImportError, ValueError):
+    from backend.models import User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -15,15 +18,13 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'sdoh_chat.db')
 
 def init_db():
     """Initialize database with schema"""
-    
-    # Create SQLite engine
-    engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
-    
-    # Create all tables
-    Base.metadata.create_all(engine)
+    from .extensions import db
+    from flask_app import app
+    with app.app_context():
+        db.create_all()
     
     print(f"✓ Database initialized at: {DB_PATH}")
-    return engine
+    return True
 
 def get_session():
     """Get database session"""

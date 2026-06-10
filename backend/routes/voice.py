@@ -1,8 +1,18 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, send_file
 import os
 import configparser
 import tempfile
+import io
+import sys
+import subprocess
 from ..auth_utils import require_auth
+
+# Add root path for local_tts import
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+try:
+    import local_tts
+except ImportError:
+    local_tts = None
 
 voice_bp = Blueprint('voice', __name__)
 
@@ -10,6 +20,11 @@ voice_bp = Blueprint('voice', __name__)
 config = configparser.ConfigParser()
 config.read('config.ini')
 SYSTEM_ELEVENLABS_KEY = config.get('ELEVENLABS', 'api_key', fallback=None)
+WHISPER_MODEL_NAME = config.get('VOICE', 'model', fallback='base')
+WHISPER_BEAM_SIZE = config.getint('VOICE', 'beam_size', fallback=5)
+WHISPER_BEST_OF = config.getint('VOICE', 'best_of', fallback=5)
+WHISPER_TEMPERATURE = config.getfloat('VOICE', 'temperature', fallback=0.0)
+_WHISPER_MODEL = None
 
 # Try to import Whisper
 try:
@@ -18,12 +33,29 @@ try:
 except (ImportError, OSError):
     WHISPER_AVAILABLE = False
 
+# Use a bundled FFmpeg binary when the system does not provide one.
+try:
+    import imageio_ffmpeg
+    FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
+except Exception:
+    FFMPEG_EXE = None
+
 # Try to import ElevenLabs
 try:
     import requests as elevenlabs_requests
     ELEVENLABS_AVAILABLE = True
 except ImportError:
     ELEVENLABS_AVAILABLE = False
+
+
+def get_whisper_model():
+    global _WHISPER_MODEL
+
+    if _WHISPER_MODEL is None:
+        print(f"[Voice] Loading Whisper model: {WHISPER_MODEL_NAME}")
+        _WHISPER_MODEL = whisper.load_model(WHISPER_MODEL_NAME)
+
+    return _WHISPER_MODEL
 
 @voice_bp.route('/dictation/transcribe', methods=['POST', 'OPTIONS'])
 def transcribe_audio():
@@ -72,16 +104,62 @@ def transcribe_audio():
         # Read audio data
         audio_data = audio_file.read()
         
-        # Save to temp file for Whisper
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        # Determine extension from filename
+        original_filename = audio_file.filename or "recording.wav"
+        ext = os.path.splitext(original_filename)[1] or ".wav"
+        
+        # Save to temp file for processing
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
             tmp.write(audio_data)
             tmp_path = tmp.name
+        wav_path = None
         
         try:
-            # Load Whisper model (tiny is much faster for CPU)
-            # Was 'base', switching to 'tiny' for speed
-            model = whisper.load_model('tiny')
-            result = model.transcribe(tmp_path, language='en')
+            import soundfile as sf
+
+            # Browser recordings are usually webm/ogg; decode them with FFmpeg first.
+            source_path = tmp_path
+            if ext.lower() != ".wav":
+                if not FFMPEG_EXE:
+                    return jsonify({'error': 'Audio decoding requires FFmpeg. Install imageio-ffmpeg or FFmpeg and try again.'}), 503
+
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as converted:
+                    wav_path = converted.name
+
+                ffmpeg_cmd = [
+                    FFMPEG_EXE,
+                    '-y',
+                    '-i', source_path,
+                    '-ac', '1',
+                    '-ar', '16000',
+                    wav_path,
+                ]
+                conversion = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+                if conversion.returncode != 0:
+                    print(f"FFmpeg conversion failed: {conversion.stderr[:500]}")
+                    return jsonify({'error': 'Could not decode audio recording. Please try again.'}), 400
+
+                source_path = wav_path
+
+            audio, sr = sf.read(source_path, dtype='float32')
+
+            # Convert to mono if needed.
+            if len(audio.shape) > 1:
+                audio = audio.mean(axis=1)
+            
+            # Load Whisper model once and use a slightly stronger decode strategy.
+            model = get_whisper_model()
+            
+            result = model.transcribe(
+                audio,
+                language='en',
+                temperature=WHISPER_TEMPERATURE,
+                beam_size=WHISPER_BEAM_SIZE,
+                best_of=WHISPER_BEST_OF,
+                fp16=False,
+                condition_on_previous_text=False,
+                verbose=False,
+            )
             text = result['text'].strip()
             
             return jsonify({
@@ -92,15 +170,19 @@ def transcribe_audio():
             # Clean up temp file
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
+            if wav_path and os.path.exists(wav_path):
+                os.remove(wav_path)
                 
     except Exception as e:
         print(f"Transcription error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @voice_bp.route('/tts/speak', methods=['POST'])
 @require_auth
 def tts_speak(current_user):
-    """Generate speech from text using ElevenLabs"""
+    """Generate speech from text (ElevenLabs with Local Silero Fallback)"""
     data = request.get_json()
     text = data.get('text')
     voice_id = data.get('voice_id', '21m00Tcm4TlvDq8ikWAM')
@@ -109,8 +191,8 @@ def tts_speak(current_user):
     if not text:
         return jsonify({'error': 'Text required'}), 400
         
-    # Try ElevenLabs if key provided
-    if api_key and ELEVENLABS_AVAILABLE:
+    # 1. Try ElevenLabs if key provided
+    if api_key and api_key != "YOUR_ELEVENLABS_API_KEY" and ELEVENLABS_AVAILABLE:
         try:
             url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
             headers = {
@@ -126,17 +208,36 @@ def tts_speak(current_user):
                     "similarity_boost": data.get('clarity', 0.75)
                 }
             }
-            response = elevenlabs_requests.post(url, json=payload, headers=headers)
+            # Add a timeout to prevent hanging the server
+            response = elevenlabs_requests.post(url, json=payload, headers=headers, timeout=12)
             if response.status_code == 200:
-                return response.content, 200, {'Content-Type': 'audio/mpeg'}
+                print(f"✅ [TTS] Generated via ElevenLabs")
+                return response.content, 200, {'Content-Type': 'audio/mpeg', 'X-TTS-Source': 'ElevenLabs'}
             else:
-                print(f"ElevenLabs Error: {response.text}")
-                return jsonify({'error': 'ElevenLabs API error'}), response.status_code
+                print(f"⚠️ ElevenLabs Error ({response.status_code}): {response.text[:100]}...")
         except Exception as e:
-            print(f"ElevenLabs Exception: {e}")
-            return jsonify({'error': str(e)}), 500
+            print(f"⚠️ ElevenLabs Exception: {e}")
+
+    # 2. Fallback to Local Silero TTS
+    if local_tts and local_tts.AVAILABLE:
+        if not local_tts.is_ready():
+            print(f"ℹ️ [TTS] Silero not ready yet, skipping server-side fallback.")
+            return jsonify({'error': 'Local TTS model still downloading/loading'}), 503
             
-    return jsonify({'error': 'TTS not configured'}), 400
+        try:
+            print(f"🔥 [TTS] Generating via Local Silero (Fallback)")
+            audio_data = local_tts.generate_audio(text)
+            if audio_data:
+                return send_file(
+                    audio_data, 
+                    mimetype='audio/wav',
+                    as_attachment=False,
+                    download_name='speech.wav'
+                )
+        except Exception as e:
+            print(f"❌ Local TTS Failure: {e}")
+
+    return jsonify({'error': 'TTS services unavailable (Check logs for details)'}), 503
 
 # Voice Previews
 VOICE_PREVIEWS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'voices'))

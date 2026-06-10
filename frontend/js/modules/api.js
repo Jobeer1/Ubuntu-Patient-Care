@@ -1,13 +1,17 @@
 // API Wrappers
 
 async function fetchWithAuth(endpoint, options = {}) {
+    const isFormData = options.body instanceof FormData;
     const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${window.token}`,
         ...options.headers
     };
+
+    if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+    }
     
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${window.API_BASE}${endpoint}`, {
         ...options,
         headers
     });
@@ -24,3 +28,6 @@ async function logout() {
     localStorage.removeItem('token');
     window.location.href = '/sdoh/index.html';
 }
+
+window.fetchWithAuth = fetchWithAuth;
+window.logout = logout;

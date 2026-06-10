@@ -7,16 +7,22 @@ import time
 try:
     import torch
     import torchaudio
+    import omegaconf
+    import soundfile
     AVAILABLE = True
 except (ImportError, OSError) as e:
     AVAILABLE = False
-    print(f"Local TTS unavailable: {type(e).__name__}")
+    print(f"Local TTS unavailable (Missing dependencies): {type(e).__name__} - {e}")
 
 # Global model cache
 _model = None
 _device = None
 _model_lock = threading.Lock()
 _initialization_queue = queue.Queue()
+
+def is_ready():
+    """Check if the model is already loaded and ready to use"""
+    return _model is not None
 
 def init_silero():
     """Initialize Silero TTS model (thread-safe, lazy-loaded)"""
@@ -51,7 +57,10 @@ def init_silero():
             print(f"✅ Silero TTS model loaded in {elapsed:.2f}s")
             return _model
         except Exception as e:
+            import sys
             print(f"⚠️ Failed to load Silero TTS: {e}")
+            print(f"   (Python Executable: {sys.executable})")
+            print(f"   (Python Path: {sys.path[:3]})")
             return None
 
 def warmup_tts():

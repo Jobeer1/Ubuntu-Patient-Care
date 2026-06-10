@@ -7,7 +7,14 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import configparser
-import local_tts
+try:
+    import local_tts
+except ImportError:
+    # Provide fallback if local_tts is not available
+    class local_tts:
+        @staticmethod
+        def warmup_tts():
+            pass
 from backend.extensions import db
 from backend.utils import init_default_groups
 
@@ -59,6 +66,8 @@ from backend.routes.agents import agents_bp
 from backend.routes.moderation import moderation_bp
 from backend.routes.voice import voice_bp
 from backend.routes.social import social_bp
+from backend.routes.pacs_mentor import pacs_bp
+from backend.routes.siim_routes import siim_bp
 
 app.register_blueprint(auth_bp, url_prefix='/api/sdoh/auth')
 app.register_blueprint(chat_bp, url_prefix='/api/sdoh')
@@ -66,6 +75,8 @@ app.register_blueprint(agents_bp, url_prefix='/api/sdoh')
 app.register_blueprint(moderation_bp, url_prefix='/api/sdoh')
 app.register_blueprint(voice_bp, url_prefix='/api/sdoh')
 app.register_blueprint(social_bp, url_prefix='/api/sdoh')
+app.register_blueprint(pacs_bp, url_prefix='/api/sdoh/pacs')
+app.register_blueprint(siim_bp, url_prefix='/api/sdoh/siim')
 
 # Flag to track if DB is initialized
 _db_initialized = False
@@ -170,6 +181,9 @@ if __name__ == '__main__':
     with app.app_context():
         ensure_db_initialized()
     
+    import sys
+    print(f"DEBUG: Running on Python: {sys.executable}")
+    
     # Warmup TTS model in background (non-blocking)
     local_tts.warmup_tts()
     
@@ -181,11 +195,11 @@ if __name__ == '__main__':
     print("╚═══════════════════════════════════════════════════╝")
     print("")
     print("🚀 Starting SDOH Chat Server...")
-    print("📍 URL: http://0.0.0.0:5001")
-    print("💬 Chat: http://0.0.0.0:5001/sdoh/index.html")
-    print("📚 API Docs: http://0.0.0.0:5001/health")
+    print("📍 URL: http://0.0.0.0:5002")
+    print("💬 Chat: http://0.0.0.0:5002/sdoh/index.html")
+    print("📚 API Docs: http://0.0.0.0:5002/health")
     print("")
     print("Press CTRL+C to stop")
     print("")
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)

@@ -24,8 +24,11 @@ async function toggleRecording() {
             };
 
             mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                await uploadAudio(audioBlob);
+                // Determine appropriate MIME type if needed, but 'audio/webm' is most common for Chrome/Firefox
+                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                // Extension reflects the actual container format
+                const extension = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('ogg')) ? 'ogg' : 'webm';
+                await uploadAudio(audioBlob, `recording.${extension}`);
                 
                 // Stop all tracks to release microphone
                 stream.getTracks().forEach(track => track.stop());
@@ -86,8 +89,12 @@ async function handleVoiceFile(event) {
     event.target.value = '';
 }
 
-// 4. Upload Audio to Backend
-async function uploadAudio(audioBlob) {
+// Global Exports
+window.toggleRecording = toggleRecording;
+window.toggleVoiceInput = toggleVoiceInput;
+window.handleVoiceFile = handleVoiceFile;
+
+async function uploadAudio(audioBlob, forcedFilename = null) {
     const input = document.getElementById('msg-input');
     const originalPlaceholder = input.placeholder;
     
@@ -96,24 +103,24 @@ async function uploadAudio(audioBlob) {
     input.value = ""; // Clear current text
 
     const formData = new FormData();
-    // Ensure filename has extension for backend detection
-    formData.append('file', audioBlob, 'recording.wav');
+    // Use the forced filename (from mediaRecorder.onstop) or the blob/file itself
+    const filename = forcedFilename || (audioBlob.name || 'recording.wav');
+    formData.append('file', audioBlob, filename);
 
     try {
-        // Use the global 'token' variable from config.js instead of reading localStorage directly
-        // config.js reads it as 'token', but voice_input.js was looking for 'sdoh_token'
-        const authToken = localStorage.getItem('token'); 
+        // Use the global 'token' variable from config.js
+        const authToken = window.token; 
         
         // Debug: Check if token exists
         if (!authToken) {
-            console.error("No auth token found in localStorage (key='token')");
+            console.error("No auth token found (window.token is missing)");
             alert("You are not logged in. Please refresh and login again.");
             input.disabled = false;
             input.placeholder = originalPlaceholder;
             return;
         }
 
-        const res = await fetch('/api/sdoh/dictation/transcribe', {
+        const res = await fetch(`${window.API_BASE}/dictation/transcribe`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`

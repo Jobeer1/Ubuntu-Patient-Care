@@ -1,9 +1,0 @@
-tunnel: 290b8c3e-9881-4f4a-9167-8d43995f8de6
-credentials-file: ~/.cloudflared/290b8c3e-9881-4f4a-9167-8d43995f8de6.json
-
-ingress:
-  - hostname: chat.virons.uk
-    service: https://localhost:5001
-    originRequest:
-      noTLSVerify: true
-  - service: http_status:404

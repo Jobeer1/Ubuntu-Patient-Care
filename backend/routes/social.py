@@ -121,6 +121,57 @@ def open_contact_chat(current_user, contact_id):
     return jsonify({'group_id': new_group.id, 'name': other_user.alias}), 201
 
 # ============================================================================
+# TRADING (THE GHOST GRID)
+# ============================================================================
+
+@social_bp.route('/trade', methods=['POST'])
+@require_auth
+def trade_item(current_user):
+    """Transfer an item from current user to another user"""
+    import json
+    data = request.json
+    recipient_id = data.get('recipient_id')
+    item_name = data.get('item_name')
+    
+    if not recipient_id or not item_name:
+        return jsonify({'error': 'Recipient ID and Item Name required'}), 400
+        
+    # Find recipient
+    recipient = User.query.get(recipient_id)
+    if not recipient:
+        return jsonify({'error': 'Recipient not found'}), 404
+        
+    # Get current user's inventory
+    try:
+        inventory = json.loads(current_user.inventory) if current_user.inventory else []
+    except:
+        inventory = []
+        
+    if item_name not in inventory:
+        return jsonify({'error': f"Item '{item_name}' not in inventory"}), 400
+        
+    # Get recipient's inventory
+    try:
+        recipient_inventory = json.loads(recipient.inventory) if recipient.inventory else []
+    except:
+        recipient_inventory = []
+        
+    # Perform Transfer
+    inventory.remove(item_name)
+    recipient_inventory.append(item_name)
+    
+    # Save changes
+    current_user.inventory = json.dumps(inventory)
+    recipient.inventory = json.dumps(recipient_inventory)
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': f"Transferred '{item_name}' to {recipient.alias}",
+        'inventory': inventory
+    }), 200
+
+# ============================================================================
 # INVITES
 # ============================================================================
 
